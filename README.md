@@ -80,7 +80,7 @@ Exop handle almost all Elixir types:
 * :atom
 * :function
 
-_Unknown type always pass this check._
+_Unknown type always passes this check._
 
 #### `required`
 

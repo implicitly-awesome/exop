@@ -1,32 +1,42 @@
 defmodule Exop.Mixfile do
   use Mix.Project
 
+  @description """
+  Little library that provides a few macros which allow
+  you to encapsulate business logic and validate incoming
+  params over predefined contract.
+  """
+
   def project do
-    [app: :exop,
-     version: "0.1.0",
-     elixir: "~> 1.3",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps()]
+    [
+      app: :exop,
+      version: "0.1.0",
+      elixir: "~> 1.3",
+      name: "Exop",
+      description: @description,
+      package: package,
+      deps: deps,
+      source_url: "https://github.com/madeinussr/exop"
+   ]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger]]
+    [
+      applications: [:logger]
+    ]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [
+      {:mock, "~> 0.1.1", only: :test}
+    ]
+  end
+
+  defp package do
+    [
+      maintainers: ["Andrey Chernykh"],
+      licenses: ["MIT"],
+      links: %{"Github" => "https://github.com/madeinussr/exop"}
+    ]
   end
 end

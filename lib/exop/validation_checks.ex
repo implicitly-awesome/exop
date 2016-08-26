@@ -2,8 +2,8 @@ defmodule Exop.ValidationChecks do
   @moduledoc """
   Provides low-level validation functions:
 
-    * check_required/3
     * check_type/3
+    * check_required/3
     * check_numericality/3
     * check_in/3
     * check_not_in/3

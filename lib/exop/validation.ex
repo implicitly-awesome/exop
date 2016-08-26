@@ -1,6 +1,6 @@
 defmodule Exop.Validation do
   @moduledoc """
-    Provides high-level functions for validation.
+    Provides high-level functions for a contract validation.
     The main function is valid?/2
     Mostly invokes Exop.ValidationChecks module functions.
   """

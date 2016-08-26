@@ -10,7 +10,7 @@ defmodule ExopOperationTest do
     parameter :param2, type: :string
 
     def process(params) do
-      ["This is the process", params]
+      ["This is the process/1 params", params]
     end
   end
 
@@ -42,18 +42,57 @@ defmodule ExopOperationTest do
   end
 
   test "run/1: calls process/1 on particular operation via delegate/3 when contract passed validation" do
-    with_mock Exop.Validation, [valid?: fn(_, _) -> :ok end] do
-      with_mock Exop.Operation.Delegator, [delegate: fn(_, _, _) -> true end] do
-        params = [param1: "param1"]
-        Operation.run(params)
-        assert called Exop.Operation.Delegator.delegate(Operation, :process, params)
-      end
-    end
+    assert Operation.run(param1: 1, param2: "string") == ["This is the process/1 params", [param1: 1, param2: "string"]]
   end
 
-  test "run/1: returns :validation_failed error when contract didnt pass validation" do
-    with_mock Exop.Validation, [valid?: fn(_, _) -> {:error, :validation_failed, [some_error: "some_error"]} end] do
-      assert Operation.run([]) == {:error, :validation_failed, [some_error: "some_error"]}
+  test "run/1: returns :validation_failed error when contract didn't pass validation" do
+    {:error, :validation_failed, reasons} = Operation.run(param1: "not integer", param2: 777)
+    assert is_list(reasons)
+  end
+
+  test "run/1: pass default value of missed parameter" do
+    defmodule DefOperation do
+      use Exop.Operation
+
+      parameter :param, type: :integer, default: 999
+
+      def process(params) do
+        params[:param]
+      end
     end
+
+    assert DefOperation.run == 999
+  end
+
+  test "run/1: pass default value of reuired missed parameter (thus pass a validation)" do
+    defmodule Def2Operation do
+      use Exop.Operation
+
+      parameter :param, type: :integer, required: true, default: 999
+
+      def process(params) do
+        params[:param]
+      end
+    end
+
+    assert Def2Operation.run == 999
+  end
+
+  test "run/1: doesn't pass default value if a parameter was passed to run/1" do
+    defmodule Def3Operation do
+      use Exop.Operation
+
+      parameter :param, type: :integer, default: 999
+
+      def process(params) do
+        params[:param]
+      end
+    end
+
+    assert Def3Operation.run(param: 111) == 111
+  end
+
+  test "params/1: doesn't invoke a contract validation" do
+    assert Operation.process(param1: "not integer", param2: 777) == ["This is the process/1 params", [param1: "not integer", param2: 777]]
   end
 end

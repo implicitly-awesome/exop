@@ -16,7 +16,8 @@ defmodule Exop.Mixfile do
       description: @description,
       package: package,
       deps: deps,
-      source_url: "https://github.com/madeinussr/exop"
+      source_url: "https://github.com/madeinussr/exop",
+      docs: [extras: ["README.md"]]
    ]
   end
 

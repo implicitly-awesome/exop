@@ -1,4 +1,4 @@
-# Exop [![hex.pm version](https://img.shields.io/hexpm/v/exop.svg?style=flat)](https://hex.pm/packages/exop) [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/exop/)
+# Exop [![hex.pm version](https://img.shields.io/hexpm/v/exop.svg?style=flat)](https://hex.pm/packages/exop) [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/exop/) [![Build Status](https://img.shields.io/travis/madeinussr/exop.svg?style=flat)](https://travis-ci.org/madeinussr/exop)
 
 Little library that provides a few macros which allow you to encapsulate business logic and validate incoming params over predefined contract.
 

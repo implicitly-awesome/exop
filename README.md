@@ -162,7 +162,7 @@ As said earlier, operations in most cases called by `run/1` function. This funct
 receives parameters collection. It's not required to pass to `run/1` function parameters
 only described in the operation's contract, but only described parameters will be validated.
 
-`run/1` function validate received paramerers over the contract and if all parameters passed
+`run/1` function validate received parameters over the contract and if all parameters passed
 the validation, the `run/1` function calls the code defined in `process/1` function.
 
 ```elixir
@@ -174,3 +174,10 @@ If at least one of the given parameters didn't pass the validation `process/1` f
 will not be invoked and corresponding warning in the application's log will appear.
 
 You always can bypass the validation simply by calling `process/1` function itself, if needed.
+
+## LICENSE
+
+    Copyright © 2016 Andrey Chernykh ( andrei.chernykh@gmail.com )
+
+    This work is free. You can redistribute it and/or modify it under the
+    terms of the MIT License. See the LICENSE file for more details.

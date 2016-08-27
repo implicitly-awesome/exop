@@ -58,10 +58,9 @@ defmodule Exop.Operation do
       @spec resolve_defaults(list(%{name: atom, opts: Keyword.t}), Keyword.t | Map.t, Keyword.t | Map.t) :: Keyword.t | Map.t
       defp resolve_defaults([], _received_params, resolved_params), do: resolved_params
       defp resolve_defaults([%{name: contract_item_name, opts: contract_item_opts} | contract_tail], received_params, resolved_params) do
-        # would be either modified collection or nil
         resolved_params =
-          if Keyword.has_key?(contract_item_opts, :default) do
-            unless Exop.ValidationChecks.get_check_item(received_params, contract_item_name) do
+          with true <- Keyword.has_key?(contract_item_opts, :default),
+            nil <- Exop.ValidationChecks.get_check_item(received_params, contract_item_name) do
               default_value = Keyword.get(contract_item_opts, :default)
               # don't know at this moment whether resolved_params were provided as Map or Keyword
               cond do
@@ -69,12 +68,15 @@ defmodule Exop.Operation do
                   Map.put(resolved_params, contract_item_name, default_value)
                 is_list(resolved_params) ->
                   Keyword.put(resolved_params, contract_item_name, default_value)
+                true ->
+                  resolved_params
               end
+            else
+              _ ->
+                resolved_params
             end
-          end
 
-        # continue with received_params if resolved is nil
-        resolve_defaults(contract_tail, received_params, (resolved_params || received_params))
+        resolve_defaults(contract_tail, received_params, resolved_params)
       end
     end
   end

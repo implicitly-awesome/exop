@@ -54,7 +54,8 @@ defmodule ExopOperationTest do
     defmodule DefOperation do
       use Exop.Operation
 
-      parameter :param, type: :integer, default: 999
+      parameter :param2
+      parameter :param, default: 999
 
       def process(params) do
         params[:param]
@@ -64,11 +65,11 @@ defmodule ExopOperationTest do
     assert DefOperation.run == 999
   end
 
-  test "run/1: pass default value of reuired missed parameter (thus pass a validation)" do
+  test "run/1: pass default value of required missed parameter (thus pass a validation)" do
     defmodule Def2Operation do
       use Exop.Operation
 
-      parameter :param, type: :integer, required: true, default: 999
+      parameter :param, required: true, default: 999
 
       def process(params) do
         params[:param]

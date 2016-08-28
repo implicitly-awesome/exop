@@ -31,7 +31,7 @@ end
 
 `Exop.Operation` provides `parameter` macro, which is responsible for the contract definition.
 Its spec is `@spec parameter(atom, Keyword.t) :: none`, we define parameter name as the first atom attribute
-and paramater options as the second `Keyword` attribute.
+and parameter options as the second `Keyword` attribute.
 
 Parameter options determine a contract of a parameter, a set of parameters contracts is an operation contract.
 
@@ -57,7 +57,7 @@ A parameter options could have various checks. Here the list of checks available
 * `not_in`
 * `format`
 * `length`
-* `inner` (experimental)
+* `inner`
 
 #### `type`
 
@@ -130,7 +130,7 @@ parameter :some_param, not_in: ~w(a b c)
 
 #### `format`
 
-Checks wether paramter's value matches given regex.
+Checks wether parameter's value matches given regex.
 
 ```elixir
 parameter :some_param, format: ~r/foo/
@@ -154,7 +154,20 @@ parameter :some_param, length: %{min: 5, max: 10, is: 7, in: 5..8}
 ```
 
 #### `inner`
-TODO: make tests & description
+
+Checks the inner of either Map or Keyword parameter. It applies checks described in `inner` map to
+related inner items.
+
+```elixir
+# some_param = %{a: 3, b: "inner_b_attr"}
+
+parameter :some_param, type: :map, inner: %{
+  a: [type: :integer, required: true],
+  b: [type: :string, length: %{min: 1, max: 6}]
+}
+```
+
+And, of course, all checks on a parent parameter (`:some_param` in the example) are still applied.
 
 ## Operation invocation
 

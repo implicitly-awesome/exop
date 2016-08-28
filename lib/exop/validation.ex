@@ -88,7 +88,7 @@ defmodule Exop.Validation do
     iex> Exop.Validation.check_inner(%{param: 1}, :param, [type: :integer, required: true])
     true
   """
-  @spec check_inner(Map.t, atom, Map.t | Keyword.t) :: list
+  @spec check_inner(Map.t | Keyword.t, atom, Map.t | Keyword.t) :: list
   def check_inner(check_items, item_name, cheks) when is_map(cheks) do
      checked_param = ValidationChecks.get_check_item(check_items, item_name)
 

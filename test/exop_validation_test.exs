@@ -61,4 +61,45 @@ defmodule ExopValidationTest do
     {:error, :validation_failed, reasons} = valid?(contract, received_params)
     assert is_list(reasons)
   end
+
+  test "valid?/2: validates a parameter inner item over inner option checks" do
+    contract = [
+      %{name: :map_param, opts: [
+        type: :map,
+        inner: %{
+          a: %{type: :integer, required: true},
+          b: %{type: :string, length: %{min: 7}}
+          }
+        ]
+      }
+    ]
+
+    received_params = [map_param: %{a: nil, b: "6chars"}]
+
+    {:error, :validation_failed, reasons} = valid?(contract, received_params)
+    assert is_list(reasons)
+    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/required/, &1))) |> Enum.member?(true)
+    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/length/, &1))) |> Enum.member?(true)
+  end
+
+  test "valid?/2: validates parent parameter itself while validating its inner" do
+    contract = [
+      %{name: :map_param, opts: [
+        type: :map,
+        inner: %{
+          a: [type: :integer, required: true],
+          b: [type: :string, length: %{min: 7}]
+          }
+        ]
+      }
+    ]
+
+    received_params = [map_param: [a: nil, b: "6chars"]]
+
+    {:error, :validation_failed, reasons} = valid?(contract, received_params)
+    assert is_list(reasons)
+    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/type/, &1))) |> Enum.member?(true)
+    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/required/, &1))) |> Enum.member?(true)
+    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/length/, &1))) |> Enum.member?(true)
+  end
 end

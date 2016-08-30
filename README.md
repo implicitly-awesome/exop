@@ -169,6 +169,16 @@ parameter :some_param, type: :map, inner: %{
 
 And, of course, all checks on a parent parameter (`:some_param` in the example) are still applied.
 
+## Validation result
+
+If received parameters passed a contract validation, a code defined in `process/1` will be invoked.
+Or you will receive `@type validation_error :: {:error, :validation_failed, Map.t}` as a result otherwise.
+`Map.t` as errors reasons might look like this:
+
+```elixir
+%{param1: ["wrong type"], param2: ["is required", "must be equal to 3"]}
+```
+
 ## Operation invocation
 
 As said earlier, operations in most cases called by `run/1` function. This function

@@ -9,7 +9,7 @@ defmodule Exop.Validation do
 
   alias Exop.ValidationChecks
 
-  @type validation_error :: {:error, :validation_failed, list}
+  @type validation_error :: {:error, :validation_failed, Map.t}
 
   @spec function_present?(Module.t, String.t) :: boolean
   defp function_present?(module, function_name) do
@@ -33,22 +33,34 @@ defmodule Exop.Validation do
     if Enum.all?(validation_results, &(&1 == true)) do
       :ok
     else
-      error_results = validation_results |> Enum.reject(&(&1 == true))
+      error_results = validation_results |> consolidate_errors
       log_errors(error_results)
       {:error, :validation_failed, error_results}
     end
   end
 
-  @spec log_errors(Keyword.t) :: :ok | {:error, any}
-  defp log_errors(reasons) do
-    unless Mix.env == :test, do: Logger.error("#{__MODULE__} errors: #{errors_message(reasons)}")
+  @spec consolidate_errors(list) :: Map.t
+  defp consolidate_errors(validation_results) do
+    error_results = validation_results |> Enum.reject(&(&1 == true))
+    Enum.reduce(error_results, %{}, fn error_result, map ->
+      item_name = Map.keys(error_result) |> List.first
+      error_message = Map.get(error_result, item_name)
+
+      Map.put(map, item_name, [error_message | (map[item_name] || [])])
+    end)
   end
 
-  @spec errors_message(Keyword.t) :: String.t
-  defp errors_message(_reasons, acc \\ "")
-  defp errors_message([], acc), do: acc
-  defp errors_message([reason | t], acc) do
-    errors_message(t, acc <> "\n#{elem(reason, 1)}")
+  @spec log_errors(Map.t) :: :ok | {:error, any}
+  defp log_errors(errors) do
+    unless Mix.env == :test, do: Logger.warn("#{__MODULE__} errors: \n#{errors_message(errors)}")
+  end
+
+  @spec errors_message(Map.t) :: String.t
+  defp errors_message(errors) do
+    result = for {item_name, error_messages} <- errors, into: [] do
+      "#{item_name}: #{Enum.join(error_messages, "\n\t")}"
+    end
+    Enum.join(result, "\n")
   end
 
   @doc """

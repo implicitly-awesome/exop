@@ -11,7 +11,8 @@ defmodule Exop.ValidationChecks do
     * check_length/3
   """
 
-  @type check_error :: {:error, String.t}
+  # @type check_error :: {:error, String.t}
+  @type check_error :: %{atom => String.t}
 
   @doc """
   Returns an item_name from either a Keyword or a Map by an atom-key.
@@ -60,7 +61,7 @@ defmodule Exop.ValidationChecks do
     if get_check_item(check_items, item_name) do
       true
     else
-      {:error, "#{item_name} is required"}
+      %{item_name => "is required"}
     end
   end
 
@@ -94,7 +95,7 @@ defmodule Exop.ValidationChecks do
         _         -> true
       end
 
-      if result, do: true, else: {:error, "#{item_name} is wrong type"}
+      if result, do: true, else: %{item_name => "has wrong type"}
     else
       true
     end
@@ -125,25 +126,25 @@ defmodule Exop.ValidationChecks do
       is_nil(check_item) ->
         true
       true ->
-        {:error, "#{item_name} is not a number"}
+        %{item_name => "not a number"}
     end
   end
 
   @spec check_number(number, atom, {atom, number}) :: boolean
   defp check_number(number, item_name, {:equal_to, check_value}) do
-    if number == check_value, do: true, else: {:error, "#{item_name} must be equal to #{check_value}"}
+    if number == check_value, do: true, else: %{item_name => "must be equal to #{check_value}"}
   end
   defp check_number(number, item_name, {:greater_than, check_value}) do
-    if number > check_value, do: true, else: {:error, "#{item_name} must be greater than #{check_value}"}
+    if number > check_value, do: true, else: %{item_name => "must be greater than #{check_value}"}
   end
   defp check_number(number, item_name, {:greater_than_or_equal_to, check_value}) do
-    if number >= check_value, do: true, else: {:error, "#{item_name} must be greater than or equal to #{check_value}"}
+    if number >= check_value, do: true, else: %{item_name => "must be greater than or equal to #{check_value}"}
   end
   defp check_number(number, item_name, {:less_than, check_value}) do
-    if number < check_value, do: true, else: {:error, "#{item_name} must be less than #{check_value}"}
+    if number < check_value, do: true, else: %{item_name => "must be less than #{check_value}"}
   end
   defp check_number(number, item_name, {:less_than_or_equal_to, check_value}) do
-    if number <= check_value, do: true, else: {:error, "#{item_name} must be less than or equal to #{check_value}"}
+    if number <= check_value, do: true, else: %{item_name => "must be less than or equal to #{check_value}"}
   end
   defp check_number(_number, _item_name, _), do: true
 
@@ -162,7 +163,7 @@ defmodule Exop.ValidationChecks do
     if Enum.member?(check_list, check_item) do
       true
     else
-      {:error, "#{item_name} must be one of [#{Enum.join(check_list, ", ")}]"}
+      %{item_name => "must be one of [#{Enum.join(check_list, ", ")}]"}
     end
   end
   def check_in(_check_items, _item_name, _check_list), do: true
@@ -180,7 +181,7 @@ defmodule Exop.ValidationChecks do
     check_item = get_check_item(check_items, item_name)
 
     if Enum.member?(check_list, check_item) do
-      {:error, "#{item_name} must not be included in [#{Enum.join(check_list, ", ")}]"}
+      %{item_name => "must not be included in [#{Enum.join(check_list, ", ")}]"}
     else
       true
     end
@@ -203,7 +204,7 @@ defmodule Exop.ValidationChecks do
       if Regex.match?(check, check_item) do
         true
       else
-        {:error, "#{item_name} has invalid format"}
+        %{item_name => "has invalid format"}
       end
     else
       true
@@ -252,24 +253,24 @@ defmodule Exop.ValidationChecks do
   @spec check_min_length(atom, pos_integer, number) :: true | check_error
   defp check_min_length(item_name, actual_length, check_value) do
     actual_length >= check_value
-      || {:error, "#{item_name} length must be greater than or equal to #{check_value}"}
+      || %{item_name => "length must be greater than or equal to #{check_value}"}
   end
 
   @spec check_max_length(atom, pos_integer, number) :: true | check_error
   defp check_max_length(item_name, actual_length, check_value) do
     actual_length <= check_value
-      || {:error, "#{item_name} length must be less than or equal to #{check_value}"}
+      || %{item_name => "#{item_name} length must be less than or equal to #{check_value}"}
   end
 
   @spec check_is_length(atom, pos_integer, number) :: true | check_error
   defp check_is_length(item_name, actual_length, check_value) do
     actual_length == check_value
-      || {:error, "#{item_name} length must be equal to #{check_value}"}
+      || %{item_name => "length must be equal to #{check_value}"}
   end
 
   @spec check_in_length(atom, pos_integer, Range.t) :: true | check_error
   defp check_in_length(item_name, actual_length, check_value) do
     Enum.member?(check_value, actual_length)
-      || {:error, "#{item_name} length must be in range #{check_value}"}
+      || %{item_name => "length must be in range #{check_value}"}
   end
 end

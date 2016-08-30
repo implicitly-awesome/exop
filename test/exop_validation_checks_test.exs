@@ -27,8 +27,8 @@ defmodule ExopValidationChecksTest do
     assert check_required([a: 1, b: 2], :a, true) == true
   end
 
-  test "check_required/3: returns {:error, String.t} if item is not in params and required = true" do
-    {:error, reason} = check_required([a: 1, b: 2], :c, true)
+  test "check_required/3: returns %{item_name => error_msg} if item is not in params and required = true" do
+    %{c: reason} = check_required([a: 1, b: 2], :c, true)
     assert is_binary(reason)
   end
 
@@ -44,13 +44,13 @@ defmodule ExopValidationChecksTest do
     assert check_type(%{a: 1}, :a, :integer) == true
   end
 
-  test "check_type/3: returns {:error, String.t} if item is not of needed type" do
-    {:error, reason} = check_type(%{a: "1"}, :a, :integer)
+  test "check_type/3: returns %{item_name => error_msg} if item is not of needed type" do
+    %{a: reason} = check_type(%{a: "1"}, :a, :integer)
     assert is_binary(reason)
   end
 
-  test "check_numericality/3: returns {:error, String.t} if item is in params and is not a number" do
-    {:error, reason} = check_numericality(%{a: "1"}, :a, %{ less_than: 3 })
+  test "check_numericality/3: returns %{item_name => error_msg} if item is in params and is not a number" do
+    %{a: reason} = check_numericality(%{a: "1"}, :a, %{ less_than: 3 })
     assert is_binary(reason)
   end
 
@@ -59,11 +59,11 @@ defmodule ExopValidationChecksTest do
   end
 
   test "check_numericality/3: fails" do
-    [{:error, _}] = check_numericality(%{a: 1}, :a, %{ equal_to: 3 })
-    [{:error, _}] = check_numericality(%{a: 1}, :a, %{ greater_than: 3 })
-    [{:error, _}] = check_numericality(%{a: 1}, :a, %{ greater_than_or_equal_to: 3 })
-    [{:error, _}] = check_numericality(%{a: 5}, :a, %{ less_than: 3 })
-    [{:error, _}] = check_numericality(%{a: 5}, :a, %{ less_than_or_equal_to: 3 })
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{ equal_to: 3 })
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{ greater_than: 3 })
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{ greater_than_or_equal_to: 3 })
+    [%{a: _}] = check_numericality(%{a: 5}, :a, %{ less_than: 3 })
+    [%{a: _}] = check_numericality(%{a: 5}, :a, %{ less_than_or_equal_to: 3 })
   end
 
   test "check_numericality/3: successes" do
@@ -84,8 +84,8 @@ defmodule ExopValidationChecksTest do
     assert check_in(%{a: 1}, :a, [1, 2, 3]) == true
   end
 
-  test "check_in/3: returns {:error, String.t} if item is not in check values list" do
-    {:error, _} = check_in(%{a: 4}, :a, [1, 2, 3])
+  test "check_in/3: returns %{item_name => error_msg} if item is not in check values list" do
+    %{a: _} = check_in(%{a: 4}, :a, [1, 2, 3])
   end
 
   test "check_not_in/3: returns true if check values is not a list" do
@@ -96,8 +96,8 @@ defmodule ExopValidationChecksTest do
     assert check_not_in(%{a: 4}, :a, [1, 2, 3]) == true
   end
 
-  test "check_not_in/3: returns {:error, String.t} if item is in check values list" do
-    {:error, _} = check_not_in(%{a: 3}, :a, [1, 2, 3])
+  test "check_not_in/3: returns %{item_name => error_msg} if item is in check values list" do
+    %{a: _} = check_not_in(%{a: 3}, :a, [1, 2, 3])
   end
 
   test "check_format/3: returns true unless item is not a string" do
@@ -108,8 +108,8 @@ defmodule ExopValidationChecksTest do
     assert check_format(%{a: "bar"}, :a, ~r/bar/) == true
   end
 
-  test "check_format/3: returns {:error, String.t} unless item is in valid format" do
-    {:error, _} = check_format(%{a: "foo"}, :a, ~r/bar/)
+  test "check_format/3: returns %{item_name => error_msg} unless item is in valid format" do
+    %{a: _} = check_format(%{a: "foo"}, :a, ~r/bar/)
   end
 
   test "check_length/3: treat nil item's length as 0" do
@@ -134,19 +134,19 @@ defmodule ExopValidationChecksTest do
   end
 
   test "check_length/3: fails" do
-    [{:error, _}] = check_length(%{a: "123"}, :a, %{min: 4})
-    [{:error, _}] = check_length(%{a: "123"}, :a, %{max: 2})
-    [{:error, _}] = check_length(%{a: "123"}, :a, %{is: 4})
-    [{:error, _}] = check_length(%{a: "123"}, :a, %{in: 4..6})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{min: 4})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{max: 2})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{is: 4})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{in: 4..6})
 
-    [{:error, _}] = check_length(%{a: 3}, :a, %{min: 4})
-    [{:error, _}] = check_length(%{a: 3}, :a, %{max: 2})
-    [{:error, _}] = check_length(%{a: 3}, :a, %{is: 4})
-    [{:error, _}] = check_length(%{a: 3}, :a, %{in: 4..6})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{min: 4})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{max: 2})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{is: 4})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{in: 4..6})
 
-    [{:error, _}] = check_length(%{a: ~w(1 2 3)}, :a, %{min: 4})
-    [{:error, _}] = check_length(%{a: ~w(1 2 3)}, :a, %{max: 2})
-    [{:error, _}] = check_length(%{a: ~w(1 2 3)}, :a, %{is: 4})
-    [{:error, _}] = check_length(%{a: ~w(1 2 3)}, :a, %{in: 4..6})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{min: 4})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{max: 2})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{is: 4})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{in: 4..6})
   end
 end

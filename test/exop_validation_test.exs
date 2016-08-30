@@ -31,8 +31,8 @@ defmodule ExopValidationTest do
 
   test "validate/3: invokes related checks for a param's contract options", %{contract: contract} do
     with_mock Exop.ValidationChecks, [__info__: fn(_) -> [check_required: true, check_type: true] end,
-                                                    check_required: fn(_, _, _) -> true end,
-                                                    check_type: fn(_, _, _) -> true end] do
+                                                          check_required: fn(_, _, _) -> true end,
+                                                          check_type: fn(_, _, _) -> true end] do
 
       validate(contract, %{param: "some_value"}, [])
       assert called Exop.ValidationChecks.check_required(%{param: "some_value"}, :param, true)
@@ -42,9 +42,9 @@ defmodule ExopValidationTest do
 
   test "validate/3: accumulates related checks results", %{contract: contract} do
     with_mock Exop.ValidationChecks, [__info__: fn(_) -> [check_required: true, check_type: true] end,
-                                                    check_required: fn(_, _, _) -> true end,
-                                                    check_type: fn(_, _, _) -> {:error, "wrong type"} end] do
-      assert validate(contract, %{param: "some_value"}, []) == [true, {:error, "wrong type"}, {:error, "wrong type"}, true]
+                                                          check_required: fn(_, _, _) -> true end,
+                                                          check_type: fn(_, _, _) -> %{param: "wrong type"} end] do
+      assert validate(contract, %{param: "some_value"}, []) == [true, %{param: "wrong type"}, %{param: "wrong type"}, true]
     end
   end
 
@@ -59,7 +59,16 @@ defmodule ExopValidationTest do
     received_params = [param: "param", param2: 4]
 
     {:error, :validation_failed, reasons} = valid?(contract, received_params)
-    assert is_list(reasons)
+    assert is_map(reasons)
+  end
+
+  test "valid?/2: {:error, :validation_failed, reasons} reasons - is a map", %{contract: contract} do
+    received_params = [param: "param", param2: "4"]
+
+    {:error, :validation_failed, reasons} = valid?(contract, received_params)
+    assert is_map(reasons)
+    assert Map.get(reasons, :param2) |> is_list
+    assert Map.get(reasons, :param2) |> List.first |> is_binary
   end
 
   test "valid?/2: validates a parameter inner item over inner option checks" do
@@ -77,9 +86,10 @@ defmodule ExopValidationTest do
     received_params = [map_param: %{a: nil, b: "6chars"}]
 
     {:error, :validation_failed, reasons} = valid?(contract, received_params)
-    assert is_list(reasons)
-    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/required/, &1))) |> Enum.member?(true)
-    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/length/, &1))) |> Enum.member?(true)
+    assert is_map(reasons)
+    keys = reasons |> Map.keys
+    assert Enum.member?(keys, :a)
+    assert Enum.member?(keys, :b)
   end
 
   test "valid?/2: validates parent parameter itself while validating its inner" do
@@ -97,9 +107,10 @@ defmodule ExopValidationTest do
     received_params = [map_param: [a: nil, b: "6chars"]]
 
     {:error, :validation_failed, reasons} = valid?(contract, received_params)
-    assert is_list(reasons)
-    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/type/, &1))) |> Enum.member?(true)
-    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/required/, &1))) |> Enum.member?(true)
-    assert Keyword.values(reasons) |> Enum.map(&(Regex.match?(~r/length/, &1))) |> Enum.member?(true)
+    assert is_map(reasons)
+    keys = reasons |> Map.keys
+    assert Enum.member?(keys, :map_param)
+    assert Enum.member?(keys, :a)
+    assert Enum.member?(keys, :b)
   end
 end

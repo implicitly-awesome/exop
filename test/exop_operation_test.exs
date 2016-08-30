@@ -47,7 +47,7 @@ defmodule ExopOperationTest do
 
   test "run/1: returns :validation_failed error when contract didn't pass validation" do
     {:error, :validation_failed, reasons} = Operation.run(param1: "not integer", param2: 777)
-    assert is_list(reasons)
+    assert is_map(reasons)
   end
 
   test "run/1: pass default value of missed parameter" do

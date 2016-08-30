@@ -176,7 +176,7 @@ Or you will receive `@type validation_error :: {:error, :validation_failed, Map.
 `Map.t` as errors reasons might look like this:
 
 ```elixir
-%{param1: ["wrong type"], param2: ["is required", "must be equal to 3"]}
+%{param1: ["has wrong type"], param2: ["is required", "must be equal to 3"]}
 ```
 
 ## Operation invocation

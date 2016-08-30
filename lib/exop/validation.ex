@@ -42,7 +42,7 @@ defmodule Exop.Validation do
   @spec consolidate_errors(list) :: Map.t
   defp consolidate_errors(validation_results) do
     error_results = validation_results |> Enum.reject(&(&1 == true))
-    Enum.reduce(error_results, %{}, fn error_result, map ->
+    Enum.reduce(error_results, %{}, fn (error_result, map) ->
       item_name = Map.keys(error_result) |> List.first
       error_message = Map.get(error_result, item_name)
 
@@ -85,7 +85,8 @@ defmodule Exop.Validation do
           apply(ValidationChecks, check_function_name, [received_params,
                                                        Map.get(contract_item, :name),
                                                        check_params])
-        true -> true
+        true ->
+          true
       end
     end
 

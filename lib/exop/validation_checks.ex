@@ -259,7 +259,7 @@ defmodule Exop.ValidationChecks do
   @spec check_max_length(atom, pos_integer, number) :: true | check_error
   defp check_max_length(item_name, actual_length, check_value) do
     actual_length <= check_value
-      || %{item_name => "#{item_name} length must be less than or equal to #{check_value}"}
+      || %{item_name => "length must be less than or equal to #{check_value}"}
   end
 
   @spec check_is_length(atom, pos_integer, number) :: true | check_error

@@ -8,7 +8,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.1.1"}]
+  [{:exop, "~> 0.2.1"}]
 end
 ```
 

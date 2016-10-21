@@ -149,4 +149,23 @@ defmodule ExopValidationChecksTest do
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{is: 4})
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{in: 4..6})
   end
+
+  defmodule TestStruct do
+    defstruct [:qwerty]
+  end
+
+  defmodule TestStruct2 do
+    defstruct [:qwerty]
+  end
+
+  test "check_struct/3: successes" do
+    assert check_struct(%{a: %TestStruct{qwerty: "123"}}, :a, %TestStruct{}) == true
+  end
+
+  test "check_struct/3: fails" do
+    assert check_struct(%{a: %TestStruct2{}}, :a, %TestStruct{}) == %{a: "is not expected struct"}
+    assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{}) == %{a: "is not expected struct"}
+    assert check_struct(%{a: %TestStruct2{}}, :a, %TestStruct{qwerty: "123"}) == %{a: "is not expected struct"}
+    assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{qwerty: "123"}) == %{a: "is not expected struct"}
+  end
 end

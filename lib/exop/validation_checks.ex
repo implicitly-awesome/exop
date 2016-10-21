@@ -273,4 +273,19 @@ defmodule Exop.ValidationChecks do
     Enum.member?(check_value, actual_length)
       || %{item_name => "length must be in range #{check_value}"}
   end
+
+  @spec check_struct(Keyword.t | Map.t, atom, struct) :: true | check_error
+  def check_struct(check_items, item_name, check) do
+    check_item = get_check_item(check_items, item_name)
+    try do
+      check = struct!(check, Map.from_struct(check_item))
+      ^check_item = check
+    rescue
+      _ ->
+        %{item_name => "is not expected struct"}
+    else
+      _ ->
+        true
+    end
+  end
 end

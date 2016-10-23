@@ -169,6 +169,14 @@ parameter :some_param, type: :map, inner: %{
 
 And, of course, all checks on a parent parameter (`:some_param` in the example) are still applied.
 
+#### `struct`
+
+Checks whether the given parameter is expected structure.
+
+```elixir
+parameter :some_param, struct: %SomeStruct{}
+```
+
 ## Validation result
 
 If received parameters passed a contract validation, a code defined in `process/1` will be invoked.

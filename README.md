@@ -8,7 +8,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.3.0"}]
+  [{:exop, "~> 0.3.2"}]
 end
 ```
 
@@ -208,6 +208,22 @@ If at least one of the given parameters didn't pass the validation `process/1` f
 will not be invoked and corresponding warning in the application's log will appear.
 
 You always can bypass the validation simply by calling `process/1` function itself, if needed.
+
+If for some reason you have to deal only with parameters that were defined in the contract,
+you can filter out odd parameters from received Keyword/Map with `defined_params/1`
+
+```elixir
+# ...
+parameter :a
+parameter :b, default: 2
+
+def process(params) do
+  params |> defined_params
+end
+# ...
+
+SomeOperation.run(a: 1, c: 3) # {:ok, %{a: 1, b: 2}}
+```
 
 ## LICENSE
 

@@ -42,11 +42,11 @@ defmodule ExopOperationTest do
   end
 
   test "run/1: calls process/1 on particular operation via delegate/3 when contract passed validation" do
-    assert Operation.run(param1: 1, param2: "string") == ["This is the process/1 params", [param1: 1, param2: "string"]]
+    assert Operation.run(param1: 1, param2: "string") == {:ok, ["This is the process/1 params", [param1: 1, param2: "string"]]}
   end
 
   test "run/1: returns :validation_failed error when contract didn't pass validation" do
-    {:error, :validation_failed, reasons} = Operation.run(param1: "not integer", param2: 777)
+    {:error, {:validation, reasons}} = Operation.run(param1: "not integer", param2: 777)
     assert is_map(reasons)
   end
 
@@ -62,7 +62,7 @@ defmodule ExopOperationTest do
       end
     end
 
-    assert DefOperation.run == 999
+    assert DefOperation.run == {:ok, 999}
   end
 
   test "run/1: pass default value of required missed parameter (thus pass a validation)" do
@@ -76,7 +76,7 @@ defmodule ExopOperationTest do
       end
     end
 
-    assert Def2Operation.run == 999
+    assert Def2Operation.run == {:ok, 999}
   end
 
   test "run/1: doesn't pass default value if a parameter was passed to run/1" do
@@ -90,7 +90,7 @@ defmodule ExopOperationTest do
       end
     end
 
-    assert Def3Operation.run(param: 111) == 111
+    assert Def3Operation.run(param: 111) == {:ok, 111}
   end
 
   test "params/1: doesn't invoke a contract validation" do

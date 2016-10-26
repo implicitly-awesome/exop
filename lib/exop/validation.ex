@@ -9,7 +9,7 @@ defmodule Exop.Validation do
 
   alias Exop.ValidationChecks
 
-  @type validation_error :: {:error, :validation_failed, Map.t}
+  @type validation_error :: {:error, {:validation, Map.t}}
 
   @spec function_present?(Module.t, String.t) :: boolean
   defp function_present?(module, function_name) do
@@ -35,7 +35,7 @@ defmodule Exop.Validation do
     else
       error_results = validation_results |> consolidate_errors
       log_errors(error_results)
-      {:error, :validation_failed, error_results}
+      {:error, {:validation, error_results}}
     end
   end
 

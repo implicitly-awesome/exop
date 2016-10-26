@@ -8,7 +8,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.2.3"}]
+  [{:exop, "~> 0.3.0"}]
 end
 ```
 
@@ -42,8 +42,11 @@ After the contract and business logic were defined, you can invoke the operation
 
 ```elixir
 iex> IntegersDivision.run(a: 50, b: 5)
-"The division result is: 10"
+{:ok, "The division result is: 10"}
 ```
+
+Return type will be either `{:ok, any()}` (where the second item in the tuple is `process/1` function's result) or
+`{:error, {:validation, Map.t}}` (where the `Map.t` is validation errors map).
 
 ### Parameter options
 

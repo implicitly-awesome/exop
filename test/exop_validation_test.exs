@@ -58,14 +58,14 @@ defmodule ExopValidationTest do
         of params doesn't conform the contract", %{contract: contract} do
     received_params = [param: "param", param2: 4]
 
-    {:error, :validation_failed, reasons} = valid?(contract, received_params)
+    {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
   end
 
   test "valid?/2: {:error, :validation_failed, reasons} reasons - is a map", %{contract: contract} do
     received_params = [param: "param", param2: "4"]
 
-    {:error, :validation_failed, reasons} = valid?(contract, received_params)
+    {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
     assert Map.get(reasons, :param2) |> is_list
     assert Map.get(reasons, :param2) |> List.first |> is_binary
@@ -85,7 +85,7 @@ defmodule ExopValidationTest do
 
     received_params = [map_param: %{a: nil, b: "6chars"}]
 
-    {:error, :validation_failed, reasons} = valid?(contract, received_params)
+    {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
     keys = reasons |> Map.keys
     assert Enum.member?(keys, :a)
@@ -106,7 +106,7 @@ defmodule ExopValidationTest do
 
     received_params = [map_param: [a: nil, b: "6chars"]]
 
-    {:error, :validation_failed, reasons} = valid?(contract, received_params)
+    {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
     keys = reasons |> Map.keys
     assert Enum.member?(keys, :map_param)

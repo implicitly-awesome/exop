@@ -42,8 +42,7 @@ defmodule Exop.Operation do
       @doc """
       Runs an operation's process/1 function after a contract's validation
       """
-      @spec run(Keyword.t | Map.t) :: Validation.validation_error | any
-      @spec run :: Validation.validation_error | any
+      @spec run(Keyword.t | Map.t | nil) :: Validation.validation_error | {:ok, any}
       def run(received_params \\ []) do
         params = resolve_defaults(@contract, received_params, received_params)
         output(Validation.valid?(@contract, params), params)
@@ -72,8 +71,8 @@ defmodule Exop.Operation do
       end
       defp put_into_collection(_value, collection, _item_name), do: collection
 
-      @spec output(Map.t | :ok, Keyword.t | Map.t) :: Validation.validation_error | any
-      defp output(validation_result = :ok, params), do: process(params)
+      @spec output(Map.t | :ok, Keyword.t | Map.t) :: Validation.validation_error | {:ok, any}
+      defp output(validation_result = :ok, params), do: {:ok, process(params)}
       defp output(validation_result, _params), do: validation_result
     end
   end

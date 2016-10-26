@@ -180,6 +180,19 @@ Checks whether the given parameter is expected structure.
 parameter :some_param, struct: %SomeStruct{}
 ```
 
+#### `func`
+
+Checks whether an item is valid over custom validation function.
+
+```elixir
+# parameter :some_param, func: fn (param) -> !is_nil(param) end
+parameter :some_param, func: &__MODULE__.your_validation/1
+
+def your_validation(param), do: !is_nil(param)
+```
+
+_it's possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
+
 ## Validation result
 
 If received parameters passed a contract validation, a code defined in `process/1` will be invoked.

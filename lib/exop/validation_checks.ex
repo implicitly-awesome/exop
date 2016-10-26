@@ -274,6 +274,9 @@ defmodule Exop.ValidationChecks do
       || %{item_name => "length must be in range #{check_value}"}
   end
 
+  @doc """
+  Checks whether an item is expected structure.
+  """
   @spec check_struct(Keyword.t | Map.t, atom, struct) :: true | check_error
   def check_struct(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
@@ -286,6 +289,20 @@ defmodule Exop.ValidationChecks do
     else
       _ ->
         true
+    end
+  end
+
+  @doc """
+  Checks whether an item is valid over custom validation function.
+  """
+  @spec check_func(Keyword.t | Map.t, atom, (any -> true | false)) :: true | check_error
+  def check_func(check_items, item_name, check) do
+    check_item = get_check_item(check_items, item_name)
+
+    if check.(check_item) do
+      true
+    else
+      %{item_name => "isn't valid"}
     end
   end
 end

@@ -18,7 +18,7 @@ defmodule Exop.Operation do
 
   alias Exop.Validation
 
-  @callback process(Keyword.t | Map.t) :: any
+  @callback process(Keyword.t | Map.t) :: Validation.validation_error | {:ok, any}
 
   defmacro __using__(_opts) do
     quote do
@@ -74,6 +74,16 @@ defmodule Exop.Operation do
       @spec output(Map.t | :ok, Keyword.t | Map.t) :: Validation.validation_error | {:ok, any}
       defp output(validation_result = :ok, params), do: {:ok, process(params)}
       defp output(validation_result, _params), do: validation_result
+
+      @spec defined_params(Keyword.t | Map.t) :: Map.t
+      def defined_params(received_params) when is_list(received_params) do
+        keys_to_filter = Keyword.keys(received_params) -- Enum.map(@contract, &(&1[:name]))
+        Keyword.drop(received_params, keys_to_filter) |> Enum.into(%{})
+      end
+      def defined_params(received_params) when is_map(received_params) do
+        keys_to_filter = Map.keys(received_params) -- Enum.map(@contract, &(&1[:name]))
+        Map.drop(received_params, keys_to_filter)
+      end
     end
   end
 

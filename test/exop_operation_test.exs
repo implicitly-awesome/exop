@@ -96,4 +96,34 @@ defmodule ExopOperationTest do
   test "params/1: doesn't invoke a contract validation" do
     assert Operation.process(param1: "not integer", param2: 777) == ["This is the process/1 params", [param1: "not integer", param2: 777]]
   end
+
+  test "defined_params/0: returns params that were defined in the contract, filter out others" do
+    defmodule Def4Operation do
+      use Exop.Operation
+
+      parameter :a
+      parameter :b
+
+      def process(params) do
+        params |> defined_params
+      end
+    end
+
+    assert Def4Operation.run(a: 1, b: 2, c: 3) == {:ok, %{a: 1, b: 2}}
+  end
+
+  test "defined_params/0: respects defaults" do
+    defmodule Def5Operation do
+      use Exop.Operation
+
+      parameter :a
+      parameter :b, default: 2
+
+      def process(params) do
+        params |> defined_params
+      end
+    end
+
+    assert Def5Operation.run(a: 1, c: 3) == {:ok, %{a: 1, b: 2}}
+  end
 end

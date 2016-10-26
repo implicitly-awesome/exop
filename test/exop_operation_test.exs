@@ -126,4 +126,19 @@ defmodule ExopOperationTest do
 
     assert Def5Operation.run(a: 1, c: 3) == {:ok, %{a: 1, b: 2}}
   end
+
+  test "run/1: returns an error if received given params Keyword has duplicated keys" do
+    defmodule Def6Operation do
+      use Exop.Operation
+
+      parameter :a
+      parameter :b
+
+      def process(_params), do: :ok
+    end
+
+    assert Def6Operation.run(a: 1, b: 3) == {:ok, :ok}
+    assert Def6Operation.run(%{a: 1, b: 3}) == {:ok, :ok}
+    assert Def6Operation.run(a: 1, a: 3) == {:error, {:validation, %{params: "There are duplicates in received params list"}}}
+  end
 end

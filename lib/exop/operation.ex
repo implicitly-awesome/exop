@@ -43,7 +43,16 @@ defmodule Exop.Operation do
       Runs an operation's process/1 function after a contract's validation
       """
       @spec run(Keyword.t | Map.t | nil) :: Validation.validation_error | {:ok, any}
-      def run(received_params \\ []) do
+      def run(received_params \\ [])
+      def run(received_params) when is_list(received_params) do
+        if Enum.uniq(Keyword.keys(received_params)) == Keyword.keys(received_params) do
+          params = resolve_defaults(@contract, received_params, received_params)
+          output(Validation.valid?(@contract, params), params)
+        else
+          {:error, {:validation, %{params: "There are duplicates in received params list"}}}
+        end
+      end
+      def run(received_params) when is_map(received_params) do
         params = resolve_defaults(@contract, received_params, received_params)
         output(Validation.valid?(@contract, params), params)
       end

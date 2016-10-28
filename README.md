@@ -185,7 +185,6 @@ parameter :some_param, struct: %SomeStruct{}
 Checks whether an item is valid over custom validation function.
 
 ```elixir
-# parameter :some_param, func: fn (param) -> !is_nil(param) end
 parameter :some_param, func: &__MODULE__.your_validation/1
 
 def your_validation(param), do: !is_nil(param)

@@ -48,179 +48,6 @@ iex> IntegersDivision.run(a: 50, b: 5)
 Return type will be either `{:ok, any()}` (where the second item in the tuple is `process/1` function's result) or
 `{:error, {:validation, Map.t}}` (where the `Map.t` is validation errors map).
 
-### Parameter options
-
-A parameter options could have various checks. Here the list of checks available yet:
-
-* `type`
-* `required`
-* `default`
-* `numericality`
-* `in`
-* `not_in`
-* `format`
-* `length`
-* `inner`
-
-#### `type`
-
-Checks whether a parameter's value is of declared type.
-
-```elixir
-parameter :some_param, type: :map
-```
-
-Exop handle almost all Elixir types:
-
-* :boolean
-* :integer
-* :float
-* :string
-* :tuple
-* :map
-* :struct
-* :list
-* :atom
-* :function
-
-_Unknown type always passes this check._
-
-#### `required`
-
-Checks the presence of a parameter in passed to `run/1` params collection.
-
-```elixir
-parameter :some_param, required: true
-```
-
-#### `default`
-
-Checks the presence of a parameter in passed to `run/1` params collection,
-and if the parameter is missed - assign default value to it.
-
-```elixir
-parameter :some_param, default: "default value"
-```
-
-#### `numericality`
-
-Checks whether a parameter's value is a number and other numeric constraints.
-All possible constraints are listed in the example below.
-
-```elixir
-parameter :some_param, numericality: %{equal_to: 10,
-                                       greater_than: 0,
-                                       greater_than_or_equal_to: 10,
-                                       less_than: 20,
-                                       less_than_or_equal_to: 10}
-```
-
-#### `in`
-
-Checks whether a parameter's value is within a given list.
-
-```elixir
-parameter :some_param, in: ~w(a b c)
-```
-
-#### `not_in`
-
-Checks whether a parameter's value is not within a given list.
-
-```elixir
-parameter :some_param, not_in: ~w(a b c)
-```
-
-#### `format`
-
-Checks wether parameter's value matches given regex.
-
-```elixir
-parameter :some_param, format: ~r/foo/
-```
-
-#### `length`
-
-Checks the length of a parameter's value. The value should be one of handled types:
-
-* list (items count)
-* string (chars count)
-* atom (treated as string)
-* map (key-value pairs count)
-* tuple (items count)
-
-`length` check is complex as `numericality` (should define map of inner checks).
-All possible checks are listed in the example below.
-
-```elixir
-parameter :some_param, length: %{min: 5, max: 10, is: 7, in: 5..8}
-```
-
-#### `inner`
-
-Checks the inner of either Map or Keyword parameter. It applies checks described in `inner` map to
-related inner items.
-
-```elixir
-# some_param = %{a: 3, b: "inner_b_attr"}
-
-parameter :some_param, type: :map, inner: %{
-  a: [type: :integer, required: true],
-  b: [type: :string, length: %{min: 1, max: 6}]
-}
-```
-
-And, of course, all checks on a parent parameter (`:some_param` in the example) are still applied.
-
-#### `struct`
-
-Checks whether the given parameter is expected structure.
-
-```elixir
-parameter :some_param, struct: %SomeStruct{}
-```
-
-#### `func`
-
-Checks whether an item is valid over custom validation function.
-
-```elixir
-parameter :some_param, func: &__MODULE__.your_validation/1
-
-def your_validation(param), do: !is_nil(param)
-```
-
-_it's possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
-
-## Validation result
-
-If received parameters passed a contract validation, a code defined in `process/1` will be invoked.
-Or you will receive `@type validation_error :: {:error, :validation_failed, Map.t}` as a result otherwise.
-`Map.t` as errors reasons might look like this:
-
-```elixir
-%{param1: ["has wrong type"], param2: ["is required", "must be equal to 3"]}
-```
-
-## Operation invocation
-
-As said earlier, operations in most cases called by `run/1` function. This function
-receives parameters collection. It's not required to pass to `run/1` function parameters
-only described in the operation's contract, but only described parameters will be validated.
-
-`run/1` function validate received parameters over the contract and if all parameters passed
-the validation, the `run/1` function calls the code defined in `process/1` function.
-
-```elixir
-iex> SomeOperation.run(param1: 1, param2: "2")
-_some_result_
-```
-
-If at least one of the given parameters didn't pass the validation `process/1` function's code
-will not be invoked and corresponding warning in the application's log will appear.
-
-You always can bypass the validation simply by calling `process/1` function itself, if needed.
-
 ### Defined params
 
 If for some reason you have to deal only with parameters that were defined in the contract,
@@ -256,6 +83,178 @@ end
 SomeOperation.run(a: 1) # {:error, {:interrupt, %{fail: "oops"}}}
 ```
 
+## Operation invocation
+
+As said earlier, operations in most cases called by `run/1` function. This function
+receives parameters collection. It's not required to pass to `run/1` function parameters
+only described in the operation's contract, but only described parameters will be validated.
+
+`run/1` function validate received parameters over the contract and if all parameters passed
+the validation, the `run/1` function calls the code defined in `process/1` function.
+
+```elixir
+iex> SomeOperation.run(param1: 1, param2: "2")
+_some_result_
+```
+
+If at least one of the given parameters didn't pass the validation `process/1` function's code
+will not be invoked and corresponding warning in the application's log will appear.
+
+You always can bypass the validation simply by calling `process/1` function itself, if needed.
+
+## Parameter options
+
+A parameter options could have various checks. Here the list of checks available yet:
+
+* `type`
+* `required`
+* `default`
+* `numericality`
+* `in`
+* `not_in`
+* `format`
+* `length`
+* `inner`
+
+### `type`
+
+Checks whether a parameter's value is of declared type.
+
+```elixir
+parameter :some_param, type: :map
+```
+
+Exop handle almost all Elixir types:
+
+* :boolean
+* :integer
+* :float
+* :string
+* :tuple
+* :map
+* :struct
+* :list
+* :atom
+* :function
+
+_Unknown type always passes this check._
+
+### `required`
+
+Checks the presence of a parameter in passed to `run/1` params collection.
+
+```elixir
+parameter :some_param, required: true
+```
+
+### `default`
+
+Checks the presence of a parameter in passed to `run/1` params collection,
+and if the parameter is missed - assign default value to it.
+
+```elixir
+parameter :some_param, default: "default value"
+```
+
+### `numericality`
+
+Checks whether a parameter's value is a number and other numeric constraints.
+All possible constraints are listed in the example below.
+
+```elixir
+parameter :some_param, numericality: %{equal_to: 10,
+                                       greater_than: 0,
+                                       greater_than_or_equal_to: 10,
+                                       less_than: 20,
+                                       less_than_or_equal_to: 10}
+```
+
+### `in`
+
+Checks whether a parameter's value is within a given list.
+
+```elixir
+parameter :some_param, in: ~w(a b c)
+```
+
+### `not_in`
+
+Checks whether a parameter's value is not within a given list.
+
+```elixir
+parameter :some_param, not_in: ~w(a b c)
+```
+
+### `format`
+
+Checks wether parameter's value matches given regex.
+
+```elixir
+parameter :some_param, format: ~r/foo/
+```
+
+### `length`
+
+Checks the length of a parameter's value. The value should be one of handled types:
+
+* list (items count)
+* string (chars count)
+* atom (treated as string)
+* map (key-value pairs count)
+* tuple (items count)
+
+`length` check is complex as `numericality` (should define map of inner checks).
+All possible checks are listed in the example below.
+
+```elixir
+parameter :some_param, length: %{min: 5, max: 10, is: 7, in: 5..8}
+```
+
+### `inner`
+
+Checks the inner of either Map or Keyword parameter. It applies checks described in `inner` map to
+related inner items.
+
+```elixir
+# some_param = %{a: 3, b: "inner_b_attr"}
+
+parameter :some_param, type: :map, inner: %{
+  a: [type: :integer, required: true],
+  b: [type: :string, length: %{min: 1, max: 6}]
+}
+```
+
+And, of course, all checks on a parent parameter (`:some_param` in the example) are still applied.
+
+### `struct`
+
+Checks whether the given parameter is expected structure.
+
+```elixir
+parameter :some_param, struct: %SomeStruct{}
+```
+
+### `func`
+
+Checks whether an item is valid over custom validation function.
+
+```elixir
+parameter :some_param, func: &__MODULE__.your_validation/1
+
+def your_validation(param), do: !is_nil(param)
+```
+
+_it's possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
+
+## Validation result
+
+If received parameters passed a contract validation, a code defined in `process/1` will be invoked.
+Or you will receive `@type validation_error :: {:error, :validation_failed, Map.t}` as a result otherwise.
+`Map.t` as errors reasons might look like this:
+
+```elixir
+%{param1: ["has wrong type"], param2: ["is required", "must be equal to 3"]}
+```
 
 ## LICENSE
 

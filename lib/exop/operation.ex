@@ -34,6 +34,8 @@ defmodule Exop.Operation do
     quote do
       alias Exop.Validation
 
+      @exop_invalid_error :exop_invalid_error
+
       @spec contract :: list(Map.t)
       def contract do
         @contract
@@ -80,8 +82,14 @@ defmodule Exop.Operation do
       end
       defp put_into_collection(_value, collection, _item_name), do: collection
 
-      @spec output(Map.t | :ok, Keyword.t | Map.t) :: Validation.validation_error | {:ok, any}
-      defp output(validation_result = :ok, params), do: {:ok, process(params)}
+      @spec output(Map.t | :ok, Keyword.t | Map.t) :: {:ok, any} | {:error, {:interrupt, any}} | Validation.validation_error
+      defp output(validation_result = :ok, params) do
+        try do
+          {:ok, process(params)}
+        catch
+          {@exop_invalid_error, reason} -> {:error, {:interrupt, reason}}
+        end
+      end
       defp output(validation_result, _params), do: validation_result
 
       @spec defined_params(Keyword.t | Map.t) :: Map.t
@@ -93,10 +101,15 @@ defmodule Exop.Operation do
         keys_to_filter = Map.keys(received_params) -- Enum.map(@contract, &(&1[:name]))
         Map.drop(received_params, keys_to_filter)
       end
+
+      @spec interrupt(any) :: no_return
+      def interrupt(reason \\ nil) do
+        throw({@exop_invalid_error, reason})
+      end
     end
   end
 
-  @spec parameter(atom, Keyword.t) :: none
+  @spec parameter(atom, Keyword.t) :: no_return
   defmacro parameter(name, opts \\ []) when is_atom(name) do
     quote bind_quoted: [name: name, opts: opts] do
       @contract %{name: name, opts: opts}

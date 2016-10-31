@@ -221,6 +221,8 @@ will not be invoked and corresponding warning in the application's log will appe
 
 You always can bypass the validation simply by calling `process/1` function itself, if needed.
 
+### Defined params
+
 If for some reason you have to deal only with parameters that were defined in the contract,
 you can filter out odd parameters from received Keyword/Map with `defined_params/1`
 
@@ -236,6 +238,24 @@ end
 
 SomeOperation.run(a: 1, c: 3) # {:ok, %{a: 1, b: 2}}
 ```
+
+### Interrupt
+
+In some cases you might want to make an 'early return' from `process/1` function.
+For this purpose you can call `interrupt/1` function within `process/1` and pass an interruption reason to it.
+An operation will be interrupted and return `{:error, {:interrupt, your_reason}}`
+
+```elixir
+# ...
+def process(_params) do
+  interrupt(%{fail: "oops"})
+  :ok # will not return it
+end
+# ...
+
+SomeOperation.run(a: 1) # {:error, {:interrupt, %{fail: "oops"}}}
+```
+
 
 ## LICENSE
 

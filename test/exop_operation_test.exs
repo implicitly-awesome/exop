@@ -141,4 +141,31 @@ defmodule ExopOperationTest do
     assert Def6Operation.run(%{a: 1, b: 3}) == {:ok, :ok}
     assert Def6Operation.run(a: 1, a: 3) == {:error, {:validation, %{params: "There are duplicates in received params list"}}}
   end
+
+  test "interrupt/1: interupts process and returns the interuption error" do
+    defmodule Def7Operation do
+      use Exop.Operation
+
+      def process(_params) do
+        interrupt(%{my_error: "oops"})
+        :ok
+      end
+    end
+
+    assert Def7Operation.run == {:error, {:interrupt, %{my_error: "oops"}}}
+  end
+
+  test "interrupt/1: pass other exceptions" do
+    defmodule Def8Operation do
+      use Exop.Operation
+
+      def process(_params) do
+        raise "runtime error"
+        interrupt(%{my_error: "oops"})
+        :ok
+      end
+    end
+
+    assert_raise(RuntimeError, fn -> Def8Operation.run end)
+  end
 end

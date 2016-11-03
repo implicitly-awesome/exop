@@ -18,7 +18,9 @@ defmodule Exop.Operation do
 
   alias Exop.Validation
 
-  @callback process(Keyword.t | Map.t) :: Validation.validation_error | {:ok, any}
+  @type interrupt_error :: {:error, {:interrupt, any}}
+
+  @callback process(Keyword.t | Map.t) :: {:ok, any} | Validation.validation_error | interrupt_error
 
   defmacro __using__(_opts) do
     quote do
@@ -34,6 +36,8 @@ defmodule Exop.Operation do
     quote do
       alias Exop.Validation
 
+      @type interrupt_error :: {:error, {:interrupt, any}}
+
       @exop_invalid_error :exop_invalid_error
 
       @spec contract :: list(Map.t)
@@ -44,7 +48,7 @@ defmodule Exop.Operation do
       @doc """
       Runs an operation's process/1 function after a contract's validation
       """
-      @spec run(Keyword.t | Map.t | nil) :: Validation.validation_error | {:ok, any}
+      @spec run(Keyword.t | Map.t | nil) :: {:ok, any} | Validation.validation_error | interrupt_error
       def run(received_params \\ [])
       def run(received_params) when is_list(received_params) do
         if Enum.uniq(Keyword.keys(received_params)) == Keyword.keys(received_params) do
@@ -82,7 +86,7 @@ defmodule Exop.Operation do
       end
       defp put_into_collection(_value, collection, _item_name), do: collection
 
-      @spec output(Map.t | :ok, Keyword.t | Map.t) :: {:ok, any} | {:error, {:interrupt, any}} | Validation.validation_error
+      @spec output(Map.t | :ok, Keyword.t | Map.t) :: {:ok, any} | Validation.validation_error | {:error, {:interrupt, any}}
       defp output(validation_result = :ok, params) do
         try do
           {:ok, process(params)}

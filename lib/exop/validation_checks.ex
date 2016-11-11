@@ -225,7 +225,7 @@ defmodule Exop.ValidationChecks do
     iex> Exop.ValidationChecks.check_length(%{a: ~w(1 2 3)}, :a, %{is: 3, max: 4})
     [true, true]
   """
-  @spec check_length(Keyword.t | Map.t, atom, Map.t) :: true | check_error
+  @spec check_length(Keyword.t | Map.t, atom, Map.t) :: true | [check_error]
   def check_length(check_items, item_name, checks) do
     check_item = get_check_item(check_items, item_name)
 

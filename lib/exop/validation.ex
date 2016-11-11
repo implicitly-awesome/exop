@@ -11,7 +11,7 @@ defmodule Exop.Validation do
 
   @type validation_error :: {:error, {:validation, Map.t}}
 
-  @spec function_present?(Module.t, String.t) :: boolean
+  @spec function_present?(Elixir.Exop.Validation | Elixir.Exop.ValidationChecks, atom()) :: boolean()
   defp function_present?(module, function_name) do
     :functions
     |> module.__info__

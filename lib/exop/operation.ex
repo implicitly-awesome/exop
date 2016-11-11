@@ -20,7 +20,7 @@ defmodule Exop.Operation do
 
   @type interrupt_error :: {:error, {:interrupt, any}}
 
-  @callback process(Keyword.t | Map.t) :: {:ok, any} | Validation.validation_error | interrupt_error
+  @callback process(Keyword.t | map()) :: {:ok, any} | Validation.validation_error | interrupt_error
 
   defmacro __using__(_opts) do
     quote do
@@ -40,7 +40,7 @@ defmodule Exop.Operation do
 
       @exop_invalid_error :exop_invalid_error
 
-      @spec contract :: list(Map.t)
+      @spec contract :: list(map())
       def contract do
         @contract
       end
@@ -48,7 +48,7 @@ defmodule Exop.Operation do
       @doc """
       Runs an operation's process/1 function after a contract's validation
       """
-      @spec run(Keyword.t | Map.t | nil) :: {:ok, any} | Validation.validation_error | interrupt_error
+      @spec run(Keyword.t | map() | nil) :: {:ok, any} | Validation.validation_error | interrupt_error
       def run(received_params \\ [])
       def run(received_params) when is_list(received_params) do
         if Enum.uniq(Keyword.keys(received_params)) == Keyword.keys(received_params) do
@@ -63,7 +63,7 @@ defmodule Exop.Operation do
         output(Validation.valid?(@contract, params), params)
       end
 
-      @spec resolve_defaults(list(%{name: atom, opts: Keyword.t}), Keyword.t | Map.t, Keyword.t | Map.t) :: Keyword.t | Map.t
+      @spec resolve_defaults(list(%{name: atom, opts: Keyword.t}), Keyword.t | map(), Keyword.t | map()) :: Keyword.t | map()
       defp resolve_defaults([], _received_params, resolved_params), do: resolved_params
       defp resolve_defaults([%{name: contract_item_name, opts: contract_item_opts} | contract_tail], received_params, resolved_params) do
         resolved_params =
@@ -77,7 +77,7 @@ defmodule Exop.Operation do
         resolve_defaults(contract_tail, received_params, resolved_params)
       end
 
-      @spec put_into_collection(any, Keyword.t | Map.t, atom) :: Keyword.t | Map.t
+      @spec put_into_collection(any, Keyword.t | map(), atom) :: Keyword.t | map()
       defp put_into_collection(value, collection, item_name) when is_map(collection) do
         Map.put(collection, item_name, value)
       end
@@ -86,7 +86,7 @@ defmodule Exop.Operation do
       end
       defp put_into_collection(_value, collection, _item_name), do: collection
 
-      @spec output(Map.t | :ok, Keyword.t | Map.t) :: {:ok, any} | Validation.validation_error | {:error, {:interrupt, any}}
+      @spec output(map() | :ok, Keyword.t | map()) :: {:ok, any} | Validation.validation_error | {:error, {:interrupt, any}}
       defp output(validation_result = :ok, params) do
         try do
           {:ok, process(params)}
@@ -96,7 +96,7 @@ defmodule Exop.Operation do
       end
       defp output(validation_result, _params), do: validation_result
 
-      @spec defined_params(Keyword.t | Map.t) :: Map.t
+      @spec defined_params(Keyword.t | map()) :: map()
       def defined_params(received_params) when is_list(received_params) do
         keys_to_filter = Keyword.keys(received_params) -- Enum.map(@contract, &(&1[:name]))
         Keyword.drop(received_params, keys_to_filter) |> Enum.into(%{})

@@ -9,7 +9,7 @@ defmodule Exop.Validation do
 
   alias Exop.ValidationChecks
 
-  @type validation_error :: {:error, {:validation, Map.t}}
+  @type validation_error :: {:error, {:validation, map()}}
 
   @spec function_present?(Elixir.Exop.Validation | Elixir.Exop.ValidationChecks, atom()) :: boolean()
   defp function_present?(module, function_name) do
@@ -26,7 +26,7 @@ defmodule Exop.Validation do
     iex> Exop.Validation.valid?([%{name: :param, opts: [required: true]}], [param: "hello"])
     :ok
   """
-  @spec valid?(list(Map.t), Keyword.t | Map.t) :: :ok | validation_error
+  @spec valid?(list(map()), Keyword.t | map()) :: :ok | validation_error
   def valid?(contract, received_params) do
     validation_results = validate(contract, received_params, [])
 
@@ -39,7 +39,7 @@ defmodule Exop.Validation do
     end
   end
 
-  @spec consolidate_errors(list) :: Map.t
+  @spec consolidate_errors(list) :: map()
   defp consolidate_errors(validation_results) do
     error_results = validation_results |> Enum.reject(&(&1 == true))
     Enum.reduce(error_results, %{}, fn (error_result, map) ->
@@ -50,12 +50,12 @@ defmodule Exop.Validation do
     end)
   end
 
-  @spec log_errors(Map.t) :: :ok | {:error, any}
+  @spec log_errors(map()) :: :ok | {:error, any}
   defp log_errors(errors) do
     unless Mix.env == :test, do: Logger.warn("#{__MODULE__} errors: \n#{errors_message(errors)}")
   end
 
-  @spec errors_message(Map.t) :: String.t
+  @spec errors_message(map()) :: String.t
   defp errors_message(errors) do
     errors
     |> Enum.map(fn {item_name, error_messages} ->
@@ -72,7 +72,7 @@ defmodule Exop.Validation do
     iex> Exop.Validation.validate([%{name: :param, opts: [required: true, type: :string]}], [param: "hello"], [])
     [true, true]
   """
-  @spec validate([Map.t], Map.t | Keyword.t, list) :: list
+  @spec validate([map()], map() | Keyword.t, list) :: list
   def validate([], _received_params, result), do: result
   def validate([contract_item | contract_tail], received_params, result) do
     checks_result = for {check_name, check_params} <- Map.get(contract_item, :opts), into: [] do
@@ -102,7 +102,7 @@ defmodule Exop.Validation do
     iex> Exop.Validation.check_inner(%{param: 1}, :param, [type: :integer, required: true])
     true
   """
-  @spec check_inner(Map.t | Keyword.t, atom, Map.t | Keyword.t) :: list
+  @spec check_inner(map() | Keyword.t, atom, map() | Keyword.t) :: list
   def check_inner(check_items, item_name, cheks) when is_map(cheks) do
      checked_param = ValidationChecks.get_check_item(check_items, item_name)
 

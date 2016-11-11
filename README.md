@@ -46,7 +46,7 @@ iex> IntegersDivision.run(a: 50, b: 5)
 ```
 
 Return type will be either `{:ok, any()}` (where the second item in the tuple is `process/1` function's result) or
-`{:error, {:validation, Map.t}}` (where the `Map.t` is validation errors map).
+`{:error, {:validation, map()}}` (where the `map()` is validation errors map).
 
 ### Defined params
 
@@ -249,8 +249,8 @@ _it's possible to combine :func check with others (though not preferable), just 
 ## Validation result
 
 If received parameters passed a contract validation, a code defined in `process/1` will be invoked.
-Or you will receive `@type validation_error :: {:error, :validation_failed, Map.t}` as a result otherwise.
-`Map.t` as errors reasons might look like this:
+Or you will receive `@type validation_error :: {:error, :validation_failed, map()}` as a result otherwise.
+`map()` as errors reasons might look like this:
 
 ```elixir
 %{param1: ["has wrong type"], param2: ["is required", "must be equal to 3"]}

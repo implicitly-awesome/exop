@@ -234,15 +234,6 @@ defmodule ExopOperationTest do
     assert Def12Operation.run == {:error, {:auth, :test}}
   end
 
-  test "return an error if you try to call authorize/2 with undefined policy" do
-    defmodule Def13Operation do
-      use Exop.Operation
-
-      def process(_params), do: authorize(%TestUser{})
-    end
-    assert Def13Operation.run == {:error, {:auth, :undefined_policy}}
-  end
-
   test "returns errors with malformed policy definition" do
     defmodule Def14Operation do
       use Exop.Operation

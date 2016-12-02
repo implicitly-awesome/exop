@@ -10,7 +10,7 @@ defmodule ExopPolicyTest do
 
     def can_smth?(_user, _opts), do: "just string"
     
-    def can_error?(_user, _opts), do: 4/0
+    def can_error?(_user, _opts), do: raise(ArithmeticError, "oops")
 
     def just_opts(_user, [a: 1, b: 2] = opts), do: opts
     def just_opts(_user, _opts), do: raise "unknown opts"

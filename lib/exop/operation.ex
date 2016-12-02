@@ -32,6 +32,7 @@ defmodule Exop.Operation do
 
   defmacro __using__(_opts) do
     quote do
+      @behaviour unquote(__MODULE__)
       import unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :contract, accumulate: true)

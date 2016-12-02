@@ -1,8 +1,11 @@
 defmodule Exop.Policy do
   @type t :: __MODULE__
 
+  @callback authorize(atom, any, Keyword.t) :: true | false
+
   defmacro __using__(_opts) do
     quote do
+      @behaviour unquote(__MODULE__)
       import unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
     end

@@ -1,4 +1,6 @@
-# Exop [![hex.pm version](https://img.shields.io/hexpm/v/exop.svg?style=flat)](https://hex.pm/packages/exop) [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/exop/) [![Build Status](https://img.shields.io/travis/madeinussr/exop.svg?style=flat)](https://travis-ci.org/madeinussr/exop)
+[![hex.pm version](https://img.shields.io/hexpm/v/exop.svg?style=flat)](https://hex.pm/packages/exop) [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/exop/) [![Build Status](https://img.shields.io/travis/madeinussr/exop.svg?style=flat)](https://travis-ci.org/madeinussr/exop)
+
+# Exop
 
 Little library that provides a few macros which allow you to encapsulate business logic and validate incoming params over predefined contract.
 
@@ -8,7 +10,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.3.4"}]
+  [{:exop, "~> 0.3.5"}]
 end
 ```
 
@@ -255,6 +257,65 @@ Or you will receive `@type validation_error :: {:error, :validation_failed, map(
 ```elixir
 %{param1: ["has wrong type"], param2: ["is required", "must be equal to 3"]}
 ```
+
+## Policy check
+
+It is possible to define a policy that will be used for authorizing the possibility of a user
+to invoke an operation. So far, there is simple policy implementation and usage:
+
+* first of all, define a policy with `Exop.Policy` macro
+
+```elixir
+  defmodule MyPolicy do
+    use Exop.Policy
+
+    def read(_user, _opts), do: true
+
+    def write(_user, _opts), do: false
+  end
+```
+
+In this policy two actions (checks) defined (read & write). Every action expects a user (an action subject/caller)
+and options (Keyword). It's up to you how to handle this arguments and turn it into a check.
+
+_Bear in mind: only `true` return-value treated as true, everything else returned form an action treated as false_
+
+* next step - link an operation and a policy
+
+```elixir
+  defmodule ReadOperation do
+    use Exop.Operation
+
+    policy MyPolicy, :read
+
+    parameter :user, required: true, struct: %User{}
+
+    def process(_params) do 
+      # make some reading...
+    end
+  end
+``` 
+
+* finally - call `authorize/2` within `process/1`
+
+```elixir
+  defmodule ReadOperation do
+    use Exop.Operation
+
+    policy MyPolicy, :read
+
+    parameter :user, required: true, struct: %User{}
+
+    def process(params) do
+      authorize(params[:user])
+
+      # make some reading...
+    end
+  end
+``` 
+
+_Please, note: if authorization fails, any code after (below) auth check
+will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)_
 
 ## LICENSE
 

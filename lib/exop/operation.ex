@@ -19,14 +19,24 @@ defmodule Exop.Operation do
   alias Exop.Validation
 
   @type interrupt_error :: {:error, {:interrupt, any}}
+  @type auth_result :: :ok |
+                       {:error, {:auth, :undefined_user}} |
+                       {:error, {:auth, :undefined_policy}} |
+                       {:error, {:auth, :undefined_action}} |
+                       {:error, {:auth, atom}}
 
-  @callback process(Keyword.t | map()) :: {:ok, any} | Validation.validation_error | interrupt_error
+
+  @callback process(Keyword.t | map()) :: {:ok, any} |
+                                          Validation.validation_error |
+                                          interrupt_error
 
   defmacro __using__(_opts) do
     quote do
       import unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :contract, accumulate: true)
+      Module.register_attribute(__MODULE__, :policy_module, [])
+      Module.register_attribute(__MODULE__, :policy_action_name, [])
 
       @before_compile unquote(__MODULE__)
     end
@@ -37,8 +47,15 @@ defmodule Exop.Operation do
       alias Exop.Validation
 
       @type interrupt_error :: {:error, {:interrupt, any}}
+      @type auth_result :: :ok |
+                           {:error, {:auth, :undefined_user}}   |
+                           {:error, {:auth, :undefined_policy}} |
+                           {:error, {:auth, :unknown_policy}}   |
+                           {:error, {:auth, :unknown_action}}   |
+                           {:error, {:auth, atom}}
 
       @exop_invalid_error :exop_invalid_error
+      @exop_auth_error :exop_auth_error
 
       @spec contract :: list(map())
       def contract do
@@ -92,6 +109,7 @@ defmodule Exop.Operation do
           {:ok, process(params)}
         catch
           {@exop_invalid_error, reason} -> {:error, {:interrupt, reason}}
+          {@exop_auth_error, reason} -> {:error, {:auth, reason}}
         end
       end
       defp output(validation_result, _params), do: validation_result
@@ -107,8 +125,21 @@ defmodule Exop.Operation do
       end
 
       @spec interrupt(any) :: no_return
-      def interrupt(reason \\ nil) do
-        throw({@exop_invalid_error, reason})
+      def interrupt(reason \\ nil), do: throw({@exop_invalid_error, reason})
+
+      @spec do_authorize(Exop.Policy.t, atom, any, Keyword.t) :: auth_result
+      defp do_authorize(_policy, _action, nil, _opts), do: throw({@exop_auth_error, :undefined_user})
+      defp do_authorize(nil, _action, _user, _opts), do: throw({@exop_auth_error, :undefined_policy})
+      defp do_authorize(_policy, nil, _user, _opts), do: throw({@exop_auth_error, :undefined_action})
+      defp do_authorize(policy, action, user, opts) do
+        try do
+          case apply(policy, :authorize, [action, user, opts]) do
+            false -> throw({@exop_auth_error, action})
+            true -> :ok
+          end
+        rescue
+          UndefinedFunctionError -> throw({@exop_auth_error, :unknown_policy})
+        end
       end
     end
   end
@@ -117,6 +148,28 @@ defmodule Exop.Operation do
   defmacro parameter(name, opts \\ []) when is_atom(name) do
     quote bind_quoted: [name: name, opts: opts] do
       @contract %{name: name, opts: opts}
+    end
+  end
+
+  @spec policy(Exop.Policy.t, atom) :: no_return
+  defmacro policy(policy_module, action_name) when is_atom(action_name) do
+    quote bind_quoted: [policy_module: policy_module, action_name: action_name] do
+      @policy_module policy_module
+      @policy_action_name action_name
+    end
+  end
+
+  @spec authorize(any, Keyword.t | nil) :: auth_result
+  defmacro authorize(user, opts \\ []) do
+    quote bind_quoted: [user: user, opts: opts] do
+      do_authorize(@policy_module, @policy_action_name, user, opts)
+    end
+  end
+
+  @spec current_policy :: {Exop.Policy.t, atom}
+  defmacro current_policy do
+    quote do
+      {@policy_module, @policy_action_name}
     end
   end
 end

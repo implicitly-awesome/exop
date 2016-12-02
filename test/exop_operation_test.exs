@@ -168,4 +168,109 @@ defmodule ExopOperationTest do
 
     assert_raise(RuntimeError, fn -> Def8Operation.run end)
   end
+
+  defmodule TruePolicy do
+    use Exop.Policy
+
+    def test(_user, _opts), do: true
+  end
+
+  defmodule FalsePolicy do
+    use Exop.Policy
+
+    def test(_user, _opts), do: false
+  end
+
+  defmodule TestUser do
+    defstruct [:name, :email] 
+  end
+
+  test "stores policy module and action" do
+    defmodule Def9Operation do
+      use Exop.Operation
+
+      policy TruePolicy, :test
+
+      def process(_params), do: current_policy
+    end
+
+    assert Def9Operation.run == {:ok, {TruePolicy, :test}}
+  end
+
+  test "authorizes with provided policy" do
+    defmodule Def10Operation do
+      use Exop.Operation
+
+      policy TruePolicy, :test
+
+      def process(_params), do: authorize(%TestUser{})
+    end
+
+    assert Def10Operation.run == {:ok, :ok}
+
+    defmodule Def11Operation do
+      use Exop.Operation
+
+      policy FalsePolicy, :test
+
+      def process(_params), do: authorize(%TestUser{})
+    end
+
+    assert Def11Operation.run == {:error, {:auth, :test}}
+  end
+
+  test "operation invokeation stops if auth failed" do
+    defmodule Def12Operation do
+      use Exop.Operation
+
+      policy FalsePolicy, :test
+
+      def process(_params) do
+        authorize %TestUser{}
+        :you_will_never_get_here
+      end
+    end
+
+    assert Def12Operation.run == {:error, {:auth, :test}}
+  end
+
+  test "return an error if you try to call authorize/2 with undefined policy" do
+    defmodule Def13Operation do
+      use Exop.Operation
+
+      def process(_params), do: authorize(%TestUser{})
+    end
+    assert Def13Operation.run == {:error, {:auth, :undefined_policy}}
+  end
+
+  test "returns errors with malformed policy definition" do
+    defmodule Def14Operation do
+      use Exop.Operation
+      policy UnknownPolicy, :test
+
+      def process(_params), do: authorize(%TestUser{})
+    end
+
+    defmodule Def15Operation do
+      use Exop.Operation
+      policy TruePolicy, :unknown_action
+
+      def process(_params), do: authorize(%TestUser{})
+    end
+
+    assert Def14Operation.run == {:error, {:auth, :unknown_policy}}
+    assert Def15Operation.run == {:error, {:auth, :unknown_policy}}
+  end
+
+  test "the last policy definition overrides previous definitions" do
+    defmodule Def16Operation do
+      use Exop.Operation
+      policy TruePolicy, :test
+      policy FalsePolicy, :test
+
+      def process(_params), do: current_policy      
+    end
+
+    assert Def16Operation.run == {:ok, {FalsePolicy, :test}}
+  end
 end

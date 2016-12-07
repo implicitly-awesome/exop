@@ -70,20 +70,21 @@ defmodule Exop.Operation do
       def run(received_params \\ [])
       def run(received_params) when is_list(received_params) do
         if Enum.uniq(Keyword.keys(received_params)) == Keyword.keys(received_params) do
-          params = resolve_defaults(@contract, received_params, received_params)
-          output(Validation.valid?(@contract, params), params)
+          params = received_params |> resolve_defaults(@contract, received_params)
+          params |> resolve_coercions(@contract, params) |> output
         else
           {:error, {:validation, %{params: "There are duplicates in received params list"}}}
         end
       end
       def run(received_params) when is_map(received_params) do
-        params = resolve_defaults(@contract, received_params, received_params)
-        output(Validation.valid?(@contract, params), params)
+        received_params
+        |> resolve_defaults(@contract, received_params)
+        |> output
       end
 
-      @spec resolve_defaults(list(%{name: atom, opts: Keyword.t}), Keyword.t | map(), Keyword.t | map()) :: Keyword.t | map()
-      defp resolve_defaults([], _received_params, resolved_params), do: resolved_params
-      defp resolve_defaults([%{name: contract_item_name, opts: contract_item_opts} | contract_tail], received_params, resolved_params) do
+      @spec resolve_defaults(Keyword.t | map(), list(%{name: atom, opts: Keyword.t}), Keyword.t | map()) :: Keyword.t | map()
+      defp resolve_defaults(_received_params, [], resolved_params), do: resolved_params
+      defp resolve_defaults(received_params, [%{name: contract_item_name, opts: contract_item_opts} | contract_tail], resolved_params) do
         resolved_params =
           if Keyword.has_key?(contract_item_opts, :default) &&
              Exop.ValidationChecks.get_check_item(received_params, contract_item_name) == nil do
@@ -92,7 +93,22 @@ defmodule Exop.Operation do
             resolved_params
           end
 
-        resolve_defaults(contract_tail, received_params, resolved_params)
+        resolve_defaults(received_params, contract_tail, resolved_params)
+      end
+
+      @spec resolve_coercions(Keyword.t | map(), list(%{name: atom, opts: Keyword.t}), Keyword.t | map()) :: Keyword.t | map()
+      defp resolve_coercions(_received_params, [], coerced_params), do: coerced_params
+      defp resolve_coercions(received_params, [%{name: contract_item_name, opts: contract_item_opts} | contract_tail], coerced_params) do
+        coerced_params =
+          if Keyword.has_key?(contract_item_opts, :coerce_with) do
+            coerce_with = Keyword.get(contract_item_opts, :coerce_with)
+            coerced_value = coerce_with.(Exop.ValidationChecks.get_check_item(coerced_params, contract_item_name)) 
+            put_into_collection(coerced_value, coerced_params, contract_item_name)
+          else
+            coerced_params
+          end
+
+        resolve_coercions(received_params, contract_tail, coerced_params)
       end
 
       @spec put_into_collection(any, Keyword.t | map(), atom) :: Keyword.t | map()
@@ -103,9 +119,12 @@ defmodule Exop.Operation do
         Keyword.put(collection, item_name, value)
       end
       defp put_into_collection(_value, collection, _item_name), do: collection
-
-      @spec output(map() | :ok, Keyword.t | map()) :: {:ok, any} | Validation.validation_error | {:error, {:interrupt, any}}
-      defp output(validation_result = :ok, params) do
+      
+      defp output(params) do
+        output(params, Validation.valid?(@contract, params))
+      end
+      @spec output(Keyword.t | map(), map() | :ok) :: {:ok, any} | Validation.validation_error | {:error, {:interrupt, any}}
+      defp output(params, validation_result = :ok) do
         try do
           {:ok, process(params)}
         catch
@@ -113,7 +132,7 @@ defmodule Exop.Operation do
           {@exop_auth_error, reason} -> {:error, {:auth, reason}}
         end
       end
-      defp output(validation_result, _params), do: validation_result
+      defp output(_params, validation_result), do: validation_result
 
       @spec defined_params(Keyword.t | map()) :: map()
       def defined_params(received_params) when is_list(received_params) do

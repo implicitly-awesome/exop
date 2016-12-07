@@ -219,7 +219,7 @@ defmodule ExopOperationTest do
     assert Def11Operation.run == {:error, {:auth, :test}}
   end
 
-  test "operation invokeation stops if auth failed" do
+  test "operation invokation stops if auth failed" do
     defmodule Def12Operation do
       use Exop.Operation
 
@@ -263,5 +263,61 @@ defmodule ExopOperationTest do
     end
 
     assert Def16Operation.run == {:ok, {FalsePolicy, :test}}
+  end
+
+  test "coerce option changes a parameter value (and after defaults resolving)" do
+    defmodule Def17Operation do
+      use Exop.Operation
+
+      parameter :a, default: 5, coerce_with: &__MODULE__.coerce/1
+      parameter :b
+
+      def process(params), do: {params[:a], params[:b]}
+
+      def coerce(x), do: x * 2
+    end
+    
+    assert Def17Operation.run(b: 0) == {:ok, {10, 0}}
+  end
+
+  test "coerce option changes a parameter value before validation" do
+    defmodule Def18Operation do
+      use Exop.Operation
+
+      parameter :a, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1
+
+      def process(params), do: params[:a]
+
+      def coerce(x), do: x * 2
+    end
+
+    defmodule Def19Operation do
+      use Exop.Operation
+
+      parameter :a, required: true, coerce_with: &__MODULE__.coerce/1
+
+      def process(params), do: params[:a]
+
+      def coerce(_x), do: nil
+    end
+
+    defmodule Def20Operation do
+      use Exop.Operation
+
+      parameter :a, func: &__MODULE__.validate/1, coerce_with: &__MODULE__.coerce/1
+
+      def process(params), do: params[:a]
+
+      def validate(x), do: x > 0
+
+      def coerce(x), do: x * 0
+    end
+    
+    assert Def18Operation.run(a: 2) == {:ok, 4}
+    assert Def18Operation.run(a: 0) == {:error, {:validation, %{a: ["must be greater than 0"]}}}
+
+    assert Def19Operation.run(a: "str") == {:error, {:validation, %{a: ["is required"]}}}
+
+    assert Def20Operation.run(a: 100) == {:error, {:validation, %{a: ["isn't valid"]}}}
   end
 end

@@ -10,7 +10,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.3.5"}]
+  [{:exop, "~> 0.3.6"}]
 end
 ```
 
@@ -117,6 +117,8 @@ A parameter options could have various checks. Here the list of checks available
 * `format`
 * `length`
 * `inner`
+* `struct`
+* `func`
 
 ### `type`
 
@@ -256,6 +258,20 @@ Or you will receive `@type validation_error :: {:error, :validation_failed, map(
 
 ```elixir
 %{param1: ["has wrong type"], param2: ["is required", "must be equal to 3"]}
+```
+
+## Coercion
+
+It is possible to coerce a parameter before the contract validation, all validation checks
+will be invoked on coerced parameter value.
+Since coercion changes a parameter before any validation has been invoked,
+defaults values are resolved (with `:default` option) before the coercion.
+So, the flow looks like this: `Resolve param default value -> Coerce -> Validate coerced`
+
+```elixir
+parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1
+
+def coerce(x), do: x * 2
 ```
 
 ## Policy check

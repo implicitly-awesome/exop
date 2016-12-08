@@ -265,8 +265,8 @@ Or you will receive `@type validation_error :: {:error, :validation_failed, map(
 It is possible to coerce a parameter before the contract validation, all validation checks
 will be invoked on coerced parameter value.
 Since coercion changes a parameter before any validation has been invoked,
-defaults values are resolved (with `:default` option) before the coercion.
-So, the flow looks like this: `Resolve param default value -> Coerce -> Validate coerced`
+default values are resolved (with `:default` option) before the coercion.
+The flow looks like: `Resolve param default value -> Coerce -> Validate coerced`
 
 ```elixir
 parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1

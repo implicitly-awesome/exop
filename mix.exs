@@ -10,14 +10,16 @@ defmodule Exop.Mixfile do
   def project do
     [
       app: :exop,
-      version: "0.3.6",
+      version: "0.3.7",
       elixir: "~> 1.3",
       name: "Exop",
       description: @description,
-      package: package,
-      deps: deps,
+      package: package(),
+      deps: deps(),
       source_url: "https://github.com/madeinussr/exop",
-      docs: [extras: ["README.md"]]
+      docs: [extras: ["README.md"]],
+      build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod
    ]
   end
 

@@ -191,7 +191,7 @@ defmodule ExopOperationTest do
 
       policy TruePolicy, :test
 
-      def process(_params), do: current_policy
+      def process(_params), do: current_policy()
     end
 
     assert Def9Operation.run == {:ok, {TruePolicy, :test}}
@@ -259,7 +259,7 @@ defmodule ExopOperationTest do
       policy TruePolicy, :test
       policy FalsePolicy, :test
 
-      def process(_params), do: current_policy      
+      def process(_params), do: current_policy()
     end
 
     assert Def16Operation.run == {:ok, {FalsePolicy, :test}}

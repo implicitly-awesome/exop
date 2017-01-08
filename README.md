@@ -22,7 +22,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.3.6"}]
+  [{:exop, "~> 0.3.7"}]
 end
 ```
 

@@ -85,9 +85,12 @@ defmodule Exop.Operation do
       @spec run!(Keyword.t | map() | nil) :: any | RuntimeError
       def run!(received_params \\ []) do
         case run(received_params) do
-          {:ok, result} -> result
-          {:error, {:validation, reasons}} -> raise(RuntimeError, Validation.errors_message(reasons))
-          result -> result
+          {:ok, result} ->
+            result
+          {:error, {:validation, reasons}} ->
+            raise(Validation.ValidationError, Validation.errors_message(reasons))
+          result ->
+            result
         end
       end
 

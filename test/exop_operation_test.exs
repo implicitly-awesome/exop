@@ -346,7 +346,7 @@ defmodule ExopOperationTest do
       end
     end
 
-    assert_raise RuntimeError, fn -> Def22Operation.run! end
+    assert_raise Exop.Validation.ValidationError, fn -> Def22Operation.run! end
   end
 
   test "run!/1: doesn't affect unhandled errors" do

@@ -9,6 +9,14 @@ defmodule Exop.Validation do
 
   alias Exop.ValidationChecks
 
+  defmodule ValidationError do
+    @moduledoc """
+      An operation's contract validation failure error.
+    """
+
+    defexception message: "Contract validation failed" 
+  end
+
   @type validation_error :: {:error, {:validation, map()}}
 
   @spec function_present?(Elixir.Exop.Validation | Elixir.Exop.ValidationChecks, atom()) :: boolean()

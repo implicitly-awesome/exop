@@ -22,7 +22,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.3.7"}]
+  [{:exop, "~> 0.3.8"}]
 end
 ```
 
@@ -333,7 +333,14 @@ _some_result_
 If at least one of the given parameters didn't pass the validation `process/1` function's code
 will not be invoked and corresponding warning in the application's log will appear.
 
-You always can bypass the validation simply by calling `process/1` function itself, if needed.
+There is "bang" version of `run/1` exists. Function `run!/1` does the same things that its sibling does,
+the only difference is a result of invocation, it might be:
+
+* if a contract validation passed - the actual result of an operation (result of a code, described in `process/1`)
+* if a contract validation failed - an error `Exop.Validation.ValidationError` raising
+* in case of manual interruption - `{:error, {:interrupt, _reason}}`
+
+_You always can bypass the validation simply by calling `process/1` function itself, if needed._
 
 ## Operation results
 
@@ -355,6 +362,8 @@ An operation can return one of results listed below (depends on passed in params
   * `{:error, {:auth, :undefined_policy}}`
   * `{:error, {:auth, :undefined_action}}`
   * `{:error, {:auth, atom()}}`
+
+_For the "bang" version of `run/1` see results description above._
 
 ## LICENSE
 

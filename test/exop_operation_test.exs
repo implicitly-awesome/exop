@@ -320,4 +320,56 @@ defmodule ExopOperationTest do
 
     assert Def20Operation.run(a: 100) == {:error, {:validation, %{a: ["isn't valid"]}}}
   end
+
+  test "run!/1: return operation's result with valid params" do
+    defmodule Def21Operation do
+      use Exop.Operation
+
+      parameter :param, required: true
+
+      def process(params) do
+        params[:param] <> " World!"
+      end
+    end
+
+    assert Def21Operation.run!(param: "Hello") == "Hello World!"
+  end
+
+  test "run!/1: return an error with invalid params" do
+    defmodule Def22Operation do
+      use Exop.Operation
+
+      parameter :param, required: true
+
+      def process(params) do
+        params[:param] <> " World!"
+      end
+    end
+
+    assert_raise RuntimeError, fn -> Def22Operation.run! end
+  end
+
+  test "run!/1: doesn't affect unhandled errors" do
+    defmodule Def23Operation do
+      use Exop.Operation
+
+      parameter :param, required: true
+
+      def process(_params), do: raise("oops")
+    end
+
+    assert_raise RuntimeError, "oops", fn -> Def23Operation.run!(param: "hi!") end
+  end
+
+  test "run!/1: doesn't affect interruptions" do
+    defmodule Def24Operation do
+      use Exop.Operation
+
+      parameter :param
+
+      def process(_params), do: interrupt()
+    end
+
+    assert Def24Operation.run! == {:error, {:interrupt, nil}}
+  end
 end

@@ -82,6 +82,15 @@ defmodule Exop.Operation do
         |> output
       end
 
+      @spec run!(Keyword.t | map() | nil) :: any | RuntimeError
+      def run!(received_params \\ []) do
+        case run(received_params) do
+          {:ok, result} -> result
+          {:error, {:validation, reasons}} -> raise(RuntimeError, Validation.errors_message(reasons))
+          result -> result
+        end
+      end
+
       @spec resolve_defaults(Keyword.t | map(), list(%{name: atom, opts: Keyword.t}), Keyword.t | map()) :: Keyword.t | map()
       defp resolve_defaults(_received_params, [], resolved_params), do: resolved_params
       defp resolve_defaults(received_params, [%{name: contract_item_name, opts: contract_item_opts} | contract_tail], resolved_params) do

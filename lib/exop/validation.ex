@@ -56,7 +56,7 @@ defmodule Exop.Validation do
   end
 
   @spec errors_message(map()) :: String.t
-  defp errors_message(errors) do
+  def errors_message(errors) do
     errors
     |> Enum.map(fn {item_name, error_messages} ->
       "#{item_name}: #{Enum.join(error_messages, "\n\t")}"

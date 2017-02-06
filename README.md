@@ -1,4 +1,4 @@
-[![hex.pm version](https://img.shields.io/hexpm/v/exop.svg?style=flat)](https://hex.pm/packages/exop) [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/exop/) [![Build Status](https://img.shields.io/travis/madeinussr/exop.svg?style=flat)](https://travis-ci.org/madeinussr/exop)
+[![Hex.pm](https://img.shields.io/hexpm/v/exop.svg)](https://hex.pm/packages/exop) [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/exop/) [![Build Status](https://travis-ci.org/madeinussr/exop.svg?branch=master)](https://travis-ci.org/madeinussr/exop)
 
 # Exop
 

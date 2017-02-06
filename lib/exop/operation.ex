@@ -18,7 +18,7 @@ defmodule Exop.Operation do
 
   alias Exop.Validation
 
-  @type interrupt_error :: {:error, {:interrupt, any}}
+  @type interrupt_result :: {:interrupt, any}
   @type auth_result :: :ok |
                        {:error, {:auth, :undefined_user}} |
                        {:error, {:auth, :undefined_policy}} |
@@ -28,7 +28,7 @@ defmodule Exop.Operation do
 
   @callback process(Keyword.t | map()) :: {:ok, any} |
                                           Validation.validation_error |
-                                          interrupt_error
+                                          interrupt_result
 
   defmacro __using__(_opts) do
     quote do
@@ -47,7 +47,7 @@ defmodule Exop.Operation do
     quote do
       alias Exop.Validation
 
-      @type interrupt_error :: {:error, {:interrupt, any}}
+      @type interrupt_result :: {:interrupt, any}
       @type auth_result :: :ok |
                            {:error, {:auth, :undefined_user}}   |
                            {:error, {:auth, :undefined_policy}} |
@@ -55,7 +55,7 @@ defmodule Exop.Operation do
                            {:error, {:auth, :unknown_action}}   |
                            {:error, {:auth, atom}}
 
-      @exop_invalid_error :exop_invalid_error
+      @exop_interruption :exop_interruption
       @exop_auth_error :exop_auth_error
 
       @spec contract :: list(map())
@@ -66,7 +66,7 @@ defmodule Exop.Operation do
       @doc """
       Runs an operation's process/1 function after a contract's validation
       """
-      @spec run(Keyword.t | map() | nil) :: {:ok, any} | Validation.validation_error | interrupt_error
+      @spec run(Keyword.t | map() | nil) :: {:ok, any} | Validation.validation_error | interrupt_result
       def run(received_params \\ [])
       def run(received_params) when is_list(received_params) do
         if Enum.uniq(Keyword.keys(received_params)) == Keyword.keys(received_params) do
@@ -135,12 +135,12 @@ defmodule Exop.Operation do
       defp output(params) do
         output(params, Validation.valid?(@contract, params))
       end
-      @spec output(Keyword.t | map(), map() | :ok) :: {:ok, any} | Validation.validation_error | {:error, {:interrupt, any}}
+      @spec output(Keyword.t | map(), map() | :ok) :: {:ok, any} | Validation.validation_error | interrupt_result
       defp output(params, validation_result = :ok) do
         try do
           {:ok, process(params)}
         catch
-          {@exop_invalid_error, reason} -> {:error, {:interrupt, reason}}
+          {@exop_interruption, reason} -> {:interrupt, reason}
           {@exop_auth_error, reason} -> {:error, {:auth, reason}}
         end
       end
@@ -157,7 +157,7 @@ defmodule Exop.Operation do
       end
 
       @spec interrupt(any) :: no_return
-      def interrupt(reason \\ nil), do: throw({@exop_invalid_error, reason})
+      def interrupt(reason \\ nil), do: throw({@exop_interruption, reason})
 
       @spec do_authorize(Exop.Policy.t, atom, any, Keyword.t) :: auth_result
       defp do_authorize(_policy, _action, nil, _opts), do: throw({@exop_auth_error, :undefined_user})

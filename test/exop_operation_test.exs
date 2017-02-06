@@ -142,7 +142,7 @@ defmodule ExopOperationTest do
     assert Def6Operation.run(a: 1, a: 3) == {:error, {:validation, %{params: "There are duplicates in received params list"}}}
   end
 
-  test "interrupt/1: interupts process and returns the interuption error" do
+  test "interrupt/1: interupts process and returns the interuption result" do
     defmodule Def7Operation do
       use Exop.Operation
 
@@ -152,7 +152,7 @@ defmodule ExopOperationTest do
       end
     end
 
-    assert Def7Operation.run == {:error, {:interrupt, %{my_error: "oops"}}}
+    assert Def7Operation.run == {:interrupt, %{my_error: "oops"}}
   end
 
   test "interrupt/1: pass other exceptions" do
@@ -370,6 +370,6 @@ defmodule ExopOperationTest do
       def process(_params), do: interrupt()
     end
 
-    assert Def24Operation.run! == {:error, {:interrupt, nil}}
+    assert Def24Operation.run! == {:interrupt, nil}
   end
 end

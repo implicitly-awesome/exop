@@ -22,7 +22,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.3.8"}]
+  [{:exop, "~> 0.3.9"}]
 end
 ```
 
@@ -230,7 +230,7 @@ SomeOperation.run(a: 1, c: 3) # {:ok, %{a: 1, b: 2}}
 
 In some cases you might want to make an 'early return' from `process/1` function.
 For this purpose you can call `interrupt/1` function within `process/1` and pass an interruption reason to it.
-An operation will be interrupted and return `{:error, {:interrupt, your_reason}}`
+An operation will be interrupted and return `{:interrupt, your_reason}`
 
 ```elixir
 # ...
@@ -240,7 +240,7 @@ def process(_params) do
 end
 # ...
 
-SomeOperation.run(a: 1) # {:error, {:interrupt, %{fail: "oops"}}}
+SomeOperation.run(a: 1) # {:interrupt, %{fail: "oops"}}
 ```
 
 ### Coercion
@@ -338,7 +338,7 @@ the only difference is a result of invocation, it might be:
 
 * if a contract validation passed - the actual result of an operation (result of a code, described in `process/1`)
 * if a contract validation failed - an error `Exop.Validation.ValidationError` raising
-* in case of manual interruption - `{:error, {:interrupt, _reason}}`
+* in case of manual interruption - `{:interrupt, _reason}`
 
 _You always can bypass the validation simply by calling `process/1` function itself, if needed._
 
@@ -356,7 +356,7 @@ An operation can return one of results listed below (depends on passed in params
 
 * an operation was completed successfully: `{:ok, any()}`
 * a contract validation failed: `{:error, {:validation, map()}}`
-* if `interrupt/1` was invoked: `{:error, {:interrupt, any()}}`
+* if `interrupt/1` was invoked: `{:interrupt, any()}`
 * policy check failed:
   * `{:error, {:auth, :undefined_user}}`
   * `{:error, {:auth, :undefined_policy}}`

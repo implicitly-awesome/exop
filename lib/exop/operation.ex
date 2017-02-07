@@ -43,6 +43,8 @@ defmodule Exop.Operation do
     end
   end
 
+  @lint [{Credo.Check.Refactor.ABCSize, false},
+         {Credo.Check.Refactor.CyclomaticComplexity, false}]
   defmacro __before_compile__(_env) do
     quote do
       alias Exop.Validation
@@ -149,7 +151,7 @@ defmodule Exop.Operation do
       @spec defined_params(Keyword.t | map()) :: map()
       def defined_params(received_params) when is_list(received_params) do
         keys_to_filter = Keyword.keys(received_params) -- Enum.map(@contract, &(&1[:name]))
-        Keyword.drop(received_params, keys_to_filter) |> Enum.into(%{})
+        received_params |> Keyword.drop(keys_to_filter) |> Enum.into(%{})
       end
       def defined_params(received_params) when is_map(received_params) do
         keys_to_filter = Map.keys(received_params) -- Enum.map(@contract, &(&1[:name]))

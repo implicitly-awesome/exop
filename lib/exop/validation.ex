@@ -51,7 +51,7 @@ defmodule Exop.Validation do
   defp consolidate_errors(validation_results) do
     error_results = validation_results |> Enum.reject(&(&1 == true))
     Enum.reduce(error_results, %{}, fn (error_result, map) ->
-      item_name = Map.keys(error_result) |> List.first
+      item_name = error_result |> Map.keys |> List.first
       error_message = Map.get(error_result, item_name)
 
       Map.put(map, item_name, [error_message | (map[item_name] || [])])
@@ -115,7 +115,7 @@ defmodule Exop.Validation do
      checked_param = ValidationChecks.get_check_item(check_items, item_name)
 
      inner_contract = for {inner_param_name, inner_param_checks} <- cheks, into: [] do
-       %{ name: inner_param_name, opts:  inner_param_checks }
+       %{name: inner_param_name, opts:  inner_param_checks}
      end
 
      validate(inner_contract, checked_param, [])

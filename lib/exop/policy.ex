@@ -1,4 +1,8 @@
 defmodule Exop.Policy do
+  @moduledoc """
+  Provides a few macros for policy validation.
+  """
+
   @type t :: __MODULE__
 
   @callback authorize(atom, any, Keyword.t) :: true | false

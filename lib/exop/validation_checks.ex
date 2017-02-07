@@ -14,6 +14,8 @@ defmodule Exop.ValidationChecks do
   # @type check_error :: {:error, String.t}
   @type check_error :: %{atom => String.t}
 
+  @known_types ~w(boolean integer float string tuple map struct list atom function)a
+
   @doc """
   Returns an item_name from either a Keyword or a Map by an atom-key.
 
@@ -79,27 +81,25 @@ defmodule Exop.ValidationChecks do
   @spec check_type(Keyword.t | map(), atom, atom) :: true | check_error
   def check_type(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
-
-    if check_item do
-      result = case check do
-        :boolean  -> is_boolean(check_item)
-        :integer  -> is_integer(check_item)
-        :float    -> is_float(check_item)
-        :string   -> is_binary(check_item)
-        :tuple    -> is_tuple(check_item)
-        :map      -> is_map(check_item)
-        :struct   -> is_map(check_item)
-        :list     -> is_list(check_item)
-        :atom     -> is_atom(check_item)
-        :function -> is_function(check_item)
-        _         -> true
-      end
-
-      if result, do: true, else: %{item_name => "has wrong type"}
+    if Enum.member?(@known_types, check) do
+      do_check_type(check_item, check) || %{item_name => "has wrong type"}
     else
       true
     end
   end
+
+  defp do_check_type(check_item, :boolean) when is_boolean(check_item), do: true
+  defp do_check_type(check_item, :integer) when is_integer(check_item), do: true
+  defp do_check_type(check_item, :float) when is_float(check_item), do: true
+  defp do_check_type(check_item, :string) when is_binary(check_item), do: true
+  defp do_check_type(check_item, :tuple) when is_tuple(check_item), do: true
+  defp do_check_type(check_item, :map) when is_map(check_item), do: true
+  defp do_check_type(check_item, :struct) when is_map(check_item), do: true
+  defp do_check_type(check_item, :list) when is_list(check_item), do: true
+  defp do_check_type(check_item, :atom) when is_atom(check_item), do: true
+  defp do_check_type(check_item, :function) when is_function(check_item), do: true
+  defp do_check_type(nil, _), do: true
+  defp do_check_type(_, _), do: false
 
   @doc """
   Checks an item_name over numericality constraints.

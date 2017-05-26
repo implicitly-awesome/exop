@@ -206,6 +206,18 @@ parameter :some_param, func: &__MODULE__.your_validation/1
 def your_validation(param), do: !is_nil(param)
 ```
 
+A custom validation function can also return a user-specified message which will be displayed in map of validation errors. 
+
+```elixir
+def your_validation(param) do
+  if param > 99 do
+    true
+  else
+    {:error, "Custom error message"}
+  end
+end
+```
+
 _it's possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
 
 ### Defined params

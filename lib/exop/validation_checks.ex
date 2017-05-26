@@ -299,10 +299,11 @@ defmodule Exop.ValidationChecks do
   def check_func(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
 
-    if check.(check_item) do
-      true
-    else
-      %{item_name => "isn't valid"}
+    case check.(check_item) do
+      {:error, msg} -> %{item_name => msg}
+      false -> %{item_name => "isn't valid"}
+      _ -> true
     end
+
   end
 end

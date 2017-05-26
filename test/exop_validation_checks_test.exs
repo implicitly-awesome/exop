@@ -173,11 +173,22 @@ defmodule ExopValidationChecksTest do
 
   def validation(param), do: param > 99
 
+  def validation_verbose(param) do
+    if param > 99 do
+      true
+    else
+      {:error, "Custom error message"}
+    end
+  end
+
   test "check_func/3: success" do
     assert check_func(%{a: 100}, :a, &__MODULE__.validation/1) == true
+    assert check_func(%{a: 100}, :a, &__MODULE__.validation_verbose/1) == true
   end
 
   test "check_func/3: fails" do
     assert check_func(%{a: 98}, :a, &__MODULE__.validation/1) == %{a: "isn't valid"}
+    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/1) == %{a: "Custom error message"}
   end
+
 end

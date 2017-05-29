@@ -199,19 +199,13 @@ parameter :some_param, struct: %SomeStruct{}
 #### `func`
 
 Checks whether an item is valid over custom validation function.
-If the function returns just `false`, validation will fail with default message `"isn't valid"`.
-You can provide your custom error message if the function returns a tuple `{:error, "your custom message"}`.
-So validation will fail, if validation function returns `false` or `{:error, msg}` tuple.
+If this function returns `false`, validation will fail with default message `"isn't valid"`.
 
 ```elixir
 parameter :some_param, func: &__MODULE__.your_validation/1
 parameter :some_param_2, func: &__MODULE__.your_validation_2/1
 
 def your_validation(param), do: !is_nil(param)
-
-def your_validation(param) do
-  if is_nil(param), do: {:error, "should not be nil"}, else: true
-end
 ```
 
 A custom validation function can also return a user-specified message which will be displayed in map of validation errors. 
@@ -225,6 +219,8 @@ def your_validation(param) do
   end
 end
 ```
+
+Therefore, validation will fail, if the function returns either `false` or `{:error, your_error_msg}` tuple.
 
 _it's possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
 

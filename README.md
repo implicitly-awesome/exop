@@ -388,6 +388,7 @@ An operation can return one of results listed below (depends on passed in params
 
 _For the "bang" version of `run/1` see results description above._
 
+
 ## LICENSE
 
     Copyright © 2016 Andrey Chernykh ( andrei.chernykh@gmail.com )

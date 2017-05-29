@@ -22,7 +22,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.3.9"}]
+  [{:exop, "~> 0.4.1"}]
 end
 ```
 
@@ -199,11 +199,19 @@ parameter :some_param, struct: %SomeStruct{}
 #### `func`
 
 Checks whether an item is valid over custom validation function.
+If the function returns just `false`, validation will fail with default message `"isn't valid"`.
+You can provide your custom error message if the function returns a tuple `{:error, "your custom message"}`.
+So validation will fail, if validation function returns `false` or `{:error, msg}` tuple.
 
 ```elixir
 parameter :some_param, func: &__MODULE__.your_validation/1
+parameter :some_param_2, func: &__MODULE__.your_validation_2/1
 
 def your_validation(param), do: !is_nil(param)
+
+def your_validation(param) do
+  if is_nil(param), do: {:error, "should not be nil"}, else: true
+end
 ```
 
 A custom validation function can also return a user-specified message which will be displayed in map of validation errors. 
@@ -223,7 +231,8 @@ _it's possible to combine :func check with others (though not preferable), just 
 ### Defined params
 
 If for some reason you have to deal only with parameters that were defined in the contract,
-you can filter out odd parameters from received Keyword/Map with `defined_params/1`
+or you need to get a map of contract parameters with their values, you can get
+it with `defined_params/1` function.
 
 ```elixir
 # ...
@@ -366,7 +375,9 @@ Or you will receive `@type validation_error :: {:error, :validation_failed, map(
 
 An operation can return one of results listed below (depends on passed in params and operation definition):
 
-* an operation was completed successfully: `{:ok, any()}`
+* an operation was completed successfully:
+  * `{:error, _your_error_reason_}` (if `{:error, _your_error_reason_}` tuple was returned by `process/1` function)
+  * `{:ok, any()}` (otherwise)
 * a contract validation failed: `{:error, {:validation, map()}}`
 * if `interrupt/1` was invoked: `{:interrupt, any()}`
 * policy check failed:

@@ -190,5 +190,4 @@ defmodule ExopValidationChecksTest do
     assert check_func(%{a: 98}, :a, &__MODULE__.validation/1) == %{a: "isn't valid"}
     assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/1) == %{a: "Custom error message"}
   end
-
 end

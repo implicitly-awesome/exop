@@ -28,7 +28,8 @@ defmodule Exop.Operation do
 
   @callback process(Keyword.t | map()) :: {:ok, any} |
                                           Validation.validation_error |
-                                          interrupt_result
+                                          interrupt_result |
+                                          auth_result
 
   defmacro __using__(_opts) do
     quote do
@@ -68,7 +69,7 @@ defmodule Exop.Operation do
       @doc """
       Runs an operation's process/1 function after a contract's validation
       """
-      @spec run(Keyword.t | map() | nil) :: {:ok, any} | Validation.validation_error | interrupt_result
+      @spec run(Keyword.t | map() | nil) :: {:ok, any} | Validation.validation_error | interrupt_result | auth_result
       def run(received_params \\ [])
       def run(received_params) when is_list(received_params) do
         if Enum.uniq(Keyword.keys(received_params)) == Keyword.keys(received_params) do
@@ -140,7 +141,11 @@ defmodule Exop.Operation do
       @spec output(Keyword.t | map(), map() | :ok) :: {:ok, any} | Validation.validation_error | interrupt_result
       defp output(params, validation_result = :ok) do
         try do
-          {:ok, process(params)}
+          result = process(params)
+          case result do
+            {:error, reason} -> {:error, reason}
+            _ -> {:ok, result}
+          end
         catch
           {@exop_interruption, reason} -> {:interrupt, reason}
           {@exop_auth_error, reason} -> {:error, {:auth, reason}}

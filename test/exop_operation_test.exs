@@ -372,4 +372,34 @@ defmodule ExopOperationTest do
 
     assert Def24Operation.run! == {:interrupt, nil}
   end
+
+  test "run/1: returns unwrapped error tuple if process/1 returns it" do
+    defmodule Def25Operation do
+      use Exop.Operation
+
+      parameter :param
+
+      def process(params) do
+        if params[:param], do: params[:param], else: {:error, :ooops}
+      end
+    end
+
+    assert Def25Operation.run(param: 111) == {:ok, 111}
+    assert Def25Operation.run(param: nil) == {:error, :ooops}
+  end
+
+  test "run!/1: returns unwrapped error tuple if process/1 returns it" do
+    defmodule Def26Operation do
+      use Exop.Operation
+
+      parameter :param
+
+      def process(params) do
+        if params[:param], do: params[:param], else: {:error, :ooops}
+      end
+    end
+
+    assert Def26Operation.run!(param: 111) == 111
+    assert Def26Operation.run!(param: nil) == {:error, :ooops}
+  end
 end

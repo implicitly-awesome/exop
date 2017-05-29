@@ -10,7 +10,7 @@ defmodule Exop.Mixfile do
   def project do
     [
       app: :exop,
-      version: "0.3.10",
+      version: "0.4.1",
       elixir: "~> 1.3",
       name: "Exop",
       description: @description,

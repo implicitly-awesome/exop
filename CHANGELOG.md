@@ -1,8 +1,16 @@
+## [0.4.2] - 2017.05.30
+
+### Changes
+
+- `func/2` check:
+  Custom validation function now receives two arguments: the first is a contract of an operation (parameters with their values),
+  the second - the actual parameter value to check. So, now you can validate a parameter depending on other parameters values.
+
 ## [0.4.1] - 2017.05.29
 
 ### Changes
 
-- `func` check:
+- `func/1` check:
   You can provide your error message if custom validation function returns `{:error, "Your validation message"}`.
   In other cases `false` is treaded as validation fail with default message `"isn't valid"`, everything else - validation success.
 - `run/1` output:

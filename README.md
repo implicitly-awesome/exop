@@ -4,13 +4,13 @@
 
 Little library that provides a few macros which allow you to encapsulate business logic and validate incoming params over predefined contract.
 
-Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a part of awesome high-level architecture for ruby/rails applications.
+Here is the [CHANGELOG]() that was started from ver. 0.4.1 ¯\\\_(ツ)_/¯
 
 ## Table of Contents
 
 - [Installation](#installation)
 - [Operation definition](#operation-definition)
-  - [Parameter options](#parameter-options)
+  - [Parameter checks](#parameter-checks)
   - [Defined params](#defined-params)
   - [Interrupt](#interrupt)
   - [Coercion](#coercion)
@@ -22,7 +22,7 @@ Inspired by [Trailblazer::Operation](http://trailblazer.to/gems/operation/) - a 
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.4.1"}]
+  [{:exop, "~> 0.4.2"}]
 end
 ```
 
@@ -62,7 +62,7 @@ iex> IntegersDivision.run(a: 50, b: 5)
 Return type will be either `{:ok, any()}` (where the second item in the tuple is `process/1` function's result) or
 `{:error, {:validation, map()}}` (where the `map()` is validation errors map).
 
-### Parameter options
+### Parameter checks
 
 A parameter options could have various checks. Here the list of checks available yet:
 
@@ -202,16 +202,15 @@ Checks whether an item is valid over custom validation function.
 If this function returns `false`, validation will fail with default message `"isn't valid"`.
 
 ```elixir
-parameter :some_param, func: &__MODULE__.your_validation/1
-parameter :some_param_2, func: &__MODULE__.your_validation_2/1
+parameter :some_param, func: &__MODULE__.your_validation/2
 
-def your_validation(param), do: !is_nil(param)
+def your_validation(_params, param), do: !is_nil(param)
 ```
 
 A custom validation function can also return a user-specified message which will be displayed in map of validation errors. 
 
 ```elixir
-def your_validation(param) do
+def your_validation(_params, param) do
   if param > 99 do
     true
   else
@@ -221,6 +220,16 @@ end
 ```
 
 Therefore, validation will fail, if the function returns either `false` or `{:error, your_error_msg}` tuple.
+
+`func/2` receives two arguments: the first is a contract of an operation (parameters with their values),
+the second - the actual parameter value to check. So, now you can validate a parameter depending on other parameters values.
+
+```elixir
+parameter :a, type: :integer
+parameter :b, func: &__MODULE__.your_validation/2
+
+def your_validation(params, b), do: params[:a] > 0 && !is_nil(b)
+```
 
 _it's possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
 

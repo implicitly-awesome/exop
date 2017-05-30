@@ -171,10 +171,10 @@ defmodule ExopValidationChecksTest do
     assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{qwerty: "123"}) == %{a: "is not expected struct"}
   end
 
-  def validation(param), do: param > 99
+  def validation(params, param_to_check), do: param_to_check > 99
 
-  def validation_verbose(param) do
-    if param > 99 do
+  def validation_verbose(params, param_to_check) do
+    if param_to_check > 99 do
       true
     else
       {:error, "Custom error message"}
@@ -182,12 +182,12 @@ defmodule ExopValidationChecksTest do
   end
 
   test "check_func/3: success" do
-    assert check_func(%{a: 100}, :a, &__MODULE__.validation/1) == true
-    assert check_func(%{a: 100}, :a, &__MODULE__.validation_verbose/1) == true
+    assert check_func(%{a: 100}, :a, &__MODULE__.validation/2) == true
+    assert check_func(%{a: 100}, :a, &__MODULE__.validation_verbose/2) == true
   end
 
   test "check_func/3: fails" do
-    assert check_func(%{a: 98}, :a, &__MODULE__.validation/1) == %{a: "isn't valid"}
-    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/1) == %{a: "Custom error message"}
+    assert check_func(%{a: 98}, :a, &__MODULE__.validation/2) == %{a: "isn't valid"}
+    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/2) == %{a: "Custom error message"}
   end
 end

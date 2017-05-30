@@ -304,11 +304,11 @@ defmodule ExopOperationTest do
     defmodule Def20Operation do
       use Exop.Operation
 
-      parameter :a, func: &__MODULE__.validate/1, coerce_with: &__MODULE__.coerce/1
+      parameter :a, func: &__MODULE__.validate/2, coerce_with: &__MODULE__.coerce/1
 
       def process(params), do: params[:a]
 
-      def validate(x), do: x > 0
+      def validate(_params, x), do: x > 0
 
       def coerce(x), do: x * 0
     end
@@ -401,5 +401,23 @@ defmodule ExopOperationTest do
 
     assert Def26Operation.run!(param: 111) == 111
     assert Def26Operation.run!(param: nil) == {:error, :ooops}
+  end
+
+  test "custom validation function takes a contract as the first parameter" do
+    defmodule Def27Operation do
+      use Exop.Operation
+
+      parameter :a, default: 5
+      parameter :b, func: &__MODULE__.custom_validation/2
+
+      def process(params), do: {params[:a], params[:b]}
+
+      def custom_validation(params, b) do
+        params[:a] > 10 && b < 10
+      end
+    end
+
+    assert Def27Operation.run(a: 11, b: 0) == {:ok, {11, 0}}
+    assert Def27Operation.run(a: 0, b: 0) == {:error, {:validation, %{b: ["isn't valid"]}}}
   end
 end

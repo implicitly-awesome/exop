@@ -295,15 +295,14 @@ defmodule Exop.ValidationChecks do
   @doc """
   Checks whether an item is valid over custom validation function.
   """
-  @spec check_func(Keyword.t | map(), atom, (any -> true | false)) :: true | check_error
+  @spec check_func(Keyword.t | map(), atom, (map(), any -> true | false)) :: true | check_error
   def check_func(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
 
-    case check.(check_item) do
+    case check.(check_items, check_item) do
       {:error, msg} -> %{item_name => msg}
       false -> %{item_name => "isn't valid"}
       _ -> true
     end
-
   end
 end

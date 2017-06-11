@@ -1,10 +1,13 @@
 defmodule Exop.Policy do
   @moduledoc """
-  Provides a few macros for policy validation.
+  Provides macros for policy validation.
   """
 
   @type t :: __MODULE__
 
+  @doc """
+  Authorizes the possibility to invoke an action.
+  """
   @callback authorize(atom, any, Keyword.t) :: true | false
 
   defmacro __using__(_opts) do
@@ -17,7 +20,6 @@ defmodule Exop.Policy do
 
   defmacro __before_compile__(_env) do
     quote do
-      @doc "authorizes `user` possibility to invoke an `action`"
       @spec authorize(atom, any, Keyword.t) :: true | false
       def authorize(action, user, opts \\ []) do
         apply(__MODULE__, action, [user, opts]) == true

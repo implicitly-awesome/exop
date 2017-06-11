@@ -11,7 +11,6 @@ defmodule Exop.Validation do
     @moduledoc """
       An operation's contract validation failure error.
     """
-
     defexception message: "Contract validation failed" 
   end
 
@@ -29,8 +28,8 @@ defmodule Exop.Validation do
 
   ## Examples
 
-    iex> Exop.Validation.valid?([%{name: :param, opts: [required: true]}], [param: "hello"])
-    :ok
+      iex> Exop.Validation.valid?([%{name: :param, opts: [required: true]}], [param: "hello"])
+      :ok
   """
   @spec valid?(list(map()), Keyword.t | map()) :: :ok | validation_error
   def valid?(contract, received_params) do
@@ -69,8 +68,8 @@ defmodule Exop.Validation do
 
   ## Examples
 
-    iex> Exop.Validation.validate([%{name: :param, opts: [required: true, type: :string]}], [param: "hello"], [])
-    [true, true]
+      iex> Exop.Validation.validate([%{name: :param, opts: [required: true, type: :string]}], [param: "hello"], [])
+      [true, true]
   """
   @spec validate([map()], map() | Keyword.t, list) :: list
   def validate([], _received_params, result), do: result
@@ -99,8 +98,8 @@ defmodule Exop.Validation do
 
   ## Examples
 
-    iex> Exop.Validation.check_inner(%{param: 1}, :param, [type: :integer, required: true])
-    true
+      iex> Exop.Validation.check_inner(%{param: 1}, :param, [type: :integer, required: true])
+      true
   """
   @spec check_inner(map() | Keyword.t, atom, map() | Keyword.t) :: list
   def check_inner(check_items, item_name, cheks) when is_map(cheks) do

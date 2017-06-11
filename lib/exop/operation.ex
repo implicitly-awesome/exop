@@ -25,11 +25,14 @@ defmodule Exop.Operation do
                        {:error, {:auth, :undefined_action}} |
                        {:error, {:auth, atom}}
 
-
-  @callback process(Keyword.t | map()) :: {:ok, any} |
-                                          Validation.validation_error |
-                                          interrupt_result |
-                                          auth_result
+  @doc """
+  Operation's entry point. Takes defined contract as the single parameter.
+  Contract itself is a `Keyword.t` list: `[param_name: param_value]`
+  """
+  @callback process(Keyword.t) :: {:ok, any} |
+                                  Validation.validation_error |
+                                  interrupt_result |
+                                  auth_result
 
   defmacro __using__(_opts) do
     quote do
@@ -71,7 +74,7 @@ defmodule Exop.Operation do
       end
 
       @doc """
-      Runs an operation's process/1 function after a contract's validation
+      Runs an operation's process/1 function after a contract validation
       """
       @spec run(Keyword.t | map() | nil) :: {:ok, any} | Validation.validation_error | interrupt_result | auth_result
       def run(received_params \\ [])
@@ -195,6 +198,81 @@ defmodule Exop.Operation do
     end
   end
 
+  @doc """
+  Defines a parameter with `name` and `opts` in an operation contract.
+  Options could include the parameter value checks and transformations (like coercion).
+
+  ## Example
+      parameter :some_param, type: :map, required: true
+
+  ## Available checks are:
+
+  #### type
+  Checks whether a parameter's value is of declared type.
+      parameter :some_param, type: :map
+
+  #### required
+  Checks the presence of a parameter in passed params collection.
+      parameter :some_param, required: true
+
+  #### default
+  Checks if the parameter is missed and assigns default value to it if so.
+      parameter :some_param, default: "default value"
+
+  #### numericality
+  Checks whether a parameter's value is a number and passes constraints (if constraints were defined).
+      parameter :some_param, numericality: %{equal_to: 10, greater_than: 0,
+                                             greater_than_or_equal_to: 10,
+                                             less_than: 20,
+                                             less_than_or_equal_to: 10}
+
+  #### in
+  Checks whether a parameter's value is within a given list.
+      parameter :some_param, in: ~w(a b c)
+
+  #### not_in
+  Checks whether a parameter's value is not within a given list.
+      parameter :some_param, not_in: ~w(a b c)
+
+  #### format
+  Checks wether parameter's value matches given regex.
+      parameter :some_param, format: ~r/foo/
+
+  #### length
+  Checks the length of a parameter's value.
+      parameter :some_param, length: %{min: 5, max: 10, is: 7, in: 5..8}
+
+  #### inner
+  Checks the inner of either Map or Keyword parameter.
+      parameter :some_param, type: :map, inner: %{
+        a: [type: :integer, required: true],
+        b: [type: :string, length: %{min: 1, max: 6}]
+      }
+
+  #### struct
+  Checks whether the given parameter is expected structure.
+      parameter :some_param, struct: %SomeStruct{}
+
+  #### func
+  Checks whether an item is valid over custom validation function.
+      parameter :some_param, func: &__MODULE__.your_validation/2
+
+      def your_validation(_params, param), do: !is_nil(param)
+
+  ## Coercion
+
+  It is possible to coerce a parameter before the contract validation, all validation checks
+  will be invoked on coerced parameter value.
+  Since coercion changes a parameter before any validation has been invoked,
+  default values are resolved (with `:default` option) before the coercion.
+  The flow looks like: `Resolve param default value -> Coerce -> Validate coerced`
+
+      parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1
+
+      def coerce(x), do: x * 2
+
+  _For more information and examples check out general Exop docs._
+  """
   @spec parameter(atom, Keyword.t) :: no_return
   defmacro parameter(name, opts \\ []) when is_atom(name) do
     quote bind_quoted: [name: name, opts: opts] do
@@ -202,6 +280,31 @@ defmodule Exop.Operation do
     end
   end
 
+  @doc """
+  Defines a policy that will be used for authorizing the possibility of a user
+  to invoke an operation.
+      defmodule ReadOperation do
+        use Exop.Operation
+
+        policy MyPolicy, :read
+
+        parameter :user, required: true, struct: %User{}
+
+        def process(_params) do
+          authorize(params[:user])
+          # make some reading...
+        end
+      end
+
+  A policy itself might be:
+      defmodule MyPolicy do
+        use Exop.Policy
+
+        def read(_user, _opts), do: true
+
+        def write(_user, _opts), do: false
+      end
+  """
   @spec policy(Exop.Policy.t, atom) :: no_return
   defmacro policy(policy_module, action_name) when is_atom(action_name) do
     quote bind_quoted: [policy_module: policy_module, action_name: action_name] do
@@ -210,6 +313,10 @@ defmodule Exop.Operation do
     end
   end
 
+  @doc """
+  Authorizes an action with predefined policy (see `policy` macro docs).
+  If authorization fails, any code after (below) auth check will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)
+  """
   @spec authorize(any, Keyword.t | nil) :: auth_result
   defmacro authorize(user, opts \\ []) do
     quote bind_quoted: [user: user, opts: opts] do
@@ -217,6 +324,9 @@ defmodule Exop.Operation do
     end
   end
 
+  @doc """
+  Returns policy that was defined in an operation.
+  """
   @spec current_policy :: {Exop.Policy.t, atom}
   defmacro current_policy do
     quote do

@@ -171,9 +171,9 @@ defmodule ExopValidationChecksTest do
     assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{qwerty: "123"}) == %{a: "is not expected struct"}
   end
 
-  def validation(params, param_to_check), do: param_to_check > 99
+  def validation(_params, param_to_check), do: param_to_check > 99
 
-  def validation_verbose(params, param_to_check) do
+  def validation_verbose(_params, param_to_check) do
     if param_to_check > 99 do
       true
     else

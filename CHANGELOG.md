@@ -1,3 +1,15 @@
+## [0.4.3] - 2017.06.13
+
+### Changes
+
+- Log improvements:
+  Logger provides operation's module name if a contract validation failed. Like:
+  ```
+  14:21:05.944 [warn]  Elixir.ExopOperationTest.Operation errors:
+  param1: has wrong type
+  param2: has wrong type
+  ```
+
 ## [0.4.2] - 2017.05.30
 
 ### Changes

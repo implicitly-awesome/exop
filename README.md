@@ -22,7 +22,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.4.2"}]
+  [{:exop, "~> 0.4.3"}]
 end
 ```
 

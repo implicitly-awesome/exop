@@ -5,8 +5,6 @@ defmodule Exop.Validation do
     Mostly invokes Exop.ValidationChecks module functions.
   """
 
-  require Logger
-
   alias Exop.ValidationChecks
 
   defmodule ValidationError do
@@ -42,7 +40,6 @@ defmodule Exop.Validation do
       :ok
     else
       error_results = validation_results |> consolidate_errors
-      log_errors(error_results)
       {:error, {:validation, error_results}}
     end
   end
@@ -58,18 +55,13 @@ defmodule Exop.Validation do
     end)
   end
 
-  @spec log_errors(map()) :: :ok | {:error, any}
-  defp log_errors(errors) do
-    unless Mix.env == :test, do: Logger.warn("#{__MODULE__} errors: \n#{errors_message(errors)}")
-  end
-
   @spec errors_message(map()) :: String.t
   def errors_message(errors) do
     errors
-    |> Enum.map(fn {item_name, error_messages} ->
-      "#{item_name}: #{Enum.join(error_messages, "\n\t")}"
-    end)
-    |> Enum.join("\n")
+      |> Enum.map(fn {item_name, error_messages} ->
+        "#{item_name}: #{Enum.join(error_messages, "\n\t")}"
+      end)
+      |> Enum.join("\n")
   end
 
   @doc """

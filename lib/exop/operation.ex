@@ -33,12 +33,16 @@ defmodule Exop.Operation do
 
   defmacro __using__(_opts) do
     quote do
+      require Logger
+
       @behaviour unquote(__MODULE__)
       import unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :contract, accumulate: true)
       Module.register_attribute(__MODULE__, :policy_module, [])
       Module.register_attribute(__MODULE__, :policy_action_name, [])
+
+      @module_name __MODULE__
 
       @before_compile unquote(__MODULE__)
     end
@@ -138,8 +142,10 @@ defmodule Exop.Operation do
       defp output(params) do
         output(params, Validation.valid?(@contract, params))
       end
-      @spec output(Keyword.t | map(), map() | :ok) :: {:ok, any} | Validation.validation_error | interrupt_result
-      defp output(params, validation_result = :ok) do
+      @spec output(Keyword.t | map(), :ok | {:error, {:validation, map()}}) :: {:ok, any} |
+                                                                               Validation.validation_error |
+                                                                               interrupt_result
+      defp output(params, :ok = _validation_result) do
         try do
           result = process(params)
           case result do
@@ -151,7 +157,13 @@ defmodule Exop.Operation do
           {@exop_auth_error, reason} -> {:error, {:auth, reason}}
         end
       end
-      defp output(_params, validation_result), do: validation_result
+      defp output(_params, {:error, {:validation, errors}} = validation_result) do
+        Logger.warn("#{@module_name} errors: \n#{Validation.errors_message(errors)}")
+        validation_result
+      end
+      defp output(_params, validation_result) do
+        validation_result
+      end
 
       @spec defined_params(Keyword.t | map()) :: map()
       def defined_params(received_params) when is_list(received_params) do

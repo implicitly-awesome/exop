@@ -2,7 +2,7 @@
 
 # Exop
 
-Little library that provides a few macros which allow you to encapsulate business logic and validate incoming params over predefined contract.
+A library that provides a macros which allow you to encapsulate business logic and validate incoming params over predefined contract.
 
 Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG.md) that was started from ver. 0.4.1 ¯\\\_(ツ)_/¯
 

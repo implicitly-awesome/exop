@@ -1,4 +1,4 @@
-## [0.4.3] - 2017.06.13
+## [0.4.3] - 2017.06.15
 
 ### Changes
 
@@ -9,6 +9,9 @@
   param1: has wrong type
   param2: has wrong type
   ```
+- Docs
+  ExDocs (hex docs) were mostly provided.
+  Will be useful for some IDEs/editors plugins usage (with docs helpers) and Dash users (like me).
 
 ## [0.4.2] - 2017.05.30
 

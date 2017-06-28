@@ -3,7 +3,7 @@
 ### Changes
 
 - `run/1` output:
-  If your `process/1` function returns a tuple `{:ok, _your_result_}` Exop will not wrap this output into former `{:ok, _outpu_}` tuple.
+  If your `process/1` function returns a tuple `{:ok, _your_result_}` Exop will not wrap this output into former `{:ok, _output_}` tuple.
 
   So, if `process/1` returns `{:ok, :its_ok}` you'll get exactly that tuple, not `{:ok, {:ok, :its_ok}}`.
 

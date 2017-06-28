@@ -1,3 +1,14 @@
+## [0.4.4] - 2017.06.28
+
+### Changes
+
+- `run/1` output:
+  If your `process/1` function returns a tuple `{:ok, _your_result_}` Exop will not wrap this output into former `{:ok, _outpu_}` tuple.
+
+  So, if `process/1` returns `{:ok, :its_ok}` you'll get exactly that tuple, not `{:ok, {:ok, :its_ok}}`.
+
+  (`run!/1` acts in the same manner with respect of it's bang nature)
+
 ## [0.4.3] - 2017.06.15
 
 ### Changes

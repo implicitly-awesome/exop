@@ -22,7 +22,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.4.3"}]
+  [{:exop, "~> 0.4.4"}]
 end
 ```
 
@@ -61,6 +61,8 @@ iex> IntegersDivision.run(a: 50, b: 5)
 
 Return type will be either `{:ok, any()}` (where the second item in the tuple is `process/1` function's result) or
 `{:error, {:validation, map()}}` (where the `map()` is validation errors map).
+
+_for more information see [Operation results](#operation-results) section_
 
 ### Parameter checks
 
@@ -382,7 +384,7 @@ An operation can return one of results listed below (depends on passed in params
 
 * an operation was completed successfully:
   * `{:error, _your_error_reason_}` (if `{:error, _your_error_reason_}` tuple was returned by `process/1` function)
-  * `{:ok, any()}` (otherwise)
+  * `{:ok, any()}` (otherwise, even if `{:ok, _your_result_}` tuple was returned by `process/1` function)
 * a contract validation failed: `{:error, {:validation, map()}}`
 * if `interrupt/1` was invoked: `{:interrupt, any()}`
 * policy check failed:

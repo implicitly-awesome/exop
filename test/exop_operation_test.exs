@@ -420,4 +420,18 @@ defmodule ExopOperationTest do
     assert Def27Operation.run(a: 11, b: 0) == {:ok, {11, 0}}
     assert Def27Operation.run(a: 0, b: 0) == {:error, {:validation, %{b: ["isn't valid"]}}}
   end
+
+  test "run/1: returns unwrapped tuple {:ok, result} if process/1 returns {:ok, result}" do
+    defmodule Def28Operation do
+      use Exop.Operation
+
+      parameter :param, required: true
+
+      def process(params) do
+        {:ok, params[:param]}
+      end
+    end
+
+    assert Def28Operation.run(param: "hello") == {:ok, "hello"}
+  end
 end

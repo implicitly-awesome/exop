@@ -153,6 +153,7 @@ defmodule Exop.Operation do
           result = process(params)
           case result do
             {:error, reason} -> {:error, reason}
+            {:ok, result} -> {:ok, result}
             _ -> {:ok, result}
           end
         catch

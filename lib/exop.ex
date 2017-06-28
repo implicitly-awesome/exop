@@ -2,12 +2,6 @@ defmodule Exop do
   @moduledoc """
   A library that provides a macros which allow you to encapsulate business logic and validate incoming params over predefined contract.
 
-  ## Installation
-
-      def deps do
-        [{:exop, "~> 0.4.3"}]
-      end
-
   ## Operation definition
 
       defmodule IntegersDivision do

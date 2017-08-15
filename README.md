@@ -72,6 +72,7 @@ A parameter options could have various checks. Here the list of checks available
 * `required`
 * `default`
 * `numericality`
+* `equals`
 * `in`
 * `not_in`
 * `format`
@@ -131,6 +132,14 @@ parameter :some_param, numericality: %{equal_to: 10,
                                        greater_than_or_equal_to: 10,
                                        less_than: 20,
                                        less_than_or_equal_to: 10}
+```
+
+#### `equals`
+
+Checks whether a parameter's value exactly equals given value (with type equality).
+
+```elixir
+parameter :some_param, equals: 100.5
 ```
 
 #### `in`

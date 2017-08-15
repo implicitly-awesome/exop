@@ -1,3 +1,14 @@
+## [0.4.5] - 2017.08.15
+
+### Changes
+
+- `equals` check:
+  Checks whether a parameter's value exactly equals given value (with type equality).
+
+  ```elixir
+  parameter :some_param, equals: 100.5
+  ```
+
 ## [0.4.4] - 2017.06.28
 
 ### Changes

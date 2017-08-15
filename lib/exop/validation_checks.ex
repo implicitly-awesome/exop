@@ -324,4 +324,23 @@ defmodule Exop.ValidationChecks do
       _ -> true
     end
   end
+
+  @doc """
+  Checks whether a parameter's value exactly equals given value (with type equality).
+
+  ## Examples
+
+      iex> Exop.ValidationChecks.check_equals(%{a: 1}, :a, 1)
+      true
+  """
+  @spec check_equals(Keyword.t | map(), atom, any()) :: true | check_error
+  def check_equals(check_items, item_name, check_value) do
+    check_item = get_check_item(check_items, item_name)
+
+    if check_item === check_value do
+      true
+    else
+      %{item_name => "must be equal to #{inspect(check_value)}"}
+    end
+  end
 end

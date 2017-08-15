@@ -190,4 +190,21 @@ defmodule ExopValidationChecksTest do
     assert check_func(%{a: 98}, :a, &__MODULE__.validation/2) == %{a: "isn't valid"}
     assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/2) == %{a: "Custom error message"}
   end
+
+  test "check_equals/3: success" do
+    assert check_equals(%{a: 1.0}, :a, 1.0) == true
+    assert check_equals(%{a: :a}, :a, :a) == true
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 3]) == true
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}, {:c, 3}]) == true
+    assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, c: 3}) == true
+  end
+
+  test "check_equals/3: fails" do
+    assert check_equals(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1"}
+    assert check_equals(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1"}
+    assert check_equals(%{a: :a}, :a, :b) == %{a: "must be equal to :b"}
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 1]) == %{a: "must be equal to [b: 2, c: 1]"}
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{a: "must be equal to [b: 2]"}
+    assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{a: "must be equal to %{b: 2, d: 3}"}
+  end
 end

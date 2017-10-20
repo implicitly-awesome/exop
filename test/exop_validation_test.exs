@@ -44,7 +44,7 @@ defmodule ExopValidationTest do
     with_mock Exop.ValidationChecks, [__info__: fn(_) -> [check_required: true, check_type: true] end,
                                                           check_required: fn(_, _, _) -> true end,
                                                           check_type: fn(_, _, _) -> %{param: "wrong type"} end] do
-      assert validate(contract, %{param: "some_value"}, []) == [true, %{param: "wrong type"}, %{param: "wrong type"}, true]
+      assert validate(contract, %{param: "some_value"}, []) == [true, %{param: "wrong type"}]
     end
   end
 

@@ -1,3 +1,29 @@
+## [0.4.6] - 2017.10.20
+
+### Changes
+
+- Does not validate nil parameters if they are not required. For example:
+
+  ```elixir
+  defmodule Operation do
+    use Exop.Operation
+
+    parameter :value, type: %MyStruct{}
+
+    # ...
+  end
+
+  # Old versions
+  Operation.run([]) # {:error, {:validation, %{value: ["is not expected struct"]}}
+
+  # This version
+  Operation.run([]) # {:ok, ...}
+  ```
+
+  In previous versions such code returns validation error, because `nil` is not a `MyStruct` struct (even if it is not required by default).
+
+  In current version such behaviour is fixed and Exop will not run validations for nil parameters if they are not required. 
+
 ## [0.4.5] - 2017.08.15
 
 ### Changes

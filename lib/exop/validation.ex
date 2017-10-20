@@ -35,7 +35,7 @@ defmodule Exop.Validation do
   def valid?(contract, received_params) do
     validation_results = validate(contract, received_params, [])
 
-    if Enum.all?(validation_results, &(&1 == true)) do
+    if Enum.empty?(validation_results) || Enum.all?(validation_results, &(&1 == true)) do
       :ok
     else
       error_results = validation_results |> consolidate_errors
@@ -74,8 +74,24 @@ defmodule Exop.Validation do
   @spec validate([map()], map() | Keyword.t, list) :: list
   def validate([], _received_params, result), do: result
   def validate([contract_item | contract_tail], received_params, result) do
-    checks_result = for {check_name, check_params} <- Map.get(contract_item, :opts), into: [] do
-      check_function_name = ("check_" <> Atom.to_string(check_name)) |> String.to_atom
+    checks_result =
+      if !required_param?(contract_item) && empty_param?(received_params, contract_item) do
+        []
+      else
+        validate_params(contract_item, received_params, contract_item)
+      end
+
+    validate(contract_tail, received_params, result ++ List.flatten(checks_result))
+  end
+
+  defp required_param?(%{opts: opts}), do: opts[:required] || false
+
+  defp empty_param?(params, %{name: param_name}), do: is_nil(params[param_name])
+
+  defp validate_params(%{opts: contract_items}, received_params, contract_item) do
+    for {check_name, check_params} <- contract_items, into: [] do
+      check_function_name = String.to_atom("check_#{check_name}")
+
       cond do
         function_present?(__MODULE__, check_function_name) ->
           apply(__MODULE__, check_function_name, [received_params,
@@ -89,8 +105,6 @@ defmodule Exop.Validation do
           true
       end
     end
-
-    validate(contract_tail, received_params, result ++ List.flatten(checks_result))
   end
 
   @doc """

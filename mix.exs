@@ -2,7 +2,7 @@ defmodule Exop.Mixfile do
   use Mix.Project
 
   @description """
-  Little library that provides a few macros which allow
+  A library that provides a few macros which allow
   you to encapsulate business logic and validate incoming
   params over predefined contract.
   """

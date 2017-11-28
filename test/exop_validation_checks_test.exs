@@ -32,6 +32,10 @@ defmodule ExopValidationChecksTest do
     assert is_binary(reason)
   end
 
+  test "check_required/3: returns true if item is in params and equals false and required = true" do
+    assert check_required([a: false, b: 2], :a, true)
+  end
+
   test "check_type/3: returns true if item is not in params" do
     assert check_type(%{}, :a, :integer) == true
   end

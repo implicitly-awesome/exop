@@ -1,3 +1,9 @@
+## [0.4.7] - 2017.11.29
+
+### Changes
+
+- Fixed `required` check when `false` was treated as the absence of a parameter.
+
 ## [0.4.6] - 2017.10.20
 
 ### Changes

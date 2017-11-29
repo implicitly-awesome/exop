@@ -60,7 +60,9 @@ defmodule Exop.ValidationChecks do
   @spec check_required(Keyword.t | map(), atom, boolean) :: true | check_error
   def check_required(_check_items, _item, false), do: true
   def check_required(check_items, item_name, true) do
-    if is_nil(get_check_item(check_items, item_name)) do
+    check_item = get_check_item(check_items, item_name)
+
+    if is_nil(check_item) do
       %{item_name => "is required"}
     else
       true

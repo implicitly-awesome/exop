@@ -86,6 +86,9 @@ defmodule Exop.Validation do
 
   defp required_param?(%{opts: opts}), do: opts[:required] || false
 
+  defp empty_param?(params, %{name: param_name}) when is_map(params) do
+    is_nil(Map.get(params, param_name)
+  end
   defp empty_param?(params, %{name: param_name}), do: is_nil(params[param_name])
 
   defp validate_params(%{opts: contract_items}, received_params, contract_item) do

@@ -6,6 +6,10 @@ defmodule ExopValidationTest do
   import Mock
   import Exop.Validation
 
+  defmodule TestStruct do
+    defstruct ~w(a b)a
+  end
+
   setup do
     contract = [
       %{
@@ -110,6 +114,27 @@ defmodule ExopValidationTest do
     assert is_map(reasons)
     keys = reasons |> Map.keys
     assert Enum.member?(keys, :map_param)
+    assert Enum.member?(keys, :a)
+    assert Enum.member?(keys, :b)
+  end
+
+  test "valid?/2: validates an inner struct parameter with inner option checks" do
+    contract = [
+      %{name: :map_param, opts: [
+        type: :map,
+        inner: %{
+          a: %{type: :integer, required: true},
+          b: %{type: :string, length: %{min: 7}}
+          }
+        ]
+      }
+    ]
+
+    received_params = [map_param: %TestStruct{a: nil, b: "6chars"}]
+
+    {:error, {:validation, reasons}} = valid?(contract, received_params)
+    assert is_map(reasons)
+    keys = reasons |> Map.keys
     assert Enum.member?(keys, :a)
     assert Enum.member?(keys, :b)
   end

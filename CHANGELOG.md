@@ -1,3 +1,9 @@
+## [0.4.8] - 2017.12.28
+
+### Changes
+
+- Fixed `required` check when a struct was checked with `inner`.
+
 ## [0.4.7] - 2017.11.29
 
 ### Changes

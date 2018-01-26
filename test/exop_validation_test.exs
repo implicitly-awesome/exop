@@ -138,4 +138,76 @@ defmodule ExopValidationTest do
     assert Enum.member?(keys, :a)
     assert Enum.member?(keys, :b)
   end
+
+  test "valid?/2: validates a list parameter items with list_item option checks (simple)" do
+    contract = [
+      %{
+        name: :list_param,
+        opts: [
+          type: :list,
+          list_item: %{type: :string, length: %{min: 7}}
+        ]
+      }
+    ]
+
+    received_params = [
+      list_param: [1, "6chars", nil, "7charss"]
+    ]
+
+    {:error, {:validation, reasons}} = valid?(contract, received_params)
+
+    assert %{
+      item_0: ["has wrong type", "length must be greater than or equal to 7"],
+      item_1: ["length must be greater than or equal to 7"],
+      item_2: ["length must be greater than or equal to 7"]
+    } == reasons
+  end
+
+  test "valid?/2: validates a list parameter items with list_item option checks (inner)" do
+    contract = [
+      %{
+        name: :list_param,
+        opts: [
+          type: :list,
+          list_item: %{inner: %{
+            a: %{type: :integer, required: true},
+            b: %{type: :string, length: %{min: 7}}
+          }}
+        ]
+      }
+    ]
+
+    received_params = [
+      list_param: [
+        %TestStruct{a: 3, b: "6chars"},
+        %TestStruct{a: nil, b: "7charss"}
+      ]
+    ]
+
+    {:error, {:validation, reasons}} = valid?(contract, received_params)
+
+    assert %{
+      a: ["is required"],
+      b: ["length must be greater than or equal to 7"]
+    } == reasons
+  end
+
+  test "valid?/2: validates a list parameter items with list_item option checks (not list)" do
+    contract = [
+      %{
+        name: :list_param,
+        opts: [
+          list_item: %{type: :string, length: %{min: 7}}
+        ]
+      }
+    ]
+
+    received_params = [
+      list_param: 1
+    ]
+
+    {:error, {:validation, reasons}} = valid?(contract, received_params)
+
+    assert %{list_param: ["is not a list"]} == reasons
+  end
 end

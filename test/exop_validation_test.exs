@@ -210,4 +210,21 @@ defmodule ExopValidationTest do
 
     assert %{list_param: ["is not a list"]} == reasons
   end
+
+  test "valid?/2: validates a list parameter items with list_item option checks (success)" do
+    contract = [
+      %{
+        name: :list_param,
+        opts: [
+          list_item: %{type: :string, length: %{min: 7}}
+        ]
+      }
+    ]
+
+    received_params = [
+      list_param: ["1234567", "7charss"]
+    ]
+
+    assert valid?(contract, received_params) == :ok
+  end
 end

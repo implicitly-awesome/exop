@@ -182,7 +182,7 @@ defmodule ExopOperationTest do
   end
 
   defmodule TestUser do
-    defstruct [:name, :email] 
+    defstruct [:name, :email]
   end
 
   test "stores policy module and action" do
@@ -276,7 +276,7 @@ defmodule ExopOperationTest do
 
       def coerce(x), do: x * 2
     end
-    
+
     assert Def17Operation.run(b: 0) == {:ok, {10, 0}}
   end
 
@@ -312,7 +312,7 @@ defmodule ExopOperationTest do
 
       def coerce(x), do: x * 0
     end
-    
+
     assert Def18Operation.run(a: 2) == {:ok, 4}
     assert Def18Operation.run(a: 0) == {:error, {:validation, %{a: ["must be greater than 0"]}}}
 
@@ -433,5 +433,35 @@ defmodule ExopOperationTest do
     end
 
     assert Def28Operation.run(param: "hello") == {:ok, "hello"}
+  end
+
+  test "list_item + default value" do
+    defmodule Def29Operation do
+      use Exop.Operation
+
+      parameter :param, list_item: %{type: :string, length: %{min: 7}}, default: ["1234567", "7chars"]
+
+      def process(params) do
+        {:ok, params[:param]}
+      end
+    end
+
+    assert Def29Operation.run() == {:error, {:validation, %{item_1: ["length must be greater than or equal to 7"]}}}
+  end
+
+  test "list_item + coerce_with" do
+    defmodule Def30Operation do
+      use Exop.Operation
+
+      parameter :param, list_item: %{type: :string, length: %{min: 7}}, coerce_with: &__MODULE__.make_list/1
+
+      def process(params) do
+        {:ok, params[:param]}
+      end
+
+      def make_list(_), do: ["1234567", "7chars"]
+    end
+
+    assert Def30Operation.run() == {:error, {:validation, %{item_1: ["length must be greater than or equal to 7"]}}}
   end
 end

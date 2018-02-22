@@ -2,7 +2,7 @@
 
 ### Changes
 
-- New `list_item` check.
+- New `list_item` parameter check.
 
 ## [0.4.8] - 2017.12.28
 

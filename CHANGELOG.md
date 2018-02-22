@@ -1,3 +1,9 @@
+## [0.5.0] - 2018.02.22
+
+### Changes
+
+- New `list_item` check.
+
 ## [0.4.8] - 2017.12.28
 
 ### Changes
@@ -34,7 +40,7 @@
 
   In previous versions such code returns validation error, because `nil` is not a `MyStruct` struct (even if it is not required by default).
 
-  In current version such behaviour is fixed and Exop will not run validations for nil parameters if they are not required. 
+  In current version such behaviour is fixed and Exop will not run validations for nil parameters if they are not required.
 
 ## [0.4.5] - 2017.08.15
 

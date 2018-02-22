@@ -22,7 +22,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.4.8"}]
+  [{:exop, "~> 0.5.0"}]
 end
 ```
 
@@ -79,6 +79,7 @@ A parameter options could have various checks. Here the list of checks available
 * `length`
 * `inner`
 * `struct`
+* `list_item`
 * `func`
 
 #### `type`
@@ -207,6 +208,33 @@ Checks whether the given parameter is expected structure.
 parameter :some_param, struct: %SomeStruct{}
 ```
 
+#### `list_item`
+
+Checks whether each of list items conforms defined checks.
+An item's checks could be any that Exop offers:
+
+```elixir
+# list_param = ["1234567", "7chars"]
+
+parameter :list_param, list_item: %{type: :string, length: %{min: 7}}
+```
+
+Even more complex like `inner`:
+
+```elixir
+# list_param = [
+#   %TestStruct{a: 3, b: "6chars"},
+#   %TestStruct{a: nil, b: "7charss"}
+# ]
+
+parameter :list_param, list_item: %{inner: %{
+                                              a: %{type: :integer, required: true},
+                                              b: %{type: :string, length: %{min: 7}}
+                                            }}
+```
+
+Moreover, `coerce_with` and `default` options are available too.
+
 #### `func`
 
 Checks whether an item is valid over custom validation function.
@@ -218,7 +246,7 @@ parameter :some_param, func: &__MODULE__.your_validation/2
 def your_validation(_params, param), do: !is_nil(param)
 ```
 
-A custom validation function can also return a user-specified message which will be displayed in map of validation errors. 
+A custom validation function can also return a user-specified message which will be displayed in map of validation errors.
 
 ```elixir
 def your_validation(_params, param) do
@@ -326,11 +354,11 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
 
     parameter :user, required: true, struct: %User{}
 
-    def process(_params) do 
+    def process(_params) do
       # make some reading...
     end
   end
-``` 
+```
 
 * finally - call `authorize/2` within `process/1`
 
@@ -348,7 +376,7 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
       # make some reading...
     end
   end
-``` 
+```
 
 _Please, note: if authorization fails, any code after (below) auth check
 will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)_

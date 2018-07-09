@@ -23,7 +23,7 @@ defmodule Exop.Policy do
       @spec authorize(atom, any, Keyword.t) :: true | false
       def authorize(action, user, opts \\ []) do
         apply(__MODULE__, action, [user, opts]) == true
-      end      
+      end
     end
   end
 end

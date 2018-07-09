@@ -33,7 +33,8 @@ defmodule Exop.Mixfile do
     [
       {:mock, "~> 0.1.1", only: :test},
       {:ex_doc, "~> 0.12", only: [:dev, :test, :docs]},
-      {:credo, "~> 0.5", only: [:dev, :test]}
+      {:credo, "~> 0.9.1", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false}
     ]
   end
 

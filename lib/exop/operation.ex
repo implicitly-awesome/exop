@@ -23,11 +23,11 @@ defmodule Exop.Operation do
   Contract itself is a `Keyword.t` list: `[param_name: param_value]`
   """
   @callback process(map()) ::
-  {:ok, any} |
-                                  Validation.validation_error |
-                                  {:interrupt, any} |
-                                  :ok |
-                                  no_return
+              {:ok, any}
+              | Validation.validation_error()
+              | {:interrupt, any}
+              | :ok
+              | no_return
 
   defmacro __using__(_opts) do
     quote do
@@ -52,12 +52,12 @@ defmodule Exop.Operation do
 
       @type interrupt_result :: {:interrupt, any}
       @type auth_result :: :ok | no_return
-                                  #  throws:
-                                  #  {:error, {:auth, :undefined_user}}   |
-                                  #  {:error, {:auth, :undefined_policy}} |
-                                  #  {:error, {:auth, :unknown_policy}}   |
-                                  #  {:error, {:auth, :unknown_action}}   |
-                                  #  {:error, {:auth, atom}}
+      #  throws:
+      #  {:error, {:auth, :undefined_user}}   |
+      #  {:error, {:auth, :undefined_policy}} |
+      #  {:error, {:auth, :unknown_policy}}   |
+      #  {:error, {:auth, :unknown_action}}   |
+      #  {:error, {:auth, atom}}
 
       @exop_interruption :exop_interruption
       @exop_auth_error :exop_auth_error
@@ -143,7 +143,10 @@ defmodule Exop.Operation do
         coerced_params =
           if Keyword.has_key?(contract_item_opts, :coerce_with) do
             coerce_with = Keyword.get(contract_item_opts, :coerce_with)
-            coerced_value = coerce_with.(Exop.ValidationChecks.get_check_item(coerced_params, contract_item_name))
+
+            coerced_value =
+              coerce_with.(Exop.ValidationChecks.get_check_item(coerced_params, contract_item_name))
+
             put_into_collection(coerced_value, coerced_params, contract_item_name)
           else
             coerced_params

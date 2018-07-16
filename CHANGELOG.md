@@ -1,3 +1,12 @@
+## [0.5.1] - 2018.07.16
+
+### Changes
+
+- An operation's `process/1` now takes a map of parameters (contract) instead of a keywords list
+  (This will help you to pattern-match them)
+- Credo was wiped out (with annoying warning on `@lint`)
+- Code was formatted with elixir formatter
+
 ## [0.5.0] - 2018.02.22
 
 ### Changes

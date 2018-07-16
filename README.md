@@ -4,7 +4,7 @@
 
 A library that provides a macros which allow you to encapsulate business logic and validate incoming params over predefined contract.
 
-Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG.md) that was started from ver. 0.4.1 ¯\\\_(ツ)_/¯
+Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG.md) that was started from ver. 0.4.1 ¯\\\_(ツ)\_/¯
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.5.0"}]
+  [{:exop, "~> 0.5.1"}]
 end
 ```
 
@@ -68,19 +68,19 @@ _for more information see [Operation results](#operation-results) section_
 
 A parameter options could have various checks. Here the list of checks available yet:
 
-* `type`
-* `required`
-* `default`
-* `numericality`
-* `equals`
-* `in`
-* `not_in`
-* `format`
-* `length`
-* `inner`
-* `struct`
-* `list_item`
-* `func`
+- `type`
+- `required`
+- `default`
+- `numericality`
+- `equals`
+- `in`
+- `not_in`
+- `format`
+- `length`
+- `inner`
+- `struct`
+- `list_item`
+- `func`
 
 #### `type`
 
@@ -92,16 +92,16 @@ parameter :some_param, type: :map
 
 Exop handle almost all Elixir types:
 
-* :boolean
-* :integer
-* :float
-* :string
-* :tuple
-* :map
-* :struct
-* :list
-* :atom
-* :function
+- :boolean
+- :integer
+- :float
+- :string
+- :tuple
+- :map
+- :struct
+- :list
+- :atom
+- :function
 
 _Unknown type always passes this check._
 
@@ -171,11 +171,11 @@ parameter :some_param, format: ~r/foo/
 
 Checks the length of a parameter's value. The value should be one of handled types:
 
-* list (items count)
-* string (chars count)
-* atom (treated as string)
-* map (key-value pairs count)
-* tuple (items count)
+- list (items count)
+- string (chars count)
+- atom (treated as string)
+- map (key-value pairs count)
+- tuple (items count)
 
 `length` check is complex as `numericality` (should define map of inner checks).
 All possible checks are listed in the example below.
@@ -327,7 +327,7 @@ def coerce(x), do: x * 2
 It is possible to define a policy that will be used for authorizing the possibility of a user
 to invoke an operation. So far, there is simple policy implementation and usage:
 
-* first of all, define a policy with `Exop.Policy` macro
+- first of all, define a policy with `Exop.Policy` macro
 
 ```elixir
   defmodule MyPolicy do
@@ -344,7 +344,7 @@ and options (Keyword). It's up to you how to handle this arguments and turn it i
 
 _Bear in mind: only `true` return-value treated as true, everything else returned form an action treated as false_
 
-* next step - link an operation and a policy
+- next step - link an operation and a policy
 
 ```elixir
   defmodule ReadOperation do
@@ -360,7 +360,7 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
   end
 ```
 
-* finally - call `authorize/2` within `process/1`
+- finally - call `authorize/2` within `process/1`
 
 ```elixir
   defmodule ReadOperation do
@@ -401,9 +401,9 @@ will not be invoked and corresponding warning in the application's log will appe
 There is "bang" version of `run/1` exists. Function `run!/1` does the same things that its sibling does,
 the only difference is a result of invocation, it might be:
 
-* if a contract validation passed - the actual result of an operation (result of a code, described in `process/1`)
-* if a contract validation failed - an error `Exop.Validation.ValidationError` raising
-* in case of manual interruption - `{:interrupt, _reason}`
+- if a contract validation passed - the actual result of an operation (result of a code, described in `process/1`)
+- if a contract validation failed - an error `Exop.Validation.ValidationError` raising
+- in case of manual interruption - `{:interrupt, _reason}`
 
 _You always can bypass the validation simply by calling `process/1` function itself, if needed._
 
@@ -419,19 +419,18 @@ Or you will receive `@type validation_error :: {:error, :validation_failed, map(
 
 An operation can return one of results listed below (depends on passed in params and operation definition):
 
-* an operation was completed successfully:
-  * `{:error, _your_error_reason_}` (if `{:error, _your_error_reason_}` tuple was returned by `process/1` function)
-  * `{:ok, any()}` (otherwise, even if `{:ok, _your_result_}` tuple was returned by `process/1` function)
-* a contract validation failed: `{:error, {:validation, map()}}`
-* if `interrupt/1` was invoked: `{:interrupt, any()}`
-* policy check failed:
-  * `{:error, {:auth, :undefined_user}}`
-  * `{:error, {:auth, :undefined_policy}}`
-  * `{:error, {:auth, :undefined_action}}`
-  * `{:error, {:auth, atom()}}`
+- an operation was completed successfully:
+  - `{:error, _your_error_reason_}` (if `{:error, _your_error_reason_}` tuple was returned by `process/1` function)
+  - `{:ok, any()}` (otherwise, even if `{:ok, _your_result_}` tuple was returned by `process/1` function)
+- a contract validation failed: `{:error, {:validation, map()}}`
+- if `interrupt/1` was invoked: `{:interrupt, any()}`
+- policy check failed:
+  - `{:error, {:auth, :undefined_user}}`
+  - `{:error, {:auth, :undefined_policy}}`
+  - `{:error, {:auth, :undefined_action}}`
+  - `{:error, {:auth, atom()}}`
 
 _For the "bang" version of `run/1` see results description above._
-
 
 ## LICENSE
 

@@ -29,10 +29,10 @@ defmodule Exop.Operation do
   Operation's entry point. Takes defined contract as the single parameter.
   Contract itself is a `Keyword.t` list: `[param_name: param_value]`
   """
-  @callback process(Keyword.t) :: {:ok, any} |
-                                  Validation.validation_error |
-                                  interrupt_result |
-                                  auth_result
+  @callback process(map()) :: {:ok, any} |
+                              Validation.validation_error |
+                              interrupt_result |
+                              auth_result
 
   defmacro __using__(_opts) do
     quote do
@@ -51,8 +51,6 @@ defmodule Exop.Operation do
     end
   end
 
-  @lint [{Credo.Check.Refactor.ABCSize, false},
-         {Credo.Check.Refactor.CyclomaticComplexity, false}]
   defmacro __before_compile__(_env) do
     quote do
       alias Exop.Validation
@@ -124,7 +122,7 @@ defmodule Exop.Operation do
         coerced_params =
           if Keyword.has_key?(contract_item_opts, :coerce_with) do
             coerce_with = Keyword.get(contract_item_opts, :coerce_with)
-            coerced_value = coerce_with.(Exop.ValidationChecks.get_check_item(coerced_params, contract_item_name)) 
+            coerced_value = coerce_with.(Exop.ValidationChecks.get_check_item(coerced_params, contract_item_name))
             put_into_collection(coerced_value, coerced_params, contract_item_name)
           else
             coerced_params
@@ -141,7 +139,7 @@ defmodule Exop.Operation do
         Keyword.put(collection, item_name, value)
       end
       defp put_into_collection(_value, collection, _item_name), do: collection
-      
+
       defp output(params) do
         output(params, Validation.valid?(@contract, params))
       end
@@ -150,7 +148,8 @@ defmodule Exop.Operation do
                                                                                interrupt_result
       defp output(params, :ok = _validation_result) do
         try do
-          result = process(params)
+          result = params |> Enum.into(%{}) |> process()
+
           case result do
             {:error, reason} -> {:error, reason}
             {:ok, result} -> {:ok, result}

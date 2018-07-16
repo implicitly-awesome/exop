@@ -32,8 +32,7 @@ defmodule Exop.Mixfile do
   defp deps do
     [
       {:mock, "~> 0.1.1", only: :test},
-      {:ex_doc, "~> 0.12", only: [:dev, :test, :docs]},
-      {:credo, "~> 0.5", only: [:dev, :test]}
+      {:ex_doc, "~> 0.12", only: [:dev, :test, :docs]}
     ]
   end
 

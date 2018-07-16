@@ -41,8 +41,8 @@ defmodule ExopOperationTest do
     end
   end
 
-  test "run/1: calls process/1 on particular operation via delegate/3 when contract passed validation" do
-    assert Operation.run(param1: 1, param2: "string") == {:ok, ["This is the process/1 params", [param1: 1, param2: "string"]]}
+  test "process/1 takes a single param which is Map type" do
+    assert Operation.run(param1: 1, param2: "string") == {:ok, ["This is the process/1 params", %{param1: 1, param2: "string"}]}
   end
 
   test "run/1: returns :validation_failed error when contract didn't pass validation" do

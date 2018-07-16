@@ -54,30 +54,30 @@ defmodule ExopValidationChecksTest do
   end
 
   test "check_numericality/3: returns %{item_name => error_msg} if item is in params and is not a number" do
-    %{a: reason} = check_numericality(%{a: "1"}, :a, %{ less_than: 3 })
+    %{a: reason} = check_numericality(%{a: "1"}, :a, %{less_than: 3})
     assert is_binary(reason)
   end
 
   test "check_numericality/3: returns true if item is not in params" do
-    assert check_numericality(%{a: 1}, :b, %{ less_than: 3 }) == true
+    assert check_numericality(%{a: 1}, :b, %{less_than: 3}) == true
   end
 
   test "check_numericality/3: fails" do
-    [%{a: _}] = check_numericality(%{a: 1}, :a, %{ equal_to: 3 })
-    [%{a: _}] = check_numericality(%{a: 1}, :a, %{ greater_than: 3 })
-    [%{a: _}] = check_numericality(%{a: 1}, :a, %{ greater_than_or_equal_to: 3 })
-    [%{a: _}] = check_numericality(%{a: 5}, :a, %{ less_than: 3 })
-    [%{a: _}] = check_numericality(%{a: 5}, :a, %{ less_than_or_equal_to: 3 })
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{equal_to: 3)
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{greater_than: 3)
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{greater_than_or_equal_to: 3)
+    [%{a: _}] = check_numericality(%{a: 5}, :a, %{less_than: 3)
+    [%{a: _}] = check_numericality(%{a: 5}, :a, %{less_than_or_equal_to: 3)
   end
 
   test "check_numericality/3: successes" do
-    assert check_numericality(%{a: 3}, :a, %{ equal_to: 3 }) == true
-    assert check_numericality(%{a: 5}, :a, %{ greater_than: 3 }) == true
-    assert check_numericality(%{a: 3}, :a, %{ greater_than_or_equal_to: 3 }) == true
-    assert check_numericality(%{a: 5}, :a, %{ greater_than_or_equal_to: 3 }) == true
-    assert check_numericality(%{a: 2}, :a, %{ less_than: 3 }) == true
-    assert check_numericality(%{a: 3}, :a, %{ less_than_or_equal_to: 3 }) == true
-    assert check_numericality(%{a: 2}, :a, %{ less_than_or_equal_to: 3 }) == true
+    assert check_numericality(%{a: 3}, :a, %{equal_to: 3}) == true
+    assert check_numericality(%{a: 5}, :a, %{greater_than: 3}) == true
+    assert check_numericality(%{a: 3}, :a, %{greater_than_or_equal_to: 3}) == true
+    assert check_numericality(%{a: 5}, :a, %{greater_than_or_equal_to: 3}) == true
+    assert check_numericality(%{a: 2}, :a, %{less_than: 3}) == true
+    assert check_numericality(%{a: 3}, :a, %{less_than_or_equal_to: 3}) == true
+    assert check_numericality(%{a: 2}, :a, %{less_than_or_equal_to: 3}) == true
   end
 
   test "check_in/3: returns true if check values is not a list" do

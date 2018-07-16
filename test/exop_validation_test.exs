@@ -14,11 +14,11 @@ defmodule ExopValidationTest do
     contract = [
       %{
         name: :param,
-        opts: [ required: true, type: :string ]
+        opts: [required: true, type: :string]
       },
       %{
         name: :param2,
-        opts: [ type: :integer, in: [1, 2, 3] ]
+        opts: [type: :integer, in: [1, 2, 3]]
       }
     ]
 
@@ -28,7 +28,7 @@ defmodule ExopValidationTest do
   test "validate/3: returns true if item's contract has unknown check", _context do
     contract = [%{
       name: :param,
-      opts: [ unknown_check: "whatever" ]
+      opts: [unknown_check: "whatever"]
     }]
     assert validate(contract, %{param: "some_value"}, []) == [true]
   end
@@ -71,8 +71,8 @@ defmodule ExopValidationTest do
 
     {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
-    assert Map.get(reasons, :param2) |> is_list
-    assert Map.get(reasons, :param2) |> List.first |> is_binary
+    assert reasons |> Map.get(:param2) |> is_list
+    assert reasons |> Map.get(:param2) |> List.first |> is_binary
   end
 
   test "valid?/2: validates a parameter inner item over inner option checks" do

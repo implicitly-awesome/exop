@@ -9,7 +9,7 @@ defmodule ExopPolicyTest do
     def can_false?(_user, _opts), do: false
 
     def can_smth?(_user, _opts), do: "just string"
-    
+
     def can_error?(_user, _opts), do: raise(ArithmeticError, "oops")
 
     def just_opts(_user, [a: 1, b: 2] = opts), do: opts
@@ -17,7 +17,7 @@ defmodule ExopPolicyTest do
   end
 
   defmodule TestUser do
-    defstruct ~w(name email)a 
+    defstruct ~w(name email)a
   end
 
   test "has authorize/3 function" do

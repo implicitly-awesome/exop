@@ -18,23 +18,16 @@ defmodule Exop.Operation do
 
   alias Exop.Validation
 
-  @type interrupt_result :: {:interrupt, any}
-  @type auth_result ::
-          :ok
-          | {:error, {:auth, :undefined_user}}
-          | {:error, {:auth, :undefined_policy}}
-          | {:error, {:auth, :undefined_action}}
-          | {:error, {:auth, atom}}
-
   @doc """
   Operation's entry point. Takes defined contract as the single parameter.
   Contract itself is a `Keyword.t` list: `[param_name: param_value]`
   """
   @callback process(map()) ::
-              {:ok, any}
-              | Validation.validation_error()
-              | interrupt_result
-              | auth_result
+  {:ok, any} |
+                                  Validation.validation_error |
+                                  {:interrupt, any} |
+                                  :ok |
+                                  no_return
 
   defmacro __using__(_opts) do
     quote do
@@ -58,13 +51,13 @@ defmodule Exop.Operation do
       alias Exop.Validation
 
       @type interrupt_result :: {:interrupt, any}
-      @type auth_result ::
-              :ok
-              | {:error, {:auth, :undefined_user}}
-              | {:error, {:auth, :undefined_policy}}
-              | {:error, {:auth, :unknown_policy}}
-              | {:error, {:auth, :unknown_action}}
-              | {:error, {:auth, atom}}
+      @type auth_result :: :ok | no_return
+                                  #  throws:
+                                  #  {:error, {:auth, :undefined_user}}   |
+                                  #  {:error, {:auth, :undefined_policy}} |
+                                  #  {:error, {:auth, :unknown_policy}}   |
+                                  #  {:error, {:auth, :unknown_action}}   |
+                                  #  {:error, {:auth, atom}}
 
       @exop_interruption :exop_interruption
       @exop_auth_error :exop_auth_error
@@ -150,10 +143,7 @@ defmodule Exop.Operation do
         coerced_params =
           if Keyword.has_key?(contract_item_opts, :coerce_with) do
             coerce_with = Keyword.get(contract_item_opts, :coerce_with)
-
-            coerced_value =
-              coerce_with.(Exop.ValidationChecks.get_check_item(coerced_params, contract_item_name))
-
+            coerced_value = coerce_with.(Exop.ValidationChecks.get_check_item(coerced_params, contract_item_name))
             put_into_collection(coerced_value, coerced_params, contract_item_name)
           else
             coerced_params
@@ -216,8 +206,11 @@ defmodule Exop.Operation do
         Map.drop(received_params, keys_to_filter)
       end
 
-      @spec interrupt(any) :: no_return
-      def interrupt(reason \\ nil), do: throw({@exop_interruption, reason})
+      @spec interrupt(any) :: :ok
+      def interrupt(reason \\ nil) do
+        throw({@exop_interruption, reason})
+        :ok
+      end
 
       @spec do_authorize(Exop.Policy.t(), atom, any, Keyword.t()) :: auth_result
       defp do_authorize(_policy, _action, nil, _opts),
@@ -317,7 +310,6 @@ defmodule Exop.Operation do
 
   _For more information and examples check out general Exop docs._
   """
-  @spec parameter(atom, Keyword.t()) :: no_return
   defmacro parameter(name, opts \\ []) when is_atom(name) do
     quote bind_quoted: [name: name, opts: opts] do
       @contract %{name: name, opts: opts}
@@ -349,7 +341,6 @@ defmodule Exop.Operation do
         def write(_user, _opts), do: false
       end
   """
-  @spec policy(Exop.Policy.t(), atom) :: no_return
   defmacro policy(policy_module, action_name) when is_atom(action_name) do
     quote bind_quoted: [policy_module: policy_module, action_name: action_name] do
       @policy_module policy_module
@@ -361,7 +352,6 @@ defmodule Exop.Operation do
   Authorizes an action with predefined policy (see `policy` macro docs).
   If authorization fails, any code after (below) auth check will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)
   """
-  @spec authorize(any, Keyword.t() | nil) :: auth_result
   defmacro authorize(user, opts \\ []) do
     quote bind_quoted: [user: user, opts: opts] do
       do_authorize(@policy_module, @policy_action_name, user, opts)
@@ -371,7 +361,6 @@ defmodule Exop.Operation do
   @doc """
   Returns policy that was defined in an operation.
   """
-  @spec current_policy :: {Exop.Policy.t(), atom}
   defmacro current_policy do
     quote do
       {@policy_module, @policy_action_name}

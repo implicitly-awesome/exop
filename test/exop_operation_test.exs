@@ -310,7 +310,7 @@ defmodule ExopOperationTest do
 
       def validate(_params, x), do: x > 0
 
-      def coerce(x), do: x * 0
+      def coerce(x), do: 0
     end
 
     assert Def18Operation.run(a: 2) == {:ok, 4}

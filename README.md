@@ -434,7 +434,7 @@ _For the "bang" version of `run/1` see results description above._
 
 ## LICENSE
 
-    Copyright © 2016 Andrey Chernykh ( andrei.chernykh@gmail.com )
+    Copyright © 2018 Andrey Chernykh ( andrei.chernykh@gmail.com )
 
     This work is free. You can redistribute it and/or modify it under the
     terms of the MIT License. See the LICENSE file for more details.

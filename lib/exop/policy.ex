@@ -8,7 +8,7 @@ defmodule Exop.Policy do
   @doc """
   Authorizes the possibility to invoke an action.
   """
-  @callback authorize(atom, any, Keyword.t) :: true | false
+  @callback authorize(atom, any, Keyword.t()) :: true | false
 
   defmacro __using__(_opts) do
     quote do
@@ -20,10 +20,10 @@ defmodule Exop.Policy do
 
   defmacro __before_compile__(_env) do
     quote do
-      @spec authorize(atom, any, Keyword.t) :: true | false
+      @spec authorize(atom, any, Keyword.t()) :: true | false
       def authorize(action, user, opts \\ []) do
         apply(__MODULE__, action, [user, opts]) == true
-      end      
+      end
     end
   end
 end

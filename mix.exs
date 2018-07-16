@@ -18,9 +18,9 @@ defmodule Exop.Mixfile do
       deps: deps(),
       source_url: "https://github.com/madeinussr/exop",
       docs: [extras: ["README.md"]],
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod
-   ]
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod
+    ]
   end
 
   def application do

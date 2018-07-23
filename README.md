@@ -15,14 +15,16 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
   - [Interrupt](#interrupt)
   - [Coercion](#coercion)
   - [Policy check](#policy-check)
+  - [Fallback module](#fallback-module)
 - [Operation invocation](#operation-invocation)
 - [Operation results](#operation-results)
+- [Chain of operations](#chain-of-operations)
 
 ## Installation
 
 ```elixir
 def deps do
-  [{:exop, "~> 0.5.1"}]
+  [{:exop, "~> 1.0.0"}]
 end
 ```
 
@@ -330,17 +332,20 @@ to invoke an operation. So far, there is simple policy implementation and usage:
 - first of all, define a policy with `Exop.Policy` macro
 
 ```elixir
-  defmodule MyPolicy do
+  defmodule MonthlyReportPolicy do
     use Exop.Policy
 
-    def read(_user, _opts), do: true
+    def can_read?(%{user_role: "admin"}), do: true
+    def can_read?(%{user_role: "manager"}), do: true
+    def can_read?(_opts), do: false
 
-    def write(_user, _opts), do: false
+    def can_write?(%{user_role: "manager"}), do: true
+    def can_write?(_opts), do: false
   end
 ```
 
-In this policy two actions (checks) defined (read & write). Every action expects a user (an action subject/caller)
-and options (Keyword). It's up to you how to handle this arguments and turn it into a check.
+In this policy two actions (checks) defined (`can_read?/1` & `can_write?/1`).
+Every action expects a map of options for a check. It's up to you how to handle this map argument and turn it into a check.
 
 _Bear in mind: only `true` return-value treated as true, everything else returned form an action treated as false_
 
@@ -350,28 +355,28 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
   defmodule ReadOperation do
     use Exop.Operation
 
-    policy MyPolicy, :read
+    policy MonthlyReportPolicy, :can_read?
 
     parameter :user, required: true, struct: %User{}
 
-    def process(_params) do
+    def process(%{user: %User{} = user}) do
       # make some reading...
     end
   end
 ```
 
-- finally - call `authorize/2` within `process/1`
+- finally - call `authorize/1` within `process/1`
 
 ```elixir
   defmodule ReadOperation do
     use Exop.Operation
 
-    policy MyPolicy, :read
+    policy MonthlyReportPolicy, :can_read?
 
     parameter :user, required: true, struct: %User{}
 
-    def process(params) do
-      authorize(params[:user])
+    def process(%{user: %User{role: role}}) do
+      authorize(user_role: role)
 
       # make some reading...
     end
@@ -380,6 +385,63 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
 
 _Please, note: if authorization fails, any code after (below) auth check
 will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)_
+
+### Fallback module
+
+If you'd like to handle various operations fails with a certain logic (for example log it into Graylog)
+you can use `Exop.Fallback`.
+
+Define a fallback module:
+
+```elixir
+  defmodule FallbackModule do
+    use Exop.Fallback
+
+    def process(operation, params, error) do
+      # your error handling code here
+      :some_fallback_result
+    end
+  end
+```
+
+here you need to define and implement `process/3` function which takes following params:
+
+- failed operation module
+- params that were passed into the operation
+- an error result which was returned by the operation
+
+Use your fallback in operations like this:
+
+```elixir
+defmodule SomeOperation do
+  use Exop.Operation
+
+  fallback FallbackModule, return: true
+
+  parameter :a, type: :integer
+  parameter :b, type: :integer
+
+  def process(%{a: a, b: b}), do: a + b
+end
+```
+
+The results of the operation executions:
+
+```elixir
+# SomeOperation will fail
+iex> SomeOperation.run(a: 1, b: "2")
+:some_fallback_result
+
+# SomeOperation will be successful
+iex> SomeOperation.run(a: 1, b: 2)
+{:ok, 3}
+```
+
+During a fallback definition you can add `return: true` option so in the example case
+`SomeOperation.run/1` will return the result of the fallback (`FallbackModule.process/3`
+function's result - `:some_fallback_result`).
+If you want `SomeOperation.run/1` to return original result (`{:error, {:validation, %{a: ["has wrong type"]}}}`)
+specify `return: false` option or just omit it in a fallback definition.
 
 ## Operation invocation
 
@@ -425,16 +487,54 @@ An operation can return one of results listed below (depends on passed in params
 - a contract validation failed: `{:error, {:validation, map()}}`
 - if `interrupt/1` was invoked: `{:interrupt, any()}`
 - policy check failed:
-  - `{:error, {:auth, :undefined_user}}`
   - `{:error, {:auth, :undefined_policy}}`
   - `{:error, {:auth, :undefined_action}}`
   - `{:error, {:auth, atom()}}`
 
 _For the "bang" version of `run/1` see results description above._
 
+## Chain of operations
+
+Sometimes you need to aggregate/group 'atom' operations into a single one operation responsible for
+some complex business process/logic.
+You have a few approaches to do it (`with` for example) but mb you'll find `Exop.Chain` more handy.
+
+`Exop.Chain` provides a simple way to organize a number of Exop.Operation modules into an invocation chain.
+
+```elixir
+defmodule CreateUser do
+  use Exop.Chain
+
+  alias Operations.{User, Backoffice, Notifications}
+
+  operation User.Create
+  operation Backoffice.SaveStats
+  operation Notifications.SendEmail
+end
+```
+
+This is how invoke this chain:
+
+```elixir
+iex> CreateUser.run(name: "User Name", age: 37, gender: "m")
+```
+
+`Exop.Chain` defines `run/1` function under the hood (like common operations do) that takes `keyword()` or `map()` of params.
+Those params will be passed into the first operation in the chain.
+Bear in mind that each of chained operations (except the first one) awaits a returned result of
+a previous operation as incoming params.
+
+So in the example above `CreateUser.run(name: "User Name", age: 37, gender: "m")` will invoke
+the chain by passing `[name: "User Name", age: 37, gender: "m"]` params to the first `User.Create` operation.
+The result of `User.Create` operation will be passed to `Backoffice.SaveStats`
+operation as its params and so on.
+
+Once any of operations in the chain returns non-ok-tuple result (error result, interruption, auth error etc.)
+the chain execution interrupts and error result returned (as the chain (`CreateUser`) result).
+
 ## LICENSE
 
-    Copyright © 2018 Andrey Chernykh ( andrei.chernykh@gmail.com )
+    Copyright © 2016 - 2018 Andrey Chernykh ( andrei.chernykh@gmail.com )
 
     This work is free. You can redistribute it and/or modify it under the
     terms of the MIT License. See the LICENSE file for more details.

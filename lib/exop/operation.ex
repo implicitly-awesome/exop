@@ -37,9 +37,10 @@ defmodule Exop.Operation do
       import unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :contract, accumulate: true)
-      Module.register_attribute(__MODULE__, :policy_module, [])
-      Module.register_attribute(__MODULE__, :policy_action_name, [])
 
+      @policy_module nil
+      @policy_action_name nil
+      @fallback_module nil
       @module_name __MODULE__
 
       @before_compile unquote(__MODULE__)
@@ -53,7 +54,6 @@ defmodule Exop.Operation do
       @type interrupt_result :: {:interrupt, any}
       @type auth_result :: :ok | no_return
       #  throws:
-      #  {:error, {:auth, :undefined_user}}   |
       #  {:error, {:auth, :undefined_policy}} |
       #  {:error, {:auth, :unknown_policy}}   |
       #  {:error, {:auth, :unknown_action}}   |
@@ -72,25 +72,34 @@ defmodule Exop.Operation do
       """
       @spec run(Keyword.t() | map() | nil) ::
               {:ok, any} | Validation.validation_error() | interrupt_result | auth_result
-      def run(received_params \\ [])
+      def run(received_params \\ %{})
 
       def run(received_params) when is_list(received_params) do
-        if Enum.uniq(Keyword.keys(received_params)) == Keyword.keys(received_params) do
-          params = received_params |> resolve_defaults(@contract, received_params)
-          params |> resolve_coercions(@contract, params) |> output
-        else
-          {:error, {:validation, %{params: "There are duplicates in received params list"}}}
-        end
+        received_params |> Enum.into(%{}) |> run()
       end
 
       def run(received_params) when is_map(received_params) do
-        received_params
-        |> resolve_defaults(@contract, received_params)
-        |> output
+        params = resolve_defaults(received_params, @contract, received_params)
+        result = params |> resolve_coercions(@contract, params) |> output()
+
+        with {:ok, _} = result <- result do
+          result
+        else
+          error -> invoke_fallback(@fallback_module, received_params, error)
+        end
       end
 
-      @spec run!(Keyword.t() | map() | nil) :: any | RuntimeError
-      def run!(received_params \\ []) do
+      @spec invoke_fallback(map() | nil, map(), any()) :: any()
+      defp invoke_fallback(%{module: fallback_module, opts: opts}, received_params, error) do
+        fallback_result = apply(fallback_module, :process, [@module_name, received_params, error])
+
+        if is_list(opts) && opts[:return], do: fallback_result, else: error
+      end
+
+      defp invoke_fallback(_fallback_module, _received_params, error), do: error
+
+      @spec run!(Keyword.t() | map() | nil) :: any() | RuntimeError
+      def run!(received_params \\ %{}) do
         case run(received_params) do
           {:ok, result} ->
             result
@@ -215,19 +224,18 @@ defmodule Exop.Operation do
         :ok
       end
 
-      @spec do_authorize(Exop.Policy.t(), atom, any, Keyword.t()) :: auth_result
-      defp do_authorize(_policy, _action, nil, _opts),
-        do: throw({@exop_auth_error, :undefined_user})
+      @spec do_authorize(Exop.Policy.t(), atom, Keyword.t()) :: auth_result
+      defp do_authorize(nil, _action, _opts) do
+        throw({@exop_auth_error, :undefined_policy})
+      end
 
-      defp do_authorize(nil, _action, _user, _opts),
-        do: throw({@exop_auth_error, :undefined_policy})
+      defp do_authorize(_policy, nil, _opts) do
+        throw({@exop_auth_error, :undefined_action})
+      end
 
-      defp do_authorize(_policy, nil, _user, _opts),
-        do: throw({@exop_auth_error, :undefined_action})
-
-      defp do_authorize(policy, action, user, opts) do
+      defp do_authorize(policy, action, opts) do
         try do
-          case apply(policy, :authorize, [action, user, opts]) do
+          case apply(policy, :authorize, [action, opts]) do
             false -> throw({@exop_auth_error, action})
             true -> :ok
           end
@@ -293,6 +301,10 @@ defmodule Exop.Operation do
   Checks whether the given parameter is expected structure.
       parameter :some_param, struct: %SomeStruct{}
 
+  #### list_item
+  Checks whether each of list items conforms defined checks. An item's checks could be any that Exop offers:
+      parameter :list_param, list_item: %{type: :string, length: %{min: 7}}
+
   #### func
   Checks whether an item is valid over custom validation function.
       parameter :some_param, func: &__MODULE__.your_validation/2
@@ -355,9 +367,9 @@ defmodule Exop.Operation do
   Authorizes an action with predefined policy (see `policy` macro docs).
   If authorization fails, any code after (below) auth check will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)
   """
-  defmacro authorize(user, opts \\ []) do
-    quote bind_quoted: [user: user, opts: opts] do
-      do_authorize(@policy_module, @policy_action_name, user, opts)
+  defmacro authorize(opts \\ []) do
+    quote bind_quoted: [opts: opts] do
+      do_authorize(@policy_module, @policy_action_name, opts)
     end
   end
 
@@ -367,6 +379,42 @@ defmodule Exop.Operation do
   defmacro current_policy do
     quote do
       {@policy_module, @policy_action_name}
+    end
+  end
+
+  @doc """
+  Defines a fallback module that will be used for an operation's non-ok-tuple (fail) result handling.
+      defmodule MultiplyByTenOperation do
+        use Exop.Operation
+
+        fallback LoggerFallback
+
+        parameter :a, type: :integer, required: true
+
+        def process(%{a: a}), do: a * 10
+      end
+
+  A fallback module itself might be:
+      defmodule LoggerFallback do
+        use Exop.Fallback
+        require Logger
+
+        def process(operation_module, params_passed_to_the_operation, operation_error_result) do
+          Logger.error("Oops")
+        end
+      end
+
+  If `return: true` option is provided then failed operation's `run/1` will return the
+  fallback's `process/3` result.
+  """
+  defmacro fallback(fallback_module, opts \\ []) do
+    quote bind_quoted: [fallback_module: fallback_module, opts: opts] do
+      if Code.ensure_compiled?(fallback_module) && function_exported?(fallback_module, :process, 3) do
+        @fallback_module %{module: fallback_module, opts: opts}
+      else
+        Logger.warn("#{@module_name}: #{fallback_module}.run/1 wasn't found")
+        @fallback_module nil
+      end
     end
   end
 end

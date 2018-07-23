@@ -1,46 +1,59 @@
 defmodule ExopPolicyTest do
   use ExUnit.Case, async: false
 
-  defmodule TestPolicy do
-    use Exop.Policy
-
-    def can_true?(_user, _opts), do: true
-
-    def can_false?(_user, _opts), do: false
-
-    def can_smth?(_user, _opts), do: "just string"
-
-    def can_error?(_user, _opts), do: raise(ArithmeticError, "oops")
-
-    def just_opts(_user, [a: 1, b: 2] = opts), do: opts
-    def just_opts(_user, _opts), do: raise "unknown opts"
-  end
-
-  defmodule TestUser do
+  defmodule User do
     defstruct ~w(name email)a
   end
 
-  test "has authorize/3 function" do
-    assert Enum.member?(TestPolicy.__info__(:functions), {:authorize, 3})
+  defmodule TestPolicy do
+    use Exop.Policy
+
+    def can_true?(_opts), do: true
+
+    def can_false?(_opts), do: false
+
+    def can_smth?(_opts), do: "just string"
+
+    def can_error?(_opts), do: raise(ArithmeticError, "oops")
+
+    def can_read?(%{user: %User{name: "admin"}} = _opts), do: true
+    def can_read?(_opts), do: false
+  end
+
+  defmodule TestOperation do
+    use Exop.Operation
+
+    policy TestPolicy, :can_read?
+
+    parameter :user, required: true, struct: %User{}
+
+    def process(params) do
+      authorize(user: params[:user])
+      :operation_result
+    end
+  end
+
+  test "has authorize/2 function" do
+    assert Enum.member?(TestPolicy.__info__(:functions), {:authorize, 2})
   end
 
   test "only true is treated as true" do
-    assert TestPolicy.authorize(:can_true?, %TestUser{})
-    refute TestPolicy.authorize(:can_false?, %TestUser{})
-    refute TestPolicy.authorize(:can_smth?, %TestUser{})
+    assert TestPolicy.authorize(:can_true?, user: %User{})
+    refute TestPolicy.authorize(:can_false?, user: %User{})
+    refute TestPolicy.authorize(:can_smth?, user: %User{})
   end
 
   test "errors are passed through" do
     assert_raise ArithmeticError, fn ->
-      TestPolicy.authorize(:can_error?, %TestUser{})
+      TestPolicy.authorize(:can_error?, user: %User{})
     end
   end
 
-  test "authorize/3 pass opts to policy action" do
-    assert TestPolicy.authorize(:just_opts, %TestUser{}, a: 1, b: 2) == false
+  test "TestOperation: admin user can read" do
+    assert TestOperation.run(user: %User{name: "admin"}) == {:ok, :operation_result}
+  end
 
-    assert_raise RuntimeError, "unknown opts", fn ->
-      TestPolicy.authorize(:just_opts, %TestUser{}, a: 123, b: 321)
-    end
+  test "TestOperation: Not admin user can't read" do
+    assert TestOperation.run(user: %User{name: "manager"}) == {:error, {:auth, :can_read?}}
   end
 end

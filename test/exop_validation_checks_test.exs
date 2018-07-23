@@ -1,5 +1,5 @@
 defmodule ExopValidationChecksTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   doctest Exop.ValidationChecks
 
@@ -63,11 +63,11 @@ defmodule ExopValidationChecksTest do
   end
 
   test "check_numericality/3: fails" do
-    [%{a: _}] = check_numericality(%{a: 1}, :a, %{equal_to: 3)
-    [%{a: _}] = check_numericality(%{a: 1}, :a, %{greater_than: 3)
-    [%{a: _}] = check_numericality(%{a: 1}, :a, %{greater_than_or_equal_to: 3)
-    [%{a: _}] = check_numericality(%{a: 5}, :a, %{less_than: 3)
-    [%{a: _}] = check_numericality(%{a: 5}, :a, %{less_than_or_equal_to: 3)
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{equal_to: 3})
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{greater_than: 3})
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{greater_than_or_equal_to: 3})
+    [%{a: _}] = check_numericality(%{a: 5}, :a, %{less_than: 3})
+    [%{a: _}] = check_numericality(%{a: 5}, :a, %{less_than_or_equal_to: 3})
   end
 
   test "check_numericality/3: successes" do

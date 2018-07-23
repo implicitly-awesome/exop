@@ -35,7 +35,7 @@ defmodule ExopOperationTest do
 
   test "run/1: calls Operation.Validation.valid?/2" do
     with_mock Exop.Validation, [valid?: fn(_, _) -> :ok end] do
-      params = [param1: "param1"]
+      params = %{param1: "param1"}
       Operation.run(params)
       assert called Exop.Validation.valid?(Operation.contract, params)
     end
@@ -127,19 +127,19 @@ defmodule ExopOperationTest do
     assert Def5Operation.run(a: 1, c: 3) == {:ok, %{a: 1, b: 2}}
   end
 
-  test "run/1: returns an error if received given params Keyword has duplicated keys" do
+  test "run/1: returns an the last defined value for duplicated keys" do
     defmodule Def6Operation do
       use Exop.Operation
 
       parameter :a
       parameter :b
 
-      def process(_params), do: :ok
+      def process(params), do: params
     end
 
-    assert Def6Operation.run(a: 1, b: 3) == {:ok, :ok}
-    assert Def6Operation.run(%{a: 1, b: 3}) == {:ok, :ok}
-    assert Def6Operation.run(a: 1, a: 3) == {:error, {:validation, %{params: "There are duplicates in received params list"}}}
+    assert Def6Operation.run(a: 1, b: 3) == {:ok, %{a: 1, b: 3}}
+    assert Def6Operation.run(%{a: 1, b: 3}) == {:ok, %{a: 1, b: 3}}
+    assert Def6Operation.run(a: 1, a: 3) == {:ok, %{a: 3}}
   end
 
   test "interrupt/1: interupts process and returns the interuption result" do
@@ -172,13 +172,13 @@ defmodule ExopOperationTest do
   defmodule TruePolicy do
     use Exop.Policy
 
-    def test(_user, _opts), do: true
+    def test(_opts), do: true
   end
 
   defmodule FalsePolicy do
     use Exop.Policy
 
-    def test(_user, _opts), do: false
+    def test(_opts), do: false
   end
 
   defmodule TestUser do
@@ -203,7 +203,7 @@ defmodule ExopOperationTest do
 
       policy TruePolicy, :test
 
-      def process(_params), do: authorize(%TestUser{})
+      def process(_params), do: authorize(user: %TestUser{})
     end
 
     assert Def10Operation.run == {:ok, :ok}
@@ -213,7 +213,7 @@ defmodule ExopOperationTest do
 
       policy FalsePolicy, :test
 
-      def process(_params), do: authorize(%TestUser{})
+      def process(_params), do: authorize(user: %TestUser{})
     end
 
     assert Def11Operation.run == {:error, {:auth, :test}}
@@ -310,7 +310,7 @@ defmodule ExopOperationTest do
 
       def validate(_params, x), do: x > 0
 
-      def coerce(x), do: 0
+      def coerce(_x), do: 0
     end
 
     assert Def18Operation.run(a: 2) == {:ok, 4}

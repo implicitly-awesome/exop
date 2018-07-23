@@ -1,3 +1,18 @@
+## [1.0.0] 🎉 - 2018.07.25
+
+### Changes
+
+A bunch of changes were made in this release with some brand new functionality,
+so I decided to bump version to 1.0.0, finally.
+Exop has been working since 2016 on various projects, in production.
+I think it means something and I can say it is production-ready :)
+
+- `Exop.Chain` helps you to organize a number of operations into an invocation chain
+- `Exop.Fallback` handles your operations fails (error-tuple results)
+- `Exop.Policy` was simplified
+- minor codebase updates
+- docs were reviewed
+
 ## [0.5.1] - 2018.07.16
 
 ### Changes

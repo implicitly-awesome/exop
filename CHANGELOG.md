@@ -1,3 +1,23 @@
+## [1.1.0] - 2018.09.03
+
+### Changes
+
+- `required` check was revised. Now `nil` is treated as a value. It means that before this version
+  `required` check returned an error if a parameter had a `nil` value. From this version
+  this check fails only if parameter wasn't provided to an operation.
+
+  To simulate previous behaviour (if you need to keep backward compatibility with parameters passed into an operation)
+  you can do:
+
+  ```elixir
+  parameter :a, required: true, func: &__MODULE__.old_required/2
+
+  def old_required(_params, nil), do: {:error, "is required"}
+  def old_required(_params, param), do: true
+  ```
+
+- `ValidationError` now has an operation name in its message (better for debugging and logging)
+
 ## [1.0.0] 🎉 - 2018.07.25
 
 ### Changes

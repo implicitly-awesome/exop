@@ -50,6 +50,9 @@ defmodule Exop.Operation do
   defmacro __before_compile__(_env) do
     quote do
       alias Exop.Validation
+      alias Exop.ValidationChecks
+
+      @no_check_item :exop_no_check_item
 
       @type interrupt_result :: {:interrupt, any}
       @type auth_result :: :ok | no_return
@@ -105,7 +108,7 @@ defmodule Exop.Operation do
             result
 
           {:error, {:validation, reasons}} ->
-            raise(Validation.ValidationError, Validation.errors_message(reasons))
+            raise(Validation.ValidationError, mod_err_msg(reasons))
 
           result ->
             result
@@ -126,7 +129,8 @@ defmodule Exop.Operation do
            ) do
         resolved_params =
           if Keyword.has_key?(contract_item_opts, :default) &&
-               Exop.ValidationChecks.get_check_item(received_params, contract_item_name) == nil do
+               ValidationChecks.get_check_item(received_params, contract_item_name) ==
+                 @no_check_item do
             contract_item_opts
             |> Keyword.get(:default)
             |> put_into_collection(resolved_params, contract_item_name)
@@ -154,7 +158,7 @@ defmodule Exop.Operation do
             coerce_with = Keyword.get(contract_item_opts, :coerce_with)
 
             coerced_value =
-              coerce_with.(Exop.ValidationChecks.get_check_item(coerced_params, contract_item_name))
+              coerce_with.(ValidationChecks.get_check_item(coerced_params, contract_item_name))
 
             put_into_collection(coerced_value, coerced_params, contract_item_name)
           else
@@ -199,13 +203,15 @@ defmodule Exop.Operation do
       end
 
       defp output(_params, {:error, {:validation, errors}} = validation_result) do
-        Logger.warn("#{@module_name} errors: \n#{Validation.errors_message(errors)}")
+        errors |> mod_err_msg() |> Logger.warn()
         validation_result
       end
 
       defp output(_params, validation_result) do
         validation_result
       end
+
+      defp mod_err_msg(errors), do: "#{@module_name} errors: \n#{Validation.errors_message(errors)}"
 
       @spec defined_params(Keyword.t() | map()) :: map()
       def defined_params(received_params) when is_list(received_params) do

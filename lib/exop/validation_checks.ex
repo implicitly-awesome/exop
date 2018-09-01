@@ -11,6 +11,8 @@ defmodule Exop.ValidationChecks do
     * check_length/3
   """
 
+  @no_check_item :exop_no_check_item
+
   # @type check_error :: {:error, String.t}
   @type check_error :: %{atom => String.t()}
 
@@ -28,22 +30,22 @@ defmodule Exop.ValidationChecks do
       2
 
       iex> Exop.ValidationChecks.get_check_item(%{a: 1, b: 2}, :c)
-      nil
+      :exop_no_check_item
   """
   @spec get_check_item(Keyword.t() | map(), atom) :: any | nil
   def get_check_item(check_items, item_name) when is_map(check_items) do
-    Map.get(check_items, item_name)
+    Map.get(check_items, item_name, @no_check_item)
   rescue
-    _ -> nil
+    _ -> @no_check_item
   end
 
   def get_check_item(check_items, item_name) when is_list(check_items) do
-    Keyword.get(check_items, item_name)
+    Keyword.get(check_items, item_name, @no_check_item)
   rescue
-    _ -> nil
+    _ -> @no_check_item
   end
 
-  def get_check_item(_check_items, _item), do: nil
+  def get_check_item(_check_items, _item), do: @no_check_item
 
   @doc """
   Checks if an item_name presents in params if its required (true).
@@ -65,7 +67,7 @@ defmodule Exop.ValidationChecks do
   def check_required(check_items, item_name, true) do
     check_item = get_check_item(check_items, item_name)
 
-    if is_nil(check_item) do
+    if check_item == @no_check_item do
       %{item_name => "is required"}
     else
       true
@@ -104,7 +106,7 @@ defmodule Exop.ValidationChecks do
   defp do_check_type(check_item, :list) when is_list(check_item), do: true
   defp do_check_type(check_item, :atom) when is_atom(check_item), do: true
   defp do_check_type(check_item, :function) when is_function(check_item), do: true
-  defp do_check_type(nil, _), do: true
+  defp do_check_type(@no_check_item, _), do: true
   defp do_check_type(_, _), do: false
 
   @doc """
@@ -130,7 +132,7 @@ defmodule Exop.ValidationChecks do
         result = checks |> Enum.map(&check_number(check_item, item_name, &1))
         if Enum.all?(result, &(&1 == true)), do: true, else: result
 
-      is_nil(check_item) ->
+      is_nil(check_item) or check_item == @no_check_item ->
         true
 
       true ->

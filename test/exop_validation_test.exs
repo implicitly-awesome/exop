@@ -80,14 +80,14 @@ defmodule ExopValidationTest do
       %{name: :map_param, opts: [
         type: :map,
         inner: %{
-          a: %{type: :integer, required: true},
+          a: %{type: :integer},
           b: %{type: :string, length: %{min: 7}}
           }
         ]
       }
     ]
 
-    received_params = [map_param: %{a: nil, b: "6chars"}]
+    received_params = [map_param: %{a: "2", b: "6chars"}]
 
     {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
@@ -101,14 +101,14 @@ defmodule ExopValidationTest do
       %{name: :map_param, opts: [
         type: :map,
         inner: %{
-          a: [type: :integer, required: true],
+          a: [type: :integer],
           b: [type: :string, length: %{min: 7}]
           }
         ]
       }
     ]
 
-    received_params = [map_param: [a: nil, b: "6chars"]]
+    received_params = [map_param: [a: "2", b: "6chars"]]
 
     {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
@@ -123,18 +123,17 @@ defmodule ExopValidationTest do
       %{name: :map_param, opts: [
         type: :map,
         inner: %{
-          a: %{type: :integer, required: true},
+          a: %{type: :integer},
           b: %{type: :string, length: %{min: 7}}
-          }
-        ]
-      }
+        }
+      ]}
     ]
 
-    received_params = [map_param: %TestStruct{a: nil, b: "6chars"}]
+    received_params = [map_param: %TestStruct{a: "2", b: "6chars"}]
 
     {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
-    keys = reasons |> Map.keys
+    keys = Map.keys(reasons)
     assert Enum.member?(keys, :a)
     assert Enum.member?(keys, :b)
   end
@@ -159,7 +158,7 @@ defmodule ExopValidationTest do
     assert %{
       item_0: ["has wrong type", "length must be greater than or equal to 7"],
       item_1: ["length must be greater than or equal to 7"],
-      item_2: ["length must be greater than or equal to 7"]
+      item_2: ["has wrong type", "length must be greater than or equal to 7"]
     } == reasons
   end
 
@@ -170,7 +169,7 @@ defmodule ExopValidationTest do
         opts: [
           type: :list,
           list_item: %{inner: %{
-            a: %{type: :integer, required: true},
+            a: %{type: :integer},
             b: %{type: :string, length: %{min: 7}}
           }}
         ]
@@ -180,14 +179,14 @@ defmodule ExopValidationTest do
     received_params = [
       list_param: [
         %TestStruct{a: 3, b: "6chars"},
-        %TestStruct{a: nil, b: "7charss"}
+        %TestStruct{a: "3", b: "7charss"}
       ]
     ]
 
     {:error, {:validation, reasons}} = valid?(contract, received_params)
 
     assert %{
-      a: ["is required"],
+      a: ["has wrong type"],
       b: ["length must be greater than or equal to 7"]
     } == reasons
   end

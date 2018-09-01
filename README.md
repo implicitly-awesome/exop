@@ -110,10 +110,14 @@ _Unknown type always passes this check._
 #### `required`
 
 Checks the presence of a parameter in passed to `run/1` params collection.
+Given parameters collection fails the validation only if required parameter is missed,
+if required parameter's value is `nil` this parameter will pass this check.
 
 ```elixir
 parameter :some_param, required: true
 ```
+
+_Since version 1.1.0 the behavior of this check has been changed. Check out CHANGELOG for more info._
 
 #### `default`
 

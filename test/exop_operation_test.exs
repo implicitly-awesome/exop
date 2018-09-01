@@ -76,7 +76,7 @@ defmodule ExopOperationTest do
       end
     end
 
-    assert Def2Operation.run == {:ok, 999}
+    assert Def2Operation.run() == {:ok, 999}
   end
 
   test "run/1: doesn't pass default value if a parameter was passed to run/1" do
@@ -298,7 +298,7 @@ defmodule ExopOperationTest do
 
       def process(params), do: params[:a]
 
-      def coerce(_x), do: nil
+      def coerce(_x), do: "str"
     end
 
     defmodule Def20Operation do
@@ -316,7 +316,7 @@ defmodule ExopOperationTest do
     assert Def18Operation.run(a: 2) == {:ok, 4}
     assert Def18Operation.run(a: 0) == {:error, {:validation, %{a: ["must be greater than 0"]}}}
 
-    assert Def19Operation.run(a: "str") == {:error, {:validation, %{a: ["is required"]}}}
+    assert Def19Operation.run() == {:ok, "str"}
 
     assert Def20Operation.run(a: 100) == {:error, {:validation, %{a: ["isn't valid"]}}}
   end
@@ -346,7 +346,7 @@ defmodule ExopOperationTest do
       end
     end
 
-    assert_raise Exop.Validation.ValidationError, fn -> Def22Operation.run! end
+    assert_raise Exop.Validation.ValidationError, fn -> Def22Operation.run!() end
   end
 
   test "run!/1: doesn't affect unhandled errors" do

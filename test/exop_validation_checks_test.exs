@@ -10,13 +10,13 @@ defmodule ExopValidationChecksTest do
     assert get_check_item([a: 1, b: 2], :b) == 2
   end
 
-  test "get_check_item/2: returns nil if key was not found" do
-    assert get_check_item(%{a: 1, b: 2}, :c) == nil
-    assert get_check_item([a: 1, b: 2], :c) == nil
+  test "get_check_item/2: returns :exop_no_check_item if key was not found" do
+    assert get_check_item(%{a: 1, b: 2}, :c) == :exop_no_check_item
+    assert get_check_item([a: 1, b: 2], :c) == :exop_no_check_item
   end
 
-  test "get_check_item/2: returns nil if first argument is not Keyword nor Map" do
-    assert get_check_item({:a, 1, :b, 2}, :a) == nil
+  test "get_check_item/2: returns :exop_no_check_item if first argument is not Keyword nor Map" do
+    assert get_check_item({:a, 1, :b, 2}, :a) == :exop_no_check_item
   end
 
   test "check_required/3: returns true if required = false" do

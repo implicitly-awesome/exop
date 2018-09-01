@@ -42,6 +42,22 @@ defmodule ExopChainTest do
     def process(_params), do: 1000
   end
 
+  defmodule TestFallback do
+    use Exop.Fallback
+
+    def process(_operation, _params, _error), do: "fallback!"
+  end
+
+  defmodule WithFallback do
+    use Exop.Operation
+
+    fallback TestFallback, return: true
+
+    parameter :a, type: :string
+
+    def process(_params), do: 1000
+  end
+
   defmodule TestChainSuccess do
     use Exop.Chain
 
@@ -58,6 +74,14 @@ defmodule ExopChainTest do
     operation DivisionByTen
   end
 
+  defmodule TestChainFallback do
+    use Exop.Chain
+
+    operation Sum
+    operation WithFallback
+    operation DivisionByTen
+  end
+
   test "invokes defined operations one by one and return the last result" do
     initial_params = [a: 1, b: 2]
     result = TestChainSuccess.run(initial_params)
@@ -70,5 +94,12 @@ defmodule ExopChainTest do
     result = TestChainFail.run(initial_params)
 
     assert result == {:error, {:validation, %{a: ["has wrong type"]}}}
+  end
+
+  test "invokes a fallback module of a failed operation" do
+    initial_params = [a: 1, b: 2]
+    result = TestChainFallback.run(initial_params)
+
+    assert result == "fallback!"
   end
 end

@@ -464,4 +464,36 @@ defmodule ExopOperationTest do
 
     assert Def30Operation.run() == {:error, {:validation, %{item_1: ["length must be greater than or equal to 7"]}}}
   end
+
+  test "string-named parameters are allowed" do
+    defmodule Def31Operation do
+      use Exop.Operation
+
+      parameter "a", type: :string, required: true
+      parameter "b", type: :integer, required: true
+
+      def process(params), do: {:ok, params}
+    end
+
+    assert Def31Operation.run() == {:error, {:validation, %{"a" => ["is required"], "b" => ["is required"]}}}
+    assert Def31Operation.run(%{"a" => 1, "b" => "2"}) == {:error, {:validation, %{"a" => ["has wrong type"], "b" => ["has wrong type"]}}}
+    assert Def31Operation.run(%{"a" => "1", b: 2}) == {:error, {:validation, %{"b" => ["is required"]}}}
+    assert Def31Operation.run(%{"a" => "1", "b" => 2}) == {:ok, %{"a" => "1", "b" => 2}}
+  end
+
+  test "mix-named parameters are allowed" do
+    defmodule Def32Operation do
+      use Exop.Operation
+
+      parameter "a", type: :string, required: true
+      parameter :b, type: :integer, required: true
+
+      def process(params), do: {:ok, params}
+    end
+
+    assert Def32Operation.run() == {:error, {:validation, %{"a" => ["is required"], :b => ["is required"]}}}
+    assert Def32Operation.run(%{"a" => 1, b: "2"}) == {:error, {:validation, %{"a" => ["has wrong type"], :b => ["has wrong type"]}}}
+    assert Def32Operation.run(%{"a" => "1"}) == {:error, {:validation, %{:b => ["is required"]}}}
+    assert Def32Operation.run(%{"a" => "1", b: 2}) == {:ok, %{"a" => "1", :b => 2}}
+  end
 end

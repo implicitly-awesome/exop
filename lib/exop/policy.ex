@@ -5,10 +5,11 @@ defmodule Exop.Policy do
   ## Example
 
       defmodule MonthlyReportPolicy do
-        use Exop.Policy
-
+        # not only Keyword or Map as an argument since 1.1.1
         def can_read?(%{user_role: "admin"}), do: true
-        def can_read?(%{user_role: "manager"}), do: true
+        def can_read?("admin"), do: true
+        def can_read?(%User{role: "manager"}), do: true
+        def can_read?(:manager), do: true
         def can_read?(_opts), do: false
 
         def can_write?(%{user_role: "manager"}), do: true
@@ -22,8 +23,8 @@ defmodule Exop.Policy do
 
         parameter :user, required: true, struct: %User{}
 
-        def process(%{user: %User{role: role}}) do
-          authorize(user_role: role)
+        def process(params) do
+          authorize(params.user)
 
           # make some reading...
         end
@@ -38,7 +39,7 @@ defmodule Exop.Policy do
   @doc """
   Authorizes the possibility to invoke an action.
   """
-  @callback authorize(atom, Keyword.t()) :: true | false
+  @callback authorize(atom, any()) :: true | false
 
   defmacro __using__(_opts) do
     quote do
@@ -50,17 +51,8 @@ defmodule Exop.Policy do
 
   defmacro __before_compile__(_env) do
     quote do
-      @spec authorize(atom, Keyword.t() | map()) :: true | false
-      def authorize(action, opts \\ [])
-
-      def authorize(action, opts) when is_list(opts) do
-        opts = Enum.into(opts, %{})
-        authorize(action, opts)
-      end
-
-      def authorize(action, opts) when is_map(opts) do
-        apply(__MODULE__, action, [opts]) == true
-      end
+      @spec authorize(atom, any()) :: true | false
+      def authorize(action, opts), do: apply(__MODULE__, action, [opts]) == true
     end
   end
 end

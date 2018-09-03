@@ -24,7 +24,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.0.0"}]
+  [{:exop, "~> 1.1.0"}]
 end
 ```
 

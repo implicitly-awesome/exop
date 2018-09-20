@@ -1,3 +1,13 @@
+## [1.1.1] - 2018.09.20
+
+### Changes
+
+- some dialyzer warnings were fixed
+- `in` & `not_in` checks error message fix (for example, atoms list displays as atoms list :) )
+- you can now name your parameters with strings, not only atoms and even combine string- and atom-named parameters
+- a policy action argument now can be a value of any type (previously only map was allowed)
+- there is no need to use `Exop.Policy` in a policy module anymore (you still can use it and there is no need to rewrite exsisting policies): simply define a module with policy checks (actions) functions which are expected to take a single argument (any type) and return either `true` or `false`
+
 ## [1.1.0] - 2018.09.03
 
 ### Changes

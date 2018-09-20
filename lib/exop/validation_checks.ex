@@ -182,7 +182,7 @@ defmodule Exop.ValidationChecks do
     if Enum.member?(check_list, check_item) do
       true
     else
-      %{item_name => "must be one of [#{Enum.join(check_list, ", ")}]"}
+      %{item_name => "must be one of #{inspect(check_list)}"}
     end
   end
 
@@ -201,7 +201,7 @@ defmodule Exop.ValidationChecks do
     check_item = get_check_item(check_items, item_name)
 
     if Enum.member?(check_list, check_item) do
-      %{item_name => "must not be included in [#{Enum.join(check_list, ", ")}]"}
+      %{item_name => "must not be included in #{inspect(check_list)}"}
     else
       true
     end

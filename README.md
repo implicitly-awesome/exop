@@ -24,7 +24,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.1.0"}]
+  [{:exop, "~> 1.1.1"}]
 end
 ```
 
@@ -46,8 +46,9 @@ end
 ```
 
 `Exop.Operation` provides `parameter` macro, which is responsible for the contract definition.
-Its spec is `@spec parameter(atom, Keyword.t) :: none`, we define parameter name as the first atom attribute
-and parameter options as the second `Keyword` attribute.
+Its spec is `@spec parameter(atom | String.t, Keyword.t) :: none`, we define parameter name as the first argument and parameter options as the second `Keyword` argument.
+
+_A parameter name could be either an atom or a string. You could even mix atom-named and string-named parameters in an operation's contract._
 
 Parameter options determine a contract of a parameter, a set of parameters contracts is an operation contract.
 
@@ -314,6 +315,8 @@ end
 SomeOperation.run(a: 1) # {:interrupt, %{fail: "oops"}}
 ```
 
+_`run!/1` invocation doesn't affect interruption result: {:interrupt, \_your_result} tuple will be returned anyway as expected and handled result._
+
 ### Coercion
 
 It is possible to coerce a parameter before the contract validation, all validation checks
@@ -330,17 +333,17 @@ def coerce(x), do: x * 2
 
 ### Policy check
 
-It is possible to define a policy that will be used for authorizing the possibility of a user
-to invoke an operation. So far, there is simple policy implementation and usage:
+It is possible to define a policy that will be used for authorizing the possibility to invoke an operation. So far, there is a simple policy implementation and usage:
 
-- first of all, define a policy with `Exop.Policy` macro
+- first of all, define a policy module _(`use Exop.Policy` is not actual since ver. 1.1.1 - it is not mandatory to use this macro. Just define a module with a bunch of functions that take a single argument (any type) and return either true or false)_
 
 ```elixir
   defmodule MonthlyReportPolicy do
-    use Exop.Policy
-
+    # not only Keyword or Map as an argument since 1.1.1
     def can_read?(%{user_role: "admin"}), do: true
-    def can_read?(%{user_role: "manager"}), do: true
+    def can_read?("admin"), do: true
+    def can_read?(%User{role: "manager"}), do: true
+    def can_read?(:manager), do: true
     def can_read?(_opts), do: false
 
     def can_write?(%{user_role: "manager"}), do: true
@@ -349,7 +352,7 @@ to invoke an operation. So far, there is simple policy implementation and usage:
 ```
 
 In this policy two actions (checks) defined (`can_read?/1` & `can_write?/1`).
-Every action expects a map of options for a check. It's up to you how to handle this map argument and turn it into a check.
+Every action expects an argument for a check. It's up to you how to handle this argument and turn it into the actual check.
 
 _Bear in mind: only `true` return-value treated as true, everything else returned form an action treated as false_
 
@@ -379,8 +382,8 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
 
     parameter :user, required: true, struct: %User{}
 
-    def process(%{user: %User{role: role}}) do
-      authorize(user_role: role)
+    def process(params) do
+      authorize(params.user)
 
       # make some reading...
     end
@@ -388,7 +391,7 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
 ```
 
 _Please, note: if authorization fails, any code after (below) auth check
-will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)_
+will be postponed (an error `{:error, {:auth, _policy_action_name}}` will be returned immediately as an operation result)_
 
 ### Fallback module
 

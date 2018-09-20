@@ -177,8 +177,6 @@ defmodule Exop.Operation do
         Keyword.put(collection, item_name, value)
       end
 
-      defp put_into_collection(_value, collection, _item_name), do: collection
-
       defp output(params) do
         output(params, Validation.valid?(@contract, params))
       end
@@ -207,10 +205,6 @@ defmodule Exop.Operation do
         validation_result
       end
 
-      defp output(_params, validation_result) do
-        validation_result
-      end
-
       defp mod_err_msg(errors), do: "#{@module_name} errors: \n#{Validation.errors_message(errors)}"
 
       @spec defined_params(Keyword.t() | map()) :: map()
@@ -224,13 +218,12 @@ defmodule Exop.Operation do
         Map.drop(received_params, keys_to_filter)
       end
 
-      @spec interrupt(any) :: :ok
+      @spec interrupt(any) :: no_return()
       def interrupt(reason \\ nil) do
         throw({@exop_interruption, reason})
-        :ok
       end
 
-      @spec do_authorize(Exop.Policy.t(), atom, Keyword.t()) :: auth_result
+      @spec do_authorize(Exop.Policy.t(), atom, any()) :: no_return()
       defp do_authorize(nil, _action, _opts) do
         throw({@exop_auth_error, :undefined_policy})
       end
@@ -241,9 +234,21 @@ defmodule Exop.Operation do
 
       defp do_authorize(policy, action, opts) do
         try do
-          case apply(policy, :authorize, [action, opts]) do
-            false -> throw({@exop_auth_error, action})
-            true -> :ok
+          if policy.__info__(:functions)[:authorize] == 2 do
+            case apply(policy, :authorize, [action, opts]) do
+              false -> throw({@exop_auth_error, action})
+              true -> :ok
+            end
+          else
+            if policy.__info__(:functions)[action] == 1 do
+              if apply(policy, action, [opts]) == true do
+                :ok
+              else
+                throw({@exop_auth_error, action})
+              end
+            else
+              throw({@exop_auth_error, :unknown_policy})
+            end
           end
         rescue
           UndefinedFunctionError -> throw({@exop_auth_error, :unknown_policy})
@@ -331,7 +336,7 @@ defmodule Exop.Operation do
 
   _For more information and examples check out general Exop docs._
   """
-  defmacro parameter(name, opts \\ []) when is_atom(name) do
+  defmacro parameter(name, opts \\ []) when is_atom(name) or is_binary(name) do
     quote bind_quoted: [name: name, opts: opts] do
       @contract %{name: name, opts: opts}
     end
@@ -343,23 +348,25 @@ defmodule Exop.Operation do
       defmodule ReadOperation do
         use Exop.Operation
 
-        policy MyPolicy, :read
+        policy MonthlyReportPolicy, :can_read?
 
         parameter :user, required: true, struct: %User{}
 
-        def process(_params) do
-          authorize(params[:user])
+        def process(params) do
+          authorize(params.user)
+
           # make some reading...
         end
       end
 
   A policy itself might be:
-      defmodule MyPolicy do
-        use Exop.Policy
+      defmodule MonthlyReportPolicy do
+        # not only Keyword or Map as an argument since 1.1.1
+        def can_read?(%User{role: "manager"}), do: true
+        def can_read?(_opts), do: false
 
-        def read(_user, _opts), do: true
-
-        def write(_user, _opts), do: false
+        def can_write?(%User{role: "manager"}), do: true
+        def can_write?(_opts), do: false
       end
   """
   defmacro policy(policy_module, action_name) when is_atom(action_name) do
@@ -373,7 +380,7 @@ defmodule Exop.Operation do
   Authorizes an action with predefined policy (see `policy` macro docs).
   If authorization fails, any code after (below) auth check will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)
   """
-  defmacro authorize(opts \\ []) do
+  defmacro authorize(opts \\ nil) do
     quote bind_quoted: [opts: opts] do
       do_authorize(@policy_module, @policy_action_name, opts)
     end

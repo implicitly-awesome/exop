@@ -9,6 +9,9 @@ defmodule Exop.ValidationChecks do
     * check_not_in/3
     * check_format/3
     * check_length/3
+    * check_struct/3
+    * check_func/3
+    * check_equals/3
   """
 
   @no_check_item :exop_no_check_item
@@ -141,6 +144,10 @@ defmodule Exop.ValidationChecks do
   end
 
   @spec check_number(number, atom, {atom, number}) :: boolean
+  defp check_number(number, item_name, {:equals, check_value}) do
+    if number == check_value, do: true, else: %{item_name => "must be equal to #{check_value}"}
+  end
+
   defp check_number(number, item_name, {:equal_to, check_value}) do
     if number == check_value, do: true, else: %{item_name => "must be equal to #{check_value}"}
   end
@@ -230,6 +237,20 @@ defmodule Exop.ValidationChecks do
     else
       true
     end
+  end
+
+  @doc """
+  The alias for `check_format/3`.
+  Checks whether an item_name conforms the given format.
+
+  ## Examples
+
+      iex> Exop.ValidationChecks.check_regex(%{a: "bar"}, :a, ~r/bar/)
+      true
+  """
+  @spec check_regex(Keyword.t() | map(), atom, Regex.t()) :: true | check_error
+  def check_regex(check_items, item_name, check) do
+    check_format(check_items, item_name, check)
   end
 
   @doc """
@@ -335,13 +356,24 @@ defmodule Exop.ValidationChecks do
       %{a: "isn't valid"}
       iex> Exop.ValidationChecks.check_func(%{a: -1}, :a, fn(_contract, _param)-> {:error, :my_error} end)
       %{a: :my_error}
+      iex> Exop.ValidationChecks.check_func(%{a: -1, b: 1}, :a, fn(_contract, param_name, param_value)-> {param_name, param_value} == {:a, -1} end)
+      true
+      iex> Exop.ValidationChecks.check_func(%{a: -1, b: 1}, :b, fn(_contract, param_name, param_value)-> {param_name, param_value} != {:a, -1} end)
+      true
   """
   @spec check_func(Keyword.t() | map(), atom, (Keyword.t() | map(), any -> true | false)) ::
           true | check_error
   def check_func(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
 
-    case check.(check_items, check_item) do
+    check_result =
+      if :erlang.fun_info(check)[:arity] == 2 do
+        check.(check_items, check_item)
+      else
+        check.(check_items, item_name, check_item)
+      end
+
+    case check_result do
       {:error, msg} -> %{item_name => msg}
       false -> %{item_name => "isn't valid"}
       _ -> true
@@ -365,5 +397,19 @@ defmodule Exop.ValidationChecks do
     else
       %{item_name => "must be equal to #{inspect(check_value)}"}
     end
+  end
+
+  @doc """
+  The alias for `check_equals/3`.
+  Checks whether a parameter's value exactly equals given value (with type equality).
+
+  ## Examples
+
+      iex> Exop.ValidationChecks.check_exactly(%{a: 1}, :a, 1)
+      true
+  """
+  @spec check_exactly(Keyword.t() | map(), atom, any()) :: true | check_error
+  def check_exactly(check_items, item_name, check_value) do
+    check_equals(check_items, item_name, check_value)
   end
 end

@@ -156,9 +156,14 @@ defmodule Exop.Operation do
         coerced_params =
           if Keyword.has_key?(contract_item_opts, :coerce_with) do
             coerce_with = Keyword.get(contract_item_opts, :coerce_with)
+            check_item = ValidationChecks.get_check_item(coerced_params, contract_item_name)
 
             coerced_value =
-              coerce_with.(ValidationChecks.get_check_item(coerced_params, contract_item_name))
+              if :erlang.fun_info(coerce_with)[:arity] == 1 do
+                coerce_with.(check_item)
+              else
+                coerce_with.(contract_item_name, check_item)
+              end
 
             put_into_collection(coerced_value, coerced_params, contract_item_name)
           else
@@ -177,9 +182,7 @@ defmodule Exop.Operation do
         Keyword.put(collection, item_name, value)
       end
 
-      defp output(params) do
-        output(params, Validation.valid?(@contract, params))
-      end
+      defp output(params), do: output(params, Validation.valid?(@contract, params))
 
       @spec output(Keyword.t() | map(), :ok | {:error, {:validation, map()}}) ::
               {:ok, any}
@@ -190,7 +193,7 @@ defmodule Exop.Operation do
           result = params |> Enum.into(%{}) |> process()
 
           case result do
-            {:error, reason} -> {:error, reason}
+            error_tuple when is_tuple(error_tuple) and elem(error_tuple, 0) == :error -> error_tuple
             {:ok, result} -> {:ok, result}
             _ -> {:ok, result}
           end

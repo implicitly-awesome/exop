@@ -1,4 +1,4 @@
-defmodule ExopValidationChecksTest do
+defmodule ValidationChecksTest do
   use ExUnit.Case, async: false
 
   doctest Exop.ValidationChecks
@@ -116,6 +116,18 @@ defmodule ExopValidationChecksTest do
     %{a: _} = check_format(%{a: "foo"}, :a, ~r/bar/)
   end
 
+  test "check_regex/3: returns true unless item is not a string" do
+    assert check_regex(%{a: 1}, :a, ~r/a/) == true
+  end
+
+  test "check_regex/3: returns true if item is in valid format" do
+    assert check_regex(%{a: "bar"}, :a, ~r/bar/) == true
+  end
+
+  test "check_regex/3: returns %{item_name => error_msg} unless item is in valid format" do
+    %{a: _} = check_regex(%{a: "foo"}, :a, ~r/bar/)
+  end
+
   test "check_length/3: treat nil item's length as 0" do
     assert check_length(%{}, :a, %{min: 0}) == [true]
   end
@@ -175,10 +187,52 @@ defmodule ExopValidationChecksTest do
     assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{qwerty: "123"}) == %{a: "is not expected struct"}
   end
 
-  def validation(_params, param_to_check), do: param_to_check > 99
+  test "check_equals/3: success" do
+    assert check_equals(%{a: 1.0}, :a, 1.0) == true
+    assert check_equals(%{a: :a}, :a, :a) == true
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 3]) == true
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}, {:c, 3}]) == true
+    assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, c: 3}) == true
+  end
 
-  def validation_verbose(_params, param_to_check) do
-    if param_to_check > 99 do
+  test "check_equals/3: fails" do
+    assert check_equals(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1"}
+    assert check_equals(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1"}
+    assert check_equals(%{a: :a}, :a, :b) == %{a: "must be equal to :b"}
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 1]) == %{a: "must be equal to [b: 2, c: 1]"}
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{a: "must be equal to [b: 2]"}
+    assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{a: "must be equal to %{b: 2, d: 3}"}
+  end
+
+  test "check_exactly/3: success" do
+    assert check_exactly(%{a: 1.0}, :a, 1.0) == true
+    assert check_exactly(%{a: :a}, :a, :a) == true
+    assert check_exactly(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 3]) == true
+    assert check_exactly(%{a: [b: 2, c: 3]}, :a, [{:b, 2}, {:c, 3}]) == true
+    assert check_exactly(%{a: %{b: 2, c: 3}}, :a, %{b: 2, c: 3}) == true
+  end
+
+  test "check_exactly/3: fails" do
+    assert check_exactly(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1"}
+    assert check_exactly(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1"}
+    assert check_exactly(%{a: :a}, :a, :b) == %{a: "must be equal to :b"}
+    assert check_exactly(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 1]) == %{a: "must be equal to [b: 2, c: 1]"}
+    assert check_exactly(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{a: "must be equal to [b: 2]"}
+    assert check_exactly(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{a: "must be equal to %{b: 2, d: 3}"}
+  end
+
+  def validation(params, :a, param_value), do: validation(params, param_value)
+  def validation(_params, :b, _param_value), do: false
+
+  def validation(_params, param_value) do
+    param_value > 99
+  end
+
+  def validation_verbose(params, :a, param_value), do: validation_verbose(params, param_value)
+  def validation_verbose(_params, :b, _param_value), do: false
+
+  def validation_verbose(_params, param_value) do
+    if param_value > 99 do
       true
     else
       {:error, "Custom error message"}
@@ -195,20 +249,13 @@ defmodule ExopValidationChecksTest do
     assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/2) == %{a: "Custom error message"}
   end
 
-  test "check_equals/3: success" do
-    assert check_equals(%{a: 1.0}, :a, 1.0) == true
-    assert check_equals(%{a: :a}, :a, :a) == true
-    assert check_equals(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 3]) == true
-    assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}, {:c, 3}]) == true
-    assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, c: 3}) == true
-  end
+  test "check_func/3: validation func can expect 3 args: params, param_name and param_value " do
+    assert check_func(%{a: 100}, :a, &__MODULE__.validation/3) == true
+    assert check_func(%{a: 100}, :a, &__MODULE__.validation_verbose/3) == true
+    assert check_func(%{b: 100}, :b, &__MODULE__.validation_verbose/3) == %{b: "isn't valid"}
 
-  test "check_equals/3: fails" do
-    assert check_equals(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1"}
-    assert check_equals(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1"}
-    assert check_equals(%{a: :a}, :a, :b) == %{a: "must be equal to :b"}
-    assert check_equals(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 1]) == %{a: "must be equal to [b: 2, c: 1]"}
-    assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{a: "must be equal to [b: 2]"}
-    assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{a: "must be equal to %{b: 2, d: 3}"}
+    assert check_func(%{a: 98}, :a, &__MODULE__.validation/3) == %{a: "isn't valid"}
+    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/3) == %{a: "Custom error message"}
+    assert check_func(%{b: 98}, :b, &__MODULE__.validation_verbose/3) == %{b: "isn't valid"}
   end
 end

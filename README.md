@@ -2,7 +2,9 @@
 
 # Exop
 
-A library that provides a macros which allow you to encapsulate business logic and validate incoming params over predefined contract.
+A library that helps you to organize your Elixir code in more domain-driven way.
+Exop provides macros which helps you to encapsulate business logic and offers you additionally:
+incoming params validation (with predefined contract), params coercion, policy check, fallback behavior and more.
 
 Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG.md) that was started from ver. 0.4.1 ¯\\\_(ツ)\_/¯
 
@@ -24,7 +26,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.1.1"}]
+  [{:exop, "~> 1.1.2"}]
 end
 ```
 
@@ -75,7 +77,7 @@ A parameter options could have various checks. Here the list of checks available
 - `required`
 - `default`
 - `numericality`
-- `equals`
+- `equals` (`exactly`)
 - `in`
 - `not_in`
 - `format`
@@ -135,19 +137,20 @@ Checks whether a parameter's value is a number and other numeric constraints.
 All possible constraints are listed in the example below.
 
 ```elixir
-parameter :some_param, numericality: %{equal_to: 10,
+parameter :some_param, numericality: %{equal_to: 10, # (alias: `equals`)
                                        greater_than: 0,
                                        greater_than_or_equal_to: 10,
                                        less_than: 20,
                                        less_than_or_equal_to: 10}
 ```
 
-#### `equals`
+#### `equals` (alias: `exactly`)
 
 Checks whether a parameter's value exactly equals given value (with type equality).
 
 ```elixir
 parameter :some_param, equals: 100.5
+parameter :some_param, exactly: 100.5
 ```
 
 #### `in`
@@ -166,12 +169,13 @@ Checks whether a parameter's value is not within a given list.
 parameter :some_param, not_in: ~w(a b c)
 ```
 
-#### `format`
+#### `format` (alias: `regex`)
 
 Checks wether parameter's value matches given regex.
 
 ```elixir
 parameter :some_param, format: ~r/foo/
+parameter :some_param, regex: ~r/foo/
 ```
 
 #### `length`
@@ -250,7 +254,13 @@ If this function returns `false`, validation will fail with default message `"is
 ```elixir
 parameter :some_param, func: &__MODULE__.your_validation/2
 
-def your_validation(_params, param), do: !is_nil(param)
+def your_validation(_params, param_value), do: !is_nil(param_value)
+
+# or with a function with arity of 3
+
+parameter :some_param, func: &__MODULE__.your_validation/3
+
+def your_validation(_params, :some_param = _param_name, param_value), do: !is_nil(param_value)
 ```
 
 A custom validation function can also return a user-specified message which will be displayed in map of validation errors.
@@ -328,7 +338,13 @@ The flow looks like: `Resolve param default value -> Coerce -> Validate coerced`
 ```elixir
 parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1
 
-def coerce(x), do: x * 2
+def coerce(param_value), do: param_value * 2
+
+# or with a function with arity of 2
+
+parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/2
+
+def coerce(:some_param = _param_name, param_value), do: param_value * 2
 ```
 
 ### Policy check
@@ -489,7 +505,7 @@ Or you will receive `@type validation_error :: {:error, :validation_failed, map(
 An operation can return one of results listed below (depends on passed in params and operation definition):
 
 - an operation was completed successfully:
-  - `{:error, _your_error_reason_}` (if `{:error, _your_error_reason_}` tuple was returned by `process/1` function)
+  - `{:error, _your_error_reason_}` (if an :error-tuple (any length, but `:error` atom should be the first element) was returned by `process/1` function)
   - `{:ok, any()}` (otherwise, even if `{:ok, _your_result_}` tuple was returned by `process/1` function)
 - a contract validation failed: `{:error, {:validation, map()}}`
 - if `interrupt/1` was invoked: `{:interrupt, any()}`

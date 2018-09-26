@@ -1,4 +1,4 @@
-defmodule ExopValidationTest do
+defmodule ValidationTest do
   use ExUnit.Case, async: false
 
   doctest Exop.Validation

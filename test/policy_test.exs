@@ -1,4 +1,4 @@
-defmodule ExopPolicyTest do
+defmodule PolicyTest do
   use ExUnit.Case, async: false
 
   defmodule User do

@@ -1,4 +1,4 @@
-defmodule ExopStringCharsImplementationsTest do
+defmodule StringCharsImplementationsTest do
   use ExUnit.Case, async: false
 
   test "implements String.Chars for Range" do

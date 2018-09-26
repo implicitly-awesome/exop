@@ -1,4 +1,4 @@
-defmodule ExopChainTest do
+defmodule ChainTest do
   use ExUnit.Case, async: false
 
   defmodule Sum do

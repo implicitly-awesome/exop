@@ -1,4 +1,4 @@
-defmodule ExopFallbackTest do
+defmodule FallbackTest do
   use ExUnit.Case, async: false
 
   defmodule TestFallback do
@@ -54,7 +54,7 @@ defmodule ExopFallbackTest do
     test "operation returns a fallback result if there is return: true in a fallback opts" do
       result = TestOperation2.run(a: "a", b: 2)
       assert result == {
-        ExopFallbackTest.TestOperation2,
+        FallbackTest.TestOperation2,
         %{a: "a", b: 2},
         {:error, {:validation, %{a: ["has wrong type"]}}}
       }

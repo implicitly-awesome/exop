@@ -1,4 +1,4 @@
-defmodule ExopOperationTest do
+defmodule OperationTest do
   use ExUnit.Case, async: false
 
   import Mock
@@ -495,5 +495,42 @@ defmodule ExopOperationTest do
     assert Def32Operation.run(%{"a" => 1, b: "2"}) == {:error, {:validation, %{"a" => ["has wrong type"], :b => ["has wrong type"]}}}
     assert Def32Operation.run(%{"a" => "1"}) == {:error, {:validation, %{:b => ["is required"]}}}
     assert Def32Operation.run(%{"a" => "1", b: 2}) == {:ok, %{"a" => "1", :b => 2}}
+  end
+
+  test "returns any-length error tuple" do
+    defmodule Def33Operation do
+      use Exop.Operation
+
+      parameter :a, type: :integer, required: true
+
+      def process(%{a: 1}), do: {:error}
+      def process(%{a: 2}), do: {:error, 2}
+      def process(%{a: 3}), do: {:error, 2, 3}
+      def process(%{a: 4}), do: {:error, 2, 3, 4}
+      def process(params), do: params
+    end
+
+    assert Def33Operation.run() == {:error, {:validation, %{a: ["is required"]}}}
+    assert Def33Operation.run(a: 1) == {:error}
+    assert Def33Operation.run(a: 2) == {:error, 2}
+    assert Def33Operation.run(a: 3) == {:error, 2, 3}
+    assert Def33Operation.run(a: 4) == {:error, 2, 3, 4}
+    assert Def33Operation.run(a: 777) == {:ok, %{a: 777}}
+  end
+
+  test "coerce_with can invoke a function with arity == 2 (passing param_name & param_value)" do
+    defmodule Def34Operation do
+      use Exop.Operation
+
+      parameter :a, type: :tuple, coerce_with: &__MODULE__.coerce_with_name/2
+
+      def process(params), do: params
+
+      def coerce_with_name(param_name, param_value) do
+        {List.duplicate(param_name, 2), param_value * 10}
+      end
+    end
+
+    assert Def34Operation.run(a: 1.1) == {:ok, %{a: {[:a, :a], 11}}}
   end
 end

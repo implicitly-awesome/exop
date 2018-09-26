@@ -1,3 +1,13 @@
+## [1.1.2] - 2018.10.01
+
+### Changes
+
+- now it is possible to return an :error-tuple of any length from an operation. Previously only a tuple
+  of two elements was treated as error result, any other results treated as success and were wrapped into :ok-tuple
+- now it is possible to provide 3-arity function to the `func` check: in previous verisons this check expected only a function with arity == 2 to invoke for checking (1. params passed to an operation, 2. param to check value), starting from this version you can provide a function with arity == 3 (in this case Exop will invoke your function with: 1. params passed to an operation, 2. param to check name, 3. param to check value)
+- `coerce_with` can take a function of arity == 2 (not only with arity == 1), coercion function/2 will be invoked with args: 1. parameter name 2. parameter value (coercion function with arity == 1 still takes just a parameter value)
+- some checks aliases were added
+
 ## [1.1.1] - 2018.09.20
 
 ### Changes

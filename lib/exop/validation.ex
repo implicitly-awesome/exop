@@ -7,6 +7,8 @@ defmodule Exop.Validation do
 
   alias Exop.ValidationChecks
 
+  @no_check_item :exop_no_check_item
+
   defmodule ValidationError do
     @moduledoc """
       An operation's contract validation failure error.
@@ -44,7 +46,7 @@ defmodule Exop.Validation do
     end
   end
 
-  @spec consolidate_errors(list) :: map()
+  @spec consolidate_errors(list()) :: map()
   defp consolidate_errors(validation_results) do
     error_results = validation_results |> Enum.reject(&(&1 == true))
 
@@ -73,12 +75,12 @@ defmodule Exop.Validation do
       iex> Exop.Validation.validate([%{name: :param, opts: [required: true, type: :string]}], [param: "hello"], [])
       [true, true]
   """
-  @spec validate([map()], map() | Keyword.t(), list) :: list
+  @spec validate([map()], map() | Keyword.t(), list()) :: list()
   def validate([], _received_params, result), do: result
 
   def validate([contract_item | contract_tail], received_params, result) do
     checks_result =
-      if !required_param?(contract_item) && empty_param?(received_params, contract_item) do
+      if not required_param?(contract_item) && empty_param?(received_params, contract_item) do
         []
       else
         validate_params(contract_item, received_params)
@@ -87,13 +89,17 @@ defmodule Exop.Validation do
     validate(contract_tail, received_params, result ++ List.flatten(checks_result))
   end
 
-  defp required_param?(%{opts: opts}), do: opts[:required] || false
+  defp required_param?(%{opts: opts}), do: opts[:required] == true || false
 
-  defp empty_param?(params, %{name: param_name}) when is_map(params) do
-    is_nil(Map.get(params, param_name))
+  defp empty_param?(params, %{name: param_name}) do
+    ValidationChecks.get_check_item(params, param_name) == @no_check_item
   end
 
-  defp empty_param?(params, %{name: param_name}), do: is_nil(params[param_name])
+  # defp empty_param?(params, %{name: param_name}) when is_map(params) do
+  #   is_nil(Map.get(params, param_name))
+  # end
+
+  # defp empty_param?(params, %{name: param_name}), do: is_nil(params[param_name])
 
   defp validate_params(%{name: name, opts: opts} = _contract_item, received_params) do
     for {check_name, check_params} <- opts, into: [] do
@@ -120,7 +126,7 @@ defmodule Exop.Validation do
       iex> Exop.Validation.check_inner(%{param: 1}, :param, [type: :integer, required: true])
       true
   """
-  @spec check_inner(map() | Keyword.t(), atom, map() | Keyword.t()) :: list
+  @spec check_inner(map() | Keyword.t(), atom() | String.t(), map() | Keyword.t()) :: list
   def check_inner(check_items, item_name, checks) when is_map(checks) do
     checked_param = ValidationChecks.get_check_item(check_items, item_name)
 
@@ -134,7 +140,7 @@ defmodule Exop.Validation do
 
   def check_inner(_received_params, _contract_item_name, _check_params), do: true
 
-  @spec check_list_item(map() | Keyword.t(), atom, map() | Keyword.t()) :: list
+  @spec check_list_item(map() | Keyword.t(), atom() | String.t(), map() | Keyword.t()) :: list
   def check_list_item(check_items, item_name, checks) when is_map(checks) do
     list = ValidationChecks.get_check_item(check_items, item_name)
 

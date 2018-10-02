@@ -35,6 +35,7 @@ defmodule ValidationTest do
 
   test "validate/3: invokes related checks for a param's contract options", %{contract: contract} do
     with_mock Exop.ValidationChecks, [__info__: fn(_) -> [check_required: true, check_type: true] end,
+                                                          get_check_item: fn(_, _) -> "some_value" end,
                                                           check_required: fn(_, _, _) -> true end,
                                                           check_type: fn(_, _, _) -> true end] do
 
@@ -45,11 +46,8 @@ defmodule ValidationTest do
   end
 
   test "validate/3: accumulates related checks results", %{contract: contract} do
-    with_mock Exop.ValidationChecks, [__info__: fn(_) -> [check_required: true, check_type: true] end,
-                                                          check_required: fn(_, _, _) -> true end,
-                                                          check_type: fn(_, _, _) -> %{param: "wrong type"} end] do
-      assert validate(contract, %{param: "some_value"}, []) == [true, %{param: "wrong type"}]
-    end
+    assert validate(contract, %{param2: "some_value"}, []) ==
+      [%{param: "is required"}, true, %{param2: "has wrong type"}, %{param2: "must be one of [1, 2, 3]"}]
   end
 
   test "valid?/2: returns :ok if all params conform the contract", %{contract: contract} do

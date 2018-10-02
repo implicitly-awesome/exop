@@ -143,7 +143,7 @@ defmodule Exop.Operation do
 
       @spec resolve_coercions(
               Keyword.t() | map(),
-              list(%{name: atom, opts: Keyword.t()}),
+              list(%{name: atom() | String.t(), opts: Keyword.t()}),
               Keyword.t() | map()
             ) :: Keyword.t() | map()
       defp resolve_coercions(_received_params, [], coerced_params), do: coerced_params
@@ -173,7 +173,8 @@ defmodule Exop.Operation do
         resolve_coercions(received_params, contract_tail, coerced_params)
       end
 
-      @spec put_into_collection(any, Keyword.t() | map(), atom) :: Keyword.t() | map()
+      @spec put_into_collection(any(), Keyword.t() | map(), atom() | String.t()) ::
+              Keyword.t() | map()
       defp put_into_collection(value, collection, item_name) when is_map(collection) do
         Map.put(collection, item_name, value)
       end
@@ -226,7 +227,7 @@ defmodule Exop.Operation do
         throw({@exop_interruption, reason})
       end
 
-      @spec do_authorize(Exop.Policy.t(), atom, any()) :: no_return()
+      @spec do_authorize(Exop.Policy.t(), atom(), any()) :: no_return()
       defp do_authorize(nil, _action, _opts) do
         throw({@exop_auth_error, :undefined_policy})
       end

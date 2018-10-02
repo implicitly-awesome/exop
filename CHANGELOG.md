@@ -1,3 +1,9 @@
+## [1.1.3] - 2018.10.02
+
+### Changes
+
+- a bug with `type` check was fixed: previously this check passed if a parameter's value is `nil`, now `nil` passes the check only if `:atom` type is specified
+
 ## [1.1.2] - 2018.10.01
 
 ### Changes

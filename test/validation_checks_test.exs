@@ -53,6 +53,10 @@ defmodule ValidationChecksTest do
     assert is_binary(reason)
   end
 
+  test "check_type/3: returns false if item is nil but type is not atom" do
+    assert check_type(%{a: nil}, :a, :string) == %{:a => "has wrong type"}
+  end
+
   test "check_numericality/3: returns %{item_name => error_msg} if item is in params and is not a number" do
     %{a: reason} = check_numericality(%{a: "1"}, :a, %{less_than: 3})
     assert is_binary(reason)

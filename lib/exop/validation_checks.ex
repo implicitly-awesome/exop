@@ -35,7 +35,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.get_check_item(%{a: 1, b: 2}, :c)
       :exop_no_check_item
   """
-  @spec get_check_item(Keyword.t() | map(), atom) :: any | nil
+  @spec get_check_item(Keyword.t() | map(), atom() | String.t()) :: any() | nil
   def get_check_item(check_items, item_name) when is_map(check_items) do
     Map.get(check_items, item_name, @no_check_item)
   rescue
@@ -64,7 +64,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_required(%{a: 1, b: 2}, :b, true)
       true
   """
-  @spec check_required(Keyword.t() | map(), atom, boolean) :: true | check_error
+  @spec check_required(Keyword.t() | map(), atom() | String.t(), boolean) :: true | check_error
   def check_required(_check_items, _item, false), do: true
 
   def check_required(check_items, item_name, true) do
@@ -87,8 +87,11 @@ defmodule Exop.ValidationChecks do
 
       iex> Exop.ValidationChecks.check_type(%{a: "1"}, :a, :string)
       true
+
+      iex> Exop.ValidationChecks.check_type(%{a: nil}, :a, :string)
+      %{:a => "has wrong type"}
   """
-  @spec check_type(Keyword.t() | map(), atom, atom) :: true | check_error
+  @spec check_type(Keyword.t() | map(), atom() | String.t(), atom()) :: true | check_error
   def check_type(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
 
@@ -126,7 +129,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_numericality(%{a: 3}, :a, %{ less_than_or_equal_to: 3 })
       true
   """
-  @spec check_numericality(Keyword.t() | map(), atom, map()) :: true | check_error
+  @spec check_numericality(Keyword.t() | map(), atom() | String.t(), map()) :: true | check_error
   def check_numericality(check_items, item_name, checks) do
     check_item = get_check_item(check_items, item_name)
 
@@ -143,7 +146,7 @@ defmodule Exop.ValidationChecks do
     end
   end
 
-  @spec check_number(number, atom, {atom, number}) :: boolean
+  @spec check_number(number, atom() | String.t(), {atom, number}) :: boolean
   defp check_number(number, item_name, {:equals, check_value}) do
     if number == check_value, do: true, else: %{item_name => "must be equal to #{check_value}"}
   end
@@ -182,7 +185,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_in(%{a: 1}, :a, [1, 2, 3])
       true
   """
-  @spec check_in(Keyword.t() | map(), atom, list) :: true | check_error
+  @spec check_in(Keyword.t() | map(), atom() | String.t(), list()) :: true | check_error
   def check_in(check_items, item_name, check_list) when is_list(check_list) do
     check_item = get_check_item(check_items, item_name)
 
@@ -203,7 +206,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_not_in(%{a: 4}, :a, [1, 2, 3])
       true
   """
-  @spec check_not_in(Keyword.t() | map(), atom, list) :: true | check_error
+  @spec check_not_in(Keyword.t() | map(), atom() | String.t(), list()) :: true | check_error
   def check_not_in(check_items, item_name, check_list) when is_list(check_list) do
     check_item = get_check_item(check_items, item_name)
 
@@ -224,7 +227,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_format(%{a: "bar"}, :a, ~r/bar/)
       true
   """
-  @spec check_format(Keyword.t() | map(), atom, Regex.t()) :: true | check_error
+  @spec check_format(Keyword.t() | map(), atom() | String.t(), Regex.t()) :: true | check_error
   def check_format(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
 
@@ -248,7 +251,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_regex(%{a: "bar"}, :a, ~r/bar/)
       true
   """
-  @spec check_regex(Keyword.t() | map(), atom, Regex.t()) :: true | check_error
+  @spec check_regex(Keyword.t() | map(), atom() | String.t(), Regex.t()) :: true | check_error
   def check_regex(check_items, item_name, check) do
     check_format(check_items, item_name, check)
   end
@@ -267,7 +270,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_length(%{a: ~w(1 2 3)}, :a, %{is: 3, max: 4})
       [true, true]
   """
-  @spec check_length(Keyword.t() | map(), atom, map()) :: true | [check_error]
+  @spec check_length(Keyword.t() | map(), atom() | String.t(), map()) :: true | [check_error]
   def check_length(check_items, item_name, checks) do
     check_item = get_check_item(check_items, item_name)
 
@@ -293,24 +296,24 @@ defmodule Exop.ValidationChecks do
   defp get_length(param) when is_tuple(param), do: tuple_size(param)
   defp get_length(_param), do: 0
 
-  @spec check_min_length(atom, pos_integer, number) :: true | check_error
+  @spec check_min_length(atom() | String.t(), pos_integer, number) :: true | check_error
   defp check_min_length(item_name, actual_length, check_value) do
     actual_length >= check_value ||
       %{item_name => "length must be greater than or equal to #{check_value}"}
   end
 
-  @spec check_max_length(atom, pos_integer, number) :: true | check_error
+  @spec check_max_length(atom() | String.t(), pos_integer, number) :: true | check_error
   defp check_max_length(item_name, actual_length, check_value) do
     actual_length <= check_value ||
       %{item_name => "length must be less than or equal to #{check_value}"}
   end
 
-  @spec check_is_length(atom, pos_integer, number) :: true | check_error
+  @spec check_is_length(atom() | String.t(), pos_integer, number) :: true | check_error
   defp check_is_length(item_name, actual_length, check_value) do
     actual_length == check_value || %{item_name => "length must be equal to #{check_value}"}
   end
 
-  @spec check_in_length(atom, pos_integer, Range.t()) :: true | check_error
+  @spec check_in_length(atom() | String.t(), pos_integer, Range.t()) :: true | check_error
   defp check_in_length(item_name, actual_length, check_value) do
     Enum.member?(check_value, actual_length) ||
       %{item_name => "length must be in range #{check_value}"}
@@ -329,7 +332,7 @@ defmodule Exop.ValidationChecks do
       Exop.ValidationChecks.check_struct(%{a: %SomeStruct1{}}, :a, %SomeStruct2{})
       # false
   """
-  @spec check_struct(Keyword.t() | map(), atom, struct) :: true | check_error
+  @spec check_struct(Keyword.t() | map(), atom() | String.t(), struct()) :: true | check_error
   def check_struct(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
 
@@ -361,8 +364,11 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_func(%{a: -1, b: 1}, :b, fn(_contract, param_name, param_value)-> {param_name, param_value} != {:a, -1} end)
       true
   """
-  @spec check_func(Keyword.t() | map(), atom, (Keyword.t() | map(), any -> true | false)) ::
-          true | check_error
+  @spec check_func(
+          Keyword.t() | map(),
+          atom() | String.t(),
+          (Keyword.t() | map(), any -> true | false)
+        ) :: true | check_error
   def check_func(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
 
@@ -388,7 +394,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_equals(%{a: 1}, :a, 1)
       true
   """
-  @spec check_equals(Keyword.t() | map(), atom, any()) :: true | check_error
+  @spec check_equals(Keyword.t() | map(), atom() | String.t(), any()) :: true | check_error
   def check_equals(check_items, item_name, check_value) do
     check_item = get_check_item(check_items, item_name)
 
@@ -408,7 +414,7 @@ defmodule Exop.ValidationChecks do
       iex> Exop.ValidationChecks.check_exactly(%{a: 1}, :a, 1)
       true
   """
-  @spec check_exactly(Keyword.t() | map(), atom, any()) :: true | check_error
+  @spec check_exactly(Keyword.t() | map(), atom() | String.t(), any()) :: true | check_error
   def check_exactly(check_items, item_name, check_value) do
     check_equals(check_items, item_name, check_value)
   end

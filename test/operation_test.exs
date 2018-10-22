@@ -533,4 +533,20 @@ defmodule OperationTest do
 
     assert Def34Operation.run(a: 1.1) == {:ok, %{a: {[:a, :a], 11}}}
   end
+
+  test "coerce_with respects an error-tuple result" do
+    defmodule Def35Operation do
+      use Exop.Operation
+
+      parameter :a, type: :integer, coerce_with: &__MODULE__.coerce/1
+
+      def process(params), do: params
+
+      def coerce(1), do: {:error, :some_error}
+      def coerce(2), do: 2
+    end
+
+    assert Def35Operation.run(a: 2) == {:ok, %{a: 2}}
+    assert Def35Operation.run(a: 1) == {:error, :some_error}
+  end
 end

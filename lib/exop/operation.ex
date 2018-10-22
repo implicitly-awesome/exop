@@ -104,14 +104,9 @@ defmodule Exop.Operation do
       @spec run!(Keyword.t() | map() | nil) :: any() | RuntimeError
       def run!(received_params \\ %{}) do
         case run(received_params) do
-          {:ok, result} ->
-            result
-
-          {:error, {:validation, reasons}} ->
-            raise(Validation.ValidationError, mod_err_msg(reasons))
-
-          result ->
-            result
+          {:ok, result} -> result
+          {:error, {:validation, reasons}} -> raise(Validation.ValidationError, mod_err_msg(reasons))
+          result -> result
         end
       end
 
@@ -183,10 +178,23 @@ defmodule Exop.Operation do
         Keyword.put(collection, item_name, value)
       end
 
-      defp output(params), do: output(params, Validation.valid?(@contract, params))
+      @spec output(Keyword.t() | map()) ::
+              {:ok, any()}
+              | {:error, any()}
+              | Validation.validation_error()
+              | interrupt_result
+      defp output(params) do
+        case Enum.find(params, fn
+            {_, {:error, error_msg}} -> true
+            _ -> false
+        end) do
+        {_, {:error, _} = error} -> error
+        _ -> output(params, Validation.valid?(@contract, params))
+        end
+      end
 
       @spec output(Keyword.t() | map(), :ok | {:error, {:validation, map()}}) ::
-              {:ok, any}
+              {:ok, any()}
               | Validation.validation_error()
               | interrupt_result
       defp output(params, :ok = _validation_result) do

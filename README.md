@@ -26,7 +26,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.1.3"}]
+  [{:exop, "~> 1.1.4"}]
 end
 ```
 
@@ -86,6 +86,7 @@ A parameter options could have various checks. Here the list of checks available
 - `struct`
 - `list_item`
 - `func`
+- `allow_nil`
 
 #### `type`
 
@@ -137,11 +138,11 @@ Checks whether a parameter's value is a number and other numeric constraints.
 All possible constraints are listed in the example below.
 
 ```elixir
-parameter :some_param, numericality: %{equal_to: 10, # (alias: `equals`)
+parameter :some_param, numericality: %{equal_to: 10, # (aliases: `equals`, `is`)
                                        greater_than: 0,
-                                       greater_than_or_equal_to: 10,
+                                       greater_than_or_equal_to: 10 # (alias: `min`),
                                        less_than: 20,
-                                       less_than_or_equal_to: 10}
+                                       less_than_or_equal_to: 10 # (alias: `max`)}
 ```
 
 #### `equals` (alias: `exactly`)
@@ -289,6 +290,30 @@ def your_validation(params, b), do: params[:a] > 0 && !is_nil(b)
 
 _it's possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
 
+#### allow_nil
+
+It is not a parameter check itself, because it doesn't return any validation errors.
+It is a parameter attribute which allow you to have other checks for a parameter whilst have a possibility to pass `nil` as the parameter's value.
+If `nil` is passed *all* the parameter's checks are ignored during validation.
+
+```elixir
+defmodule YourOperation do
+  use Exop.Operation
+
+  parameter :a, type: :integer, allow_nil: true
+  parameter :b, type: :integer, allow_nil: false
+
+  def process(params), do: params
+end
+
+{:ok, %{a: 1}} = YourOperation.run(a: 1)
+{:ok, %{a: nil}} = YourOperation.run(a: nil)
+{:ok, %{b: 1}} = YourOperation.run(b: 1)
+{:error, {:validation, %{b: ["has wrong type"]}}} = YourOperation.run(b: nil)
+```
+
+_By default (if you omit `allow_nil` attribute), a parameter is treated as `allow_nil: false`_
+
 ### Defined params
 
 If for some reason you have to deal only with parameters that were defined in the contract,
@@ -334,6 +359,8 @@ will be invoked on coerced parameter value.
 Since coercion changes a parameter before any validation has been invoked,
 default values are resolved (with `:default` option) before the coercion.
 The flow looks like: `Resolve param default value -> Coerce -> Validate coerced`
+
+If coercion function returns an error tuple it will be treated as validation failure: an operation's invokation stops and that error tuple will be returned as a result.
 
 ```elixir
 parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1

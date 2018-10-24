@@ -1,5 +1,5 @@
 defmodule OperationTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
 
   import Mock
 
@@ -532,5 +532,57 @@ defmodule OperationTest do
     end
 
     assert Def34Operation.run(a: 1.1) == {:ok, %{a: {[:a, :a], 11}}}
+  end
+
+  test "coerce_with respects an error-tuple result" do
+    defmodule Def35Operation do
+      use Exop.Operation
+
+      parameter :a, type: :integer, coerce_with: &__MODULE__.coerce/1
+
+      def process(params), do: params
+
+      def coerce(1), do: {:error, :some_error}
+      def coerce(2), do: 2
+    end
+
+    assert Def35Operation.run(a: 2) == {:ok, %{a: 2}}
+    assert Def35Operation.run(a: 1) == {:error, :some_error}
+  end
+
+  describe "allow_nil options" do
+    test "allows to have nil as parameter value" do
+      defmodule Def36Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer, allow_nil: true
+        parameter :b, type: :integer, allow_nil: false
+
+        def process(params), do: params
+      end
+
+      assert Def36Operation.run(a: 1) == {:ok, %{a: 1}}
+      assert Def36Operation.run(a: nil) == {:ok, %{a: nil}}
+      assert Def36Operation.run(b: 1) == {:ok, %{b: 1}}
+      assert Def36Operation.run(b: nil) == {:error, {:validation, %{b: ["has wrong type"]}}}
+    end
+
+    test "skips all checks" do
+      defmodule Def37Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer, numericality: [greater_than: 2], allow_nil: true
+        parameter :b, allow_nil: true, func: &__MODULE__.nil_check/2
+
+        def nil_check(_, nil), do: {:error, :this_is_nil}
+
+        def process(params), do: params
+      end
+
+      assert Def37Operation.run(a: nil) == {:ok, %{a: nil}}
+      assert Def37Operation.run(a: 1) == {:error, {:validation, %{a: ["must be greater than 2"]}}}
+      assert Def37Operation.run(a: "1") == {:error, {:validation, %{a: ["not a number", "has wrong type"]}}}
+      assert Def37Operation.run(b: nil) == {:ok, %{b: nil}}
+    end
   end
 end

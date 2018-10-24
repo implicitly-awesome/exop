@@ -95,25 +95,23 @@ defmodule Exop.Validation do
     ValidationChecks.get_check_item(params, param_name) == @no_check_item
   end
 
-  # defp empty_param?(params, %{name: param_name}) when is_map(params) do
-  #   is_nil(Map.get(params, param_name))
-  # end
-
-  # defp empty_param?(params, %{name: param_name}), do: is_nil(params[param_name])
-
   defp validate_params(%{name: name, opts: opts} = _contract_item, received_params) do
     for {check_name, check_params} <- opts, into: [] do
-      check_function_name = String.to_atom("check_#{check_name}")
+      if opts[:allow_nil] == true && is_nil(ValidationChecks.get_check_item(received_params, name)) do
+        true
+      else
+        check_function_name = String.to_atom("check_#{check_name}")
 
-      cond do
-        function_present?(__MODULE__, check_function_name) ->
-          apply(__MODULE__, check_function_name, [received_params, name, check_params])
+        cond do
+          function_present?(__MODULE__, check_function_name) ->
+            apply(__MODULE__, check_function_name, [received_params, name, check_params])
 
-        function_present?(ValidationChecks, check_function_name) ->
-          apply(ValidationChecks, check_function_name, [received_params, name, check_params])
+          function_present?(ValidationChecks, check_function_name) ->
+            apply(ValidationChecks, check_function_name, [received_params, name, check_params])
 
-        true ->
-          true
+          true ->
+            true
+        end
       end
     end
   end

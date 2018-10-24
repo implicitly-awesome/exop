@@ -262,4 +262,15 @@ defmodule ValidationChecksTest do
     assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/3) == %{a: "Custom error message"}
     assert check_func(%{b: 98}, :b, &__MODULE__.validation_verbose/3) == %{b: "isn't valid"}
   end
+
+  test "check_numericality/3: aliases" do
+    assert check_numericality(%{a: 3}, :a, %{equals: 3}) == true
+    assert check_numericality(%{a: 2}, :a, %{equals: 3}) == [%{a: "must be equal to 3"}]
+    assert check_numericality(%{a: 3}, :a, %{is: 3}) == true
+    assert check_numericality(%{a: 2}, :a, %{is: 3}) == [%{a: "must be equal to 3"}]
+    assert check_numericality(%{a: 3}, :a, %{min: 1}) == true
+    assert check_numericality(%{a: 1}, :a, %{min: 3}) == [%{a: "must be greater than or equal to 3"}]
+    assert check_numericality(%{a: 1}, :a, %{max: 3}) == true
+    assert check_numericality(%{a: 3}, :a, %{max: 1}) == [%{a: "must be less than or equal to 1"}]
+  end
 end

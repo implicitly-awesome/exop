@@ -10,7 +10,7 @@ defmodule Exop.Mixfile do
   def project do
     [
       app: :exop,
-      version: "1.1.3",
+      version: "1.1.4",
       elixir: "~> 1.3",
       name: "Exop",
       description: @description,
@@ -33,7 +33,6 @@ defmodule Exop.Mixfile do
     [
       {:mock, "~> 0.1.1", only: :test},
       {:ex_doc, "~> 0.12", only: [:dev, :test, :docs]},
-      # {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0.0-rc.3", only: [:dev], runtime: false}
     ]
   end

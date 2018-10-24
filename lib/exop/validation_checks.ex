@@ -155,6 +155,14 @@ defmodule Exop.ValidationChecks do
     if number == check_value, do: true, else: %{item_name => "must be equal to #{check_value}"}
   end
 
+  defp check_number(number, item_name, {:equals, check_value}) do
+    check_number(number, item_name, {:equal_to, check_value})
+  end
+
+  defp check_number(number, item_name, {:is, check_value}) do
+    check_number(number, item_name, {:equal_to, check_value})
+  end
+
   defp check_number(number, item_name, {:greater_than, check_value}) do
     if number > check_value, do: true, else: %{item_name => "must be greater than #{check_value}"}
   end
@@ -165,6 +173,10 @@ defmodule Exop.ValidationChecks do
       else: %{item_name => "must be greater than or equal to #{check_value}"}
   end
 
+  defp check_number(number, item_name, {:min, check_value}) do
+    check_number(number, item_name, {:greater_than_or_equal_to, check_value})
+  end
+
   defp check_number(number, item_name, {:less_than, check_value}) do
     if number < check_value, do: true, else: %{item_name => "must be less than #{check_value}"}
   end
@@ -173,6 +185,10 @@ defmodule Exop.ValidationChecks do
     if number <= check_value,
       do: true,
       else: %{item_name => "must be less than or equal to #{check_value}"}
+  end
+
+  defp check_number(number, item_name, {:max, check_value}) do
+    check_number(number, item_name, {:less_than_or_equal_to, check_value})
   end
 
   defp check_number(_number, _item_name, _), do: true

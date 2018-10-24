@@ -1,3 +1,11 @@
+## [1.1.4] - 2018.10.24
+
+### Changes
+
+- new `allow_nil` attribute for a parameter which allows you to pass `nil` as a parameter's value (and omit all validation checks invokation)
+- a few (`min`, `max`, `is`) aliases were added to `numericality` check
+- `coerce_with` now respects error tuple which might be returned from coerce function (that error tuple is returned as an operation's result immediately)
+
 ## [1.1.3] - 2018.10.02
 
 ### Changes

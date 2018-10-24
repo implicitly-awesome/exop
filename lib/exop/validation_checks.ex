@@ -147,10 +147,6 @@ defmodule Exop.ValidationChecks do
   end
 
   @spec check_number(number, atom() | String.t(), {atom, number}) :: boolean
-  defp check_number(number, item_name, {:equals, check_value}) do
-    if number == check_value, do: true, else: %{item_name => "must be equal to #{check_value}"}
-  end
-
   defp check_number(number, item_name, {:equal_to, check_value}) do
     if number == check_value, do: true, else: %{item_name => "must be equal to #{check_value}"}
   end

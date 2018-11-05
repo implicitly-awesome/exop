@@ -154,9 +154,9 @@ defmodule ValidationTest do
     {:error, {:validation, reasons}} = valid?(contract, received_params)
 
     assert %{
-      item_0: ["has wrong type", "length must be greater than or equal to 7"],
-      item_1: ["length must be greater than or equal to 7"],
-      item_2: ["has wrong type", "length must be greater than or equal to 7"]
+      "list_param[0]" => ["has wrong type", "length must be greater than or equal to 7"],
+      "list_param[1]" => ["length must be greater than or equal to 7"],
+      "list_param[2]" => ["has wrong type", "length must be greater than or equal to 7"]
     } == reasons
   end
 

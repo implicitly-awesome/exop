@@ -19,7 +19,7 @@ defmodule Exop.ValidationChecks do
   # @type check_error :: {:error, String.t}
   @type check_error :: %{atom => String.t()}
 
-  @known_types ~w(boolean integer float string tuple map struct list atom function)a
+  @known_types ~w(boolean integer float string tuple map struct list atom module function)a
 
   @doc """
   Returns an item_name from either a Keyword or a Map by an atom-key.
@@ -111,6 +111,11 @@ defmodule Exop.ValidationChecks do
   defp do_check_type(check_item, :struct) when is_map(check_item), do: true
   defp do_check_type(check_item, :list) when is_list(check_item), do: true
   defp do_check_type(check_item, :atom) when is_atom(check_item), do: true
+
+  defp do_check_type(check_item, :module) when is_atom(check_item) do
+    Code.ensure_loaded?(check_item)
+  end
+
   defp do_check_type(check_item, :function) when is_function(check_item), do: true
   defp do_check_type(@no_check_item, _), do: true
   defp do_check_type(_, _), do: false

@@ -439,30 +439,26 @@ defmodule OperationTest do
     defmodule Def29Operation do
       use Exop.Operation
 
-      parameter :param, list_item: %{type: :string, length: %{min: 7}}, default: ["1234567", "7chars"]
+      parameter :list_param, list_item: %{type: :string, length: %{min: 7}}, default: ["1234567", "7chars"]
 
-      def process(params) do
-        {:ok, params[:param]}
-      end
+      def process(params), do: {:ok, params[:list_param]}
     end
 
-    assert Def29Operation.run() == {:error, {:validation, %{item_1: ["length must be greater than or equal to 7"]}}}
+    assert Def29Operation.run() == {:error, {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
   end
 
   test "list_item + coerce_with" do
     defmodule Def30Operation do
       use Exop.Operation
 
-      parameter :param, list_item: %{type: :string, length: %{min: 7}}, coerce_with: &__MODULE__.make_list/1
+      parameter :list_param, list_item: [type: :string, length: %{min: 7}], coerce_with: &__MODULE__.make_list/1
 
-      def process(params) do
-        {:ok, params[:param]}
-      end
+      def process(params), do: {:ok, params[:list_param]}
 
       def make_list(_), do: ["1234567", "7chars"]
     end
 
-    assert Def30Operation.run() == {:error, {:validation, %{item_1: ["length must be greater than or equal to 7"]}}}
+    assert Def30Operation.run() == {:error, {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
   end
 
   test "string-named parameters are allowed" do

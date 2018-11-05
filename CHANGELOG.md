@@ -1,3 +1,11 @@
+## [1.1.5] - 2018.11.04
+
+### Changes
+
+- `list_item` now accept both: Map and Keyword as items checks
+- `list_item` returns an item's error as `"list_param[index]" => [error_messages]`
+- `:module` option for `type` check (if you want to be more explicit)
+
 ## [1.1.4] - 2018.10.24
 
 ### Changes

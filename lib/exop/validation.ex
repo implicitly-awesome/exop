@@ -139,6 +139,10 @@ defmodule Exop.Validation do
   def check_inner(_received_params, _contract_item_name, _check_params), do: true
 
   @spec check_list_item(map() | Keyword.t(), atom() | String.t(), map() | Keyword.t()) :: list
+  def check_list_item(check_items, item_name, checks) when is_list(checks) do
+    check_list_item(check_items, item_name, Enum.into(checks, %{}))
+  end
+
   def check_list_item(check_items, item_name, checks) when is_map(checks) do
     list = ValidationChecks.get_check_item(check_items, item_name)
 
@@ -147,7 +151,7 @@ defmodule Exop.Validation do
         list
         |> Enum.with_index()
         |> Enum.reduce(%{}, fn {item, index}, map ->
-          Map.put(map, String.to_atom("item_#{index}"), item)
+          Map.put(map, "#{item_name}[#{index}]", item)
         end)
 
       checks =

@@ -57,6 +57,16 @@ defmodule ValidationChecksTest do
     assert check_type(%{a: nil}, :a, :string) == %{:a => "has wrong type"}
   end
 
+  test "check_type/3: checks module" do
+    defmodule TestModule do
+    end
+
+    assert check_type(%{a: TestModule}, :a, :module) == true
+    assert check_type(%{a: TestModule_2}, :a, :module) == %{a: "has wrong type"}
+    assert check_type(%{a: :atom}, :a, :module) == %{a: "has wrong type"}
+    assert check_type(%{a: 1}, :a, :module) == %{a: "has wrong type"}
+  end
+
   test "check_numericality/3: returns %{item_name => error_msg} if item is in params and is not a number" do
     %{a: reason} = check_numericality(%{a: "1"}, :a, %{less_than: 3})
     assert is_binary(reason)

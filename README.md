@@ -26,7 +26,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.1.4"}]
+  [{:exop, "~> 1.1.5"}]
 end
 ```
 
@@ -107,9 +107,12 @@ Exop handle almost all Elixir types:
 - :struct
 - :list
 - :atom
+- :module
 - :function
 
 _Unknown type always passes this check._
+
+`module` 'type' means Exop expects a parameter's value to be an atom (a module name) and this module should be already loaded (ready to call it's functions)
 
 #### `required`
 

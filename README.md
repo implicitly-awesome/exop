@@ -13,6 +13,20 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 - [Installation](#installation)
 - [Operation definition](#operation-definition)
   - [Parameter checks](#parameter-checks)
+    - [type](#type)
+    - [required](#required)
+    - [default](#default)
+    - [numericality](#numericality)
+    - [equals](#equals)
+    - [in](#in)
+    - [not_in](#not_in)
+    - [format](#format)
+    - [length](#length)
+    - [inner](#inner)
+    - [struct](#struct)
+    - [list_item](#list_item)
+    - [func](#func)
+    - [allow_nil](#allow_nil)
   - [Defined params](#defined-params)
   - [Interrupt](#interrupt)
   - [Coercion](#coercion)
@@ -80,7 +94,7 @@ A parameter options could have various checks. Here the list of checks available
 - `equals` (`exactly`)
 - `in`
 - `not_in`
-- `format`
+- `format` (`regex`)
 - `length`
 - `inner`
 - `struct`
@@ -148,7 +162,9 @@ parameter :some_param, numericality: %{equal_to: 10, # (aliases: `equals`, `is`)
                                        less_than_or_equal_to: 10 # (alias: `max`)}
 ```
 
-#### `equals` (alias: `exactly`)
+#### `equals`
+
+(alias: `exactly`)
 
 Checks whether a parameter's value exactly equals given value (with type equality).
 
@@ -173,7 +189,9 @@ Checks whether a parameter's value is not within a given list.
 parameter :some_param, not_in: ~w(a b c)
 ```
 
-#### `format` (alias: `regex`)
+#### `format`
+
+(alias: `regex`)
 
 Checks wether parameter's value matches given regex.
 

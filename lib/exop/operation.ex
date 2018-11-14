@@ -20,7 +20,7 @@ defmodule Exop.Operation do
 
   @doc """
   Operation's entry point. Takes defined contract as the single parameter.
-  Contract itself is a `Keyword.t` list: `[param_name: param_value]`
+  Contract itself is a list of maps: `[%{name: atom(), opts: keyword()}]`
   """
   @callback process(map()) ::
               {:ok, any}
@@ -338,6 +338,11 @@ defmodule Exop.Operation do
       parameter :some_param, func: &__MODULE__.your_validation/2
 
       def your_validation(_params, param), do: !is_nil(param)
+
+  #### allow_nil
+  It is not a parameter check itself, because it doesn't return any validation errors.
+  It is a parameter attribute which allow you to have other checks for a parameter whilst have a possibility to pass `nil` as the parameter's value.
+  If `nil` is passed all the parameter's checks are ignored during validation.
 
   ## Coercion
 

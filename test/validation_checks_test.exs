@@ -10,13 +10,17 @@ defmodule ValidationChecksTest do
     assert get_check_item([a: 1, b: 2], :b) == 2
   end
 
-  test "get_check_item/2: returns :exop_no_check_item if key was not found" do
-    assert get_check_item(%{a: 1, b: 2}, :c) == :exop_no_check_item
-    assert get_check_item([a: 1, b: 2], :c) == :exop_no_check_item
+  test "get_check_item/2: returns nil if key was not found" do
+    assert is_nil(get_check_item(%{a: 1, b: 2}, :c))
+    assert is_nil(get_check_item([a: 1, b: 2], :c))
   end
 
-  test "get_check_item/2: returns :exop_no_check_item if first argument is not Keyword nor Map" do
-    assert get_check_item({:a, 1, :b, 2}, :a) == :exop_no_check_item
+  test "check_item_present?/2: checks whether a param has been provided" do
+    assert check_item_present?(%{a: 1, b: 2}, :a) == true
+    assert check_item_present?([a: 1, b: 2], :b) == true
+    assert check_item_present?([a: 1, b: nil], :b) == true
+    assert check_item_present?(%{a: 1, b: 2}, :c) == false
+    assert check_item_present?([a: 1, b: 2], :c) == false
   end
 
   test "check_required/3: returns true if required = false" do
@@ -55,6 +59,16 @@ defmodule ValidationChecksTest do
 
   test "check_type/3: returns false if item is nil but type is not atom" do
     assert check_type(%{a: nil}, :a, :string) == %{:a => "has wrong type"}
+  end
+
+  test "check_type/3: checks module" do
+    defmodule TestModule do
+    end
+
+    assert check_type(%{a: TestModule}, :a, :module) == true
+    assert check_type(%{a: TestModule_2}, :a, :module) == %{a: "has wrong type"}
+    assert check_type(%{a: :atom}, :a, :module) == %{a: "has wrong type"}
+    assert check_type(%{a: 1}, :a, :module) == %{a: "has wrong type"}
   end
 
   test "check_numericality/3: returns %{item_name => error_msg} if item is in params and is not a number" do

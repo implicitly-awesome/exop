@@ -20,7 +20,7 @@ defmodule Exop.Operation do
 
   @doc """
   Operation's entry point. Takes defined contract as the single parameter.
-  Contract itself is a `Keyword.t` list: `[param_name: param_value]`
+  Contract itself is a list of maps: `[%{name: atom(), opts: keyword()}]`
   """
   @callback process(map()) ::
               {:ok, any}
@@ -51,8 +51,6 @@ defmodule Exop.Operation do
     quote do
       alias Exop.Validation
       alias Exop.ValidationChecks
-
-      @no_check_item :exop_no_check_item
 
       @type interrupt_result :: {:interrupt, any}
       @type auth_result :: :ok | no_return
@@ -129,8 +127,7 @@ defmodule Exop.Operation do
            ) do
         resolved_params =
           if Keyword.has_key?(contract_item_opts, :default) &&
-               ValidationChecks.get_check_item(received_params, contract_item_name) ==
-                 @no_check_item do
+               !ValidationChecks.check_item_present?(received_params, contract_item_name) do
             contract_item_opts
             |> Keyword.get(:default)
             |> put_into_collection(resolved_params, contract_item_name)
@@ -338,6 +335,11 @@ defmodule Exop.Operation do
       parameter :some_param, func: &__MODULE__.your_validation/2
 
       def your_validation(_params, param), do: !is_nil(param)
+
+  #### allow_nil
+  It is not a parameter check itself, because it doesn't return any validation errors.
+  It is a parameter attribute which allow you to have other checks for a parameter whilst have a possibility to pass `nil` as the parameter's value.
+  If `nil` is passed all the parameter's checks are ignored during validation.
 
   ## Coercion
 

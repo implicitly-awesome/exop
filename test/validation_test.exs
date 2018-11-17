@@ -30,7 +30,7 @@ defmodule ValidationTest do
       name: :param,
       opts: [unknown_check: "whatever"]
     }]
-    assert validate(contract, %{param: "some_value"}, []) == [true]
+    assert validate(contract, %{param: "some_value"}, []) == [true, true]
   end
 
   test "validate/3: invokes related checks for a param's contract options", %{contract: contract} do
@@ -47,7 +47,7 @@ defmodule ValidationTest do
 
   test "validate/3: accumulates related checks results", %{contract: contract} do
     assert validate(contract, %{param2: "some_value"}, []) ==
-      [%{param: "is required"}, true, %{param2: "has wrong type"}, %{param2: "must be one of [1, 2, 3]"}]
+      [%{param: "is required"}, true, true, %{param2: "has wrong type"}, %{param2: "must be one of [1, 2, 3]"}]
   end
 
   test "valid?/2: returns :ok if all params conform the contract", %{contract: contract} do
@@ -154,9 +154,9 @@ defmodule ValidationTest do
     {:error, {:validation, reasons}} = valid?(contract, received_params)
 
     assert %{
-      item_0: ["has wrong type", "length must be greater than or equal to 7"],
-      item_1: ["length must be greater than or equal to 7"],
-      item_2: ["has wrong type", "length must be greater than or equal to 7"]
+      "list_param[0]" => ["has wrong type", "length must be greater than or equal to 7"],
+      "list_param[1]" => ["length must be greater than or equal to 7"],
+      "list_param[2]" => ["has wrong type", "length must be greater than or equal to 7"]
     } == reasons
   end
 

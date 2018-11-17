@@ -54,7 +54,7 @@ defmodule OperationTest do
     defmodule DefOperation do
       use Exop.Operation
 
-      parameter :param2
+      parameter :param2, required: false
       parameter :param, default: 999
 
       def process(params) do
@@ -127,7 +127,7 @@ defmodule OperationTest do
     assert Def5Operation.run(a: 1, c: 3) == {:ok, %{a: 1, b: 2}}
   end
 
-  test "run/1: returns an the last defined value for duplicated keys" do
+  test "run/1: returns the last defined value for duplicated keys" do
     defmodule Def6Operation do
       use Exop.Operation
 
@@ -139,7 +139,7 @@ defmodule OperationTest do
 
     assert Def6Operation.run(a: 1, b: 3) == {:ok, %{a: 1, b: 3}}
     assert Def6Operation.run(%{a: 1, b: 3}) == {:ok, %{a: 1, b: 3}}
-    assert Def6Operation.run(a: 1, a: 3) == {:ok, %{a: 3}}
+    assert Def6Operation.run(a: 1, a: 3, b: 2) == {:ok, %{a: 3, b: 2}}
   end
 
   test "interrupt/1: interupts process and returns the interuption result" do
@@ -370,7 +370,7 @@ defmodule OperationTest do
       def process(_params), do: interrupt()
     end
 
-    assert Def24Operation.run! == {:interrupt, nil}
+    assert Def24Operation.run!(param: :a) == {:interrupt, nil}
   end
 
   test "run/1: returns unwrapped error tuple if process/1 returns it" do
@@ -439,30 +439,26 @@ defmodule OperationTest do
     defmodule Def29Operation do
       use Exop.Operation
 
-      parameter :param, list_item: %{type: :string, length: %{min: 7}}, default: ["1234567", "7chars"]
+      parameter :list_param, list_item: %{type: :string, length: %{min: 7}}, default: ["1234567", "7chars"]
 
-      def process(params) do
-        {:ok, params[:param]}
-      end
+      def process(params), do: {:ok, params[:list_param]}
     end
 
-    assert Def29Operation.run() == {:error, {:validation, %{item_1: ["length must be greater than or equal to 7"]}}}
+    assert Def29Operation.run() == {:error, {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
   end
 
   test "list_item + coerce_with" do
     defmodule Def30Operation do
       use Exop.Operation
 
-      parameter :param, list_item: %{type: :string, length: %{min: 7}}, coerce_with: &__MODULE__.make_list/1
+      parameter :list_param, list_item: [type: :string, length: %{min: 7}], coerce_with: &__MODULE__.make_list/1
 
-      def process(params) do
-        {:ok, params[:param]}
-      end
+      def process(params), do: {:ok, params[:list_param]}
 
       def make_list(_), do: ["1234567", "7chars"]
     end
 
-    assert Def30Operation.run() == {:error, {:validation, %{item_1: ["length must be greater than or equal to 7"]}}}
+    assert Def30Operation.run() == {:error, {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
   end
 
   test "string-named parameters are allowed" do
@@ -555,8 +551,8 @@ defmodule OperationTest do
       defmodule Def36Operation do
         use Exop.Operation
 
-        parameter :a, type: :integer, allow_nil: true
-        parameter :b, type: :integer, allow_nil: false
+        parameter :a, type: :integer, allow_nil: true, required: false
+        parameter :b, type: :integer, allow_nil: false, required: false
 
         def process(params), do: params
       end
@@ -571,8 +567,8 @@ defmodule OperationTest do
       defmodule Def37Operation do
         use Exop.Operation
 
-        parameter :a, type: :integer, numericality: [greater_than: 2], allow_nil: true
-        parameter :b, allow_nil: true, func: &__MODULE__.nil_check/2
+        parameter :a, type: :integer, numericality: [greater_than: 2], allow_nil: true, required: false
+        parameter :b, allow_nil: true, func: &__MODULE__.nil_check/2, required: false
 
         def nil_check(_, nil), do: {:error, :this_is_nil}
 
@@ -583,6 +579,88 @@ defmodule OperationTest do
       assert Def37Operation.run(a: 1) == {:error, {:validation, %{a: ["must be greater than 2"]}}}
       assert Def37Operation.run(a: "1") == {:error, {:validation, %{a: ["not a number", "has wrong type"]}}}
       assert Def37Operation.run(b: nil) == {:ok, %{b: nil}}
+    end
+  end
+
+  describe "when parameter is required" do
+    test "all parameters are required by default" do
+      defmodule Def38Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer
+
+        def process(params), do: params
+      end
+
+      assert Def38Operation.run(a: nil) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def38Operation.run() == {:error, {:validation, %{a: ["is required"]}}}
+    end
+
+    test "with allow_nil" do
+      defmodule Def39Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer, allow_nil: true
+
+        def process(params), do: params
+      end
+
+      assert Def39Operation.run(a: nil) == {:ok, %{a: nil}}
+      assert Def39Operation.run() == {:error, {:validation, %{a: ["is required"]}}}
+    end
+
+    test "with default" do
+      defmodule Def40Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer, default: 7
+
+        def process(params), do: params
+      end
+
+      assert Def40Operation.run(a: nil) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def40Operation.run() == {:ok, %{a: 7}}
+    end
+  end
+
+  describe "when parameter is not required" do
+    test "should be not required explicitly" do
+      defmodule Def41Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer, required: false
+
+        def process(params), do: params
+      end
+
+      assert Def41Operation.run(a: nil) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def41Operation.run() == {:ok, %{}}
+    end
+
+    test "with allow_nil" do
+      defmodule Def42Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer, required: false, allow_nil: true
+
+        def process(params), do: params
+      end
+
+      assert Def42Operation.run(a: nil) == {:ok, %{a: nil}}
+      assert Def42Operation.run() == {:ok, %{}}
+    end
+
+    test "with default" do
+      defmodule Def43Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer, required: false, default: 7
+
+        def process(params), do: params
+      end
+
+      assert Def43Operation.run(a: nil) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def43Operation.run() == {:ok, %{a: 7}}
     end
   end
 end

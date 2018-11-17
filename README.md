@@ -13,6 +13,20 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 - [Installation](#installation)
 - [Operation definition](#operation-definition)
   - [Parameter checks](#parameter-checks)
+    - [type](#type)
+    - [required](#required)
+    - [default](#default)
+    - [numericality](#numericality)
+    - [equals](#equals)
+    - [in](#in)
+    - [not_in](#not_in)
+    - [format](#format)
+    - [length](#length)
+    - [inner](#inner)
+    - [struct](#struct)
+    - [list_item](#list_item)
+    - [func](#func)
+    - [allow_nil](#allow_nil)
   - [Defined params](#defined-params)
   - [Interrupt](#interrupt)
   - [Coercion](#coercion)
@@ -26,7 +40,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.1.4"}]
+  [{:exop, "~> 1.2.0"}]
 end
 ```
 
@@ -80,7 +94,7 @@ A parameter options could have various checks. Here the list of checks available
 - `equals` (`exactly`)
 - `in`
 - `not_in`
-- `format`
+- `format` (`regex`)
 - `length`
 - `inner`
 - `struct`
@@ -107,19 +121,27 @@ Exop handle almost all Elixir types:
 - :struct
 - :list
 - :atom
+- :module
 - :function
 
 _Unknown type always passes this check._
 
+`module` 'type' means Exop expects a parameter's value to be an atom (a module name) and this module should be already loaded (ready to call it's functions)
+
 #### `required`
 
-Checks the presence of a parameter in passed to `run/1` params collection.
+Checks the presence/absence of a parameter in passed to `run/1` params collection.
 Given parameters collection fails the validation only if required parameter is missed,
 if required parameter's value is `nil` this parameter will pass this check.
 
 ```elixir
-parameter :some_param, required: true
+parameter :param_a                   # the same as required: true, required by default
+parameter :param_b, required: false  # this parameter is not required
 ```
+
+By default, a parameter is required (since version 1.2.0, `required: true`).
+If you want to specify a parameter is not required, provide `required: false`.
+Why? Because you might find that you repetitively type `required: true` for almost every parameter in a contract. I think if you provide a parameter to an operation (define it in a contract) you expect to get it. Cases, when you need a parameter passed into an operation (and don't really care whether it is present or not), are pretty rare.
 
 _Since version 1.1.0 the behavior of this check has been changed. Check out CHANGELOG for more info._
 
@@ -145,7 +167,9 @@ parameter :some_param, numericality: %{equal_to: 10, # (aliases: `equals`, `is`)
                                        less_than_or_equal_to: 10 # (alias: `max`)}
 ```
 
-#### `equals` (alias: `exactly`)
+#### `equals`
+
+(alias: `exactly`)
 
 Checks whether a parameter's value exactly equals given value (with type equality).
 
@@ -170,7 +194,9 @@ Checks whether a parameter's value is not within a given list.
 parameter :some_param, not_in: ~w(a b c)
 ```
 
-#### `format` (alias: `regex`)
+#### `format`
+
+(alias: `regex`)
 
 Checks wether parameter's value matches given regex.
 
@@ -294,7 +320,7 @@ _it's possible to combine :func check with others (though not preferable), just 
 
 It is not a parameter check itself, because it doesn't return any validation errors.
 It is a parameter attribute which allow you to have other checks for a parameter whilst have a possibility to pass `nil` as the parameter's value.
-If `nil` is passed *all* the parameter's checks are ignored during validation.
+If `nil` is passed _all_ the parameter's checks are ignored during validation.
 
 ```elixir
 defmodule YourOperation do

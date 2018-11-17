@@ -40,7 +40,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.1.5"}]
+  [{:exop, "~> 1.2.0"}]
 end
 ```
 
@@ -130,13 +130,18 @@ _Unknown type always passes this check._
 
 #### `required`
 
-Checks the presence of a parameter in passed to `run/1` params collection.
+Checks the presence/absence of a parameter in passed to `run/1` params collection.
 Given parameters collection fails the validation only if required parameter is missed,
 if required parameter's value is `nil` this parameter will pass this check.
 
 ```elixir
-parameter :some_param, required: true
+parameter :param_a                   # the same as required: true, required by default
+parameter :param_b, required: false  # this parameter is not required
 ```
+
+By default, a parameter is required (since version 1.2.0, `required: true`).
+If you want to specify a parameter is not required, provide `required: false`.
+Why? Because you might find that you repetitively type `required: true` for almost every parameter in a contract. I think if you provide a parameter to an operation (define it in a contract) you expect to get it. Cases, when you need a parameter passed into an operation (and don't really care whether it is present or not), are pretty rare.
 
 _Since version 1.1.0 the behavior of this check has been changed. Check out CHANGELOG for more info._
 
@@ -315,7 +320,7 @@ _it's possible to combine :func check with others (though not preferable), just 
 
 It is not a parameter check itself, because it doesn't return any validation errors.
 It is a parameter attribute which allow you to have other checks for a parameter whilst have a possibility to pass `nil` as the parameter's value.
-If `nil` is passed *all* the parameter's checks are ignored during validation.
+If `nil` is passed _all_ the parameter's checks are ignored during validation.
 
 ```elixir
 defmodule YourOperation do

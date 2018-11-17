@@ -52,8 +52,6 @@ defmodule Exop.Operation do
       alias Exop.Validation
       alias Exop.ValidationChecks
 
-      @no_check_item :exop_no_check_item
-
       @type interrupt_result :: {:interrupt, any}
       @type auth_result :: :ok | no_return
       #  throws:
@@ -129,8 +127,7 @@ defmodule Exop.Operation do
            ) do
         resolved_params =
           if Keyword.has_key?(contract_item_opts, :default) &&
-               ValidationChecks.get_check_item(received_params, contract_item_name) ==
-                 @no_check_item do
+               !ValidationChecks.check_item_present?(received_params, contract_item_name) do
             contract_item_opts
             |> Keyword.get(:default)
             |> put_into_collection(resolved_params, contract_item_name)

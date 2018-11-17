@@ -1,10 +1,12 @@
-## [1.1.5] - 2018.11.04
+## [1.2.0] - 2018.11.04
 
 ### Changes
 
+- **breaking:** `required` has `true` value by default, so paramter is required by default if only you haven't specify `required: false` (a bit more info in the [README](https://github.com/madeinussr/exop#required))
 - `list_item` now accept both: Map and Keyword as items checks
 - `list_item` returns an item's error as `"list_param[index]" => [error_messages]`
 - `:module` option for `type` check (if you want to be more explicit)
+- Checks list as links in the README
 
 ## [1.1.4] - 2018.10.24
 

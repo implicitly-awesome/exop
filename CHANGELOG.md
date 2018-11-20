@@ -1,3 +1,9 @@
+## Future version
+
+### Changes
+
+- allow to pass struct module name in `struct` validation
+
 ## [1.2.0] - 2018.11.17
 
 ### Changes

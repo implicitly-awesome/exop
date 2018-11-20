@@ -374,18 +374,9 @@ defmodule Exop.ValidationChecks do
   """
   @spec check_struct(Keyword.t() | map(), atom() | String.t(), struct()) :: true | check_error
   def check_struct(check_items, item_name, check) do
-    check_item = get_check_item(check_items, item_name)
-
-    try do
-      check = struct!(check, Map.from_struct(check_item))
-      ^check_item = check
-    rescue
-      _ ->
-        %{item_name => "is not expected struct"}
-    else
-      _ ->
-        true
-    end
+    check_items
+    |> get_check_item(item_name)
+    |> validate_struct(check, item_name)
   end
 
   @doc """
@@ -458,4 +449,10 @@ defmodule Exop.ValidationChecks do
   def check_exactly(check_items, item_name, check_value) do
     check_equals(check_items, item_name, check_value)
   end
+
+  defp validate_struct(%struct{}, %struct{}, _item_name), do: true
+
+  defp validate_struct(%struct{}, struct, _item_name) when is_atom(struct), do: true
+
+  defp validate_struct(_item, _check, item_name), do: %{item_name => "is not expected struct"}
 end

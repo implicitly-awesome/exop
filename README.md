@@ -244,6 +244,8 @@ Checks whether the given parameter is expected structure.
 
 ```elixir
 parameter :some_param, struct: %SomeStruct{}
+# or
+parameter :some_param, struct: SomeStruct
 ```
 
 #### `list_item`

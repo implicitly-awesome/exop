@@ -193,9 +193,10 @@ defmodule ValidationChecksTest do
   end
 
   test "check_struct/3: successes" do
-    assert check_struct(%{a: %TestStruct{qwerty: "123"}}, :a, %TestStruct{}) == true
     struct = %TestStruct{qwerty: "123"}
+
     assert check_struct(%{a: struct}, :a, %TestStruct{}) == true
+    assert check_struct(%{a: struct}, :a, TestStruct) == true
   end
 
   test "check_struct/3: fails" do
@@ -203,6 +204,8 @@ defmodule ValidationChecksTest do
     assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{}) == %{a: "is not expected struct"}
     assert check_struct(%{a: %TestStruct2{}}, :a, %TestStruct{qwerty: "123"}) == %{a: "is not expected struct"}
     assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{qwerty: "123"}) == %{a: "is not expected struct"}
+    assert check_struct(%{a: %TestStruct2{}}, :a, TestStruct) == %{a: "is not expected struct"}
+    assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, TestStruct) == %{a: "is not expected struct"}
   end
 
   test "check_equals/3: success" do

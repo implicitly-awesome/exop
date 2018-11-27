@@ -167,19 +167,9 @@ defmodule Exop.Validation do
           Map.put(map, "#{item_name}[#{index}]", item)
         end)
 
-      checks =
-        Enum.reduce(received_params, %{}, fn {param_name, _}, map ->
-          Map.put(map, param_name, checks)
-        end)
-
-      inner_contract =
-        for {inner_param_name, inner_param_checks} <- checks, into: [] do
-          %{name: inner_param_name, opts: inner_param_checks}
-        end
-
-      Enum.map(inner_contract, fn contract_item ->
-        validate_params(contract_item, received_params)
-      end)
+      for {param_name, _} <- received_params, into: [] do
+        validate_params(%{name: param_name, opts: checks}, received_params)
+      end
     else
       [%{String.to_atom("#{item_name}") => "is not a list"}]
     end

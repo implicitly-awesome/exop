@@ -71,6 +71,14 @@ defmodule ValidationChecksTest do
     assert check_type(%{a: 1}, :a, :module) == %{a: "has wrong type"}
   end
 
+  test "check_type/3: checks keyword" do
+    assert check_type(%{a: [b: 1, c: "2"]}, :a, :keyword) == true
+    assert check_type(%{a: [{:b, 1}, {:c, "2"}]}, :a, :keyword) == true
+    assert check_type(%{a: []}, :a, :keyword) == true
+    assert check_type(%{a: :atom}, :a, :keyword) == %{a: "has wrong type"}
+    assert check_type(%{a: %{b: 1, c: "2"}}, :a, :keyword) == %{a: "has wrong type"}
+  end
+
   test "check_numericality/3: returns %{item_name => error_msg} if item is in params and is not a number" do
     %{a: reason} = check_numericality(%{a: "1"}, :a, %{less_than: 3})
     assert is_binary(reason)

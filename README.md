@@ -119,6 +119,7 @@ Exop handle almost all Elixir types:
 - :tuple
 - :map
 - :struct
+- :keyword
 - :list
 - :atom
 - :module

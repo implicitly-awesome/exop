@@ -89,9 +89,9 @@ defmodule ValidationTest do
 
     {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
-    keys = reasons |> Map.keys
-    assert Enum.member?(keys, :a)
-    assert Enum.member?(keys, :b)
+    keys = Map.keys(reasons)
+    assert Enum.member?(keys, "map_param[:a]")
+    assert Enum.member?(keys, "map_param[:b]")
   end
 
   test "valid?/2: validates parent parameter itself while validating its inner" do
@@ -112,8 +112,8 @@ defmodule ValidationTest do
     assert is_map(reasons)
     keys = reasons |> Map.keys
     assert Enum.member?(keys, :map_param)
-    assert Enum.member?(keys, :a)
-    assert Enum.member?(keys, :b)
+    assert Enum.member?(keys, "map_param[:a]")
+    assert Enum.member?(keys, "map_param[:b]")
   end
 
   test "valid?/2: validates an inner struct parameter with inner option checks" do
@@ -132,8 +132,8 @@ defmodule ValidationTest do
     {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
     keys = Map.keys(reasons)
-    assert Enum.member?(keys, :a)
-    assert Enum.member?(keys, :b)
+    assert Enum.member?(keys, "map_param[:a]")
+    assert Enum.member?(keys, "map_param[:b]")
   end
 
   test "valid?/2: validates a list parameter items with list_item option checks (simple)" do
@@ -184,8 +184,8 @@ defmodule ValidationTest do
     {:error, {:validation, reasons}} = valid?(contract, received_params)
 
     assert %{
-      a: ["has wrong type"],
-      b: ["length must be greater than or equal to 7"]
+      "list_param[0][:b]" => ["length must be greater than or equal to 7"],
+      "list_param[1][:a]" => ["has wrong type"]
     } == reasons
   end
 

@@ -139,14 +139,22 @@ defmodule Exop.Validation do
   """
   @spec check_inner(map() | Keyword.t(), atom() | String.t(), map() | Keyword.t()) :: list
   def check_inner(check_items, item_name, checks) when is_map(checks) do
-    checked_param = ValidationChecks.get_check_item(check_items, item_name)
-
-    inner_contract =
-      for {inner_param_name, inner_param_checks} <- checks, into: [] do
-        %{name: inner_param_name, opts: inner_param_checks}
+    map =
+      case ValidationChecks.get_check_item(check_items, item_name) do
+        %_{} = struct -> Map.from_struct(struct)
+        x -> Enum.into(x, %{})
       end
 
-    validate(inner_contract, checked_param, [])
+    received_params =
+      Enum.reduce(map, %{}, fn {inner_param_name, _inner_param_value}, acc ->
+        Map.put(acc, "#{item_name}[:#{inner_param_name}]", map[inner_param_name])
+      end)
+
+    for {inner_param_name, _inner_param_value} <- map, into: [] do
+      inner_name = "#{item_name}[:#{inner_param_name}]"
+      inner_opts = Map.get(checks, inner_param_name, [])
+      validate_params(%{name: inner_name, opts: inner_opts}, received_params)
+    end
   end
 
   def check_inner(_received_params, _contract_item_name, _check_params), do: true
@@ -163,8 +171,8 @@ defmodule Exop.Validation do
       received_params =
         list
         |> Enum.with_index()
-        |> Enum.reduce(%{}, fn {item, index}, map ->
-          Map.put(map, "#{item_name}[#{index}]", item)
+        |> Enum.reduce(%{}, fn {item, index}, acc ->
+          Map.put(acc, "#{item_name}[#{index}]", item)
         end)
 
       for {param_name, _} <- received_params, into: [] do

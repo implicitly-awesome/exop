@@ -145,6 +145,7 @@ defmodule OperationTest do
   test "interrupt/1: interupts process and returns the interuption result" do
     defmodule Def7Operation do
       use Exop.Operation
+      parameter :x, required: false
 
       def process(_params) do
         interrupt(%{my_error: "oops"})
@@ -158,6 +159,7 @@ defmodule OperationTest do
   test "interrupt/1: pass other exceptions" do
     defmodule Def8Operation do
       use Exop.Operation
+      parameter :x, required: false
 
       def process(_params) do
         raise "runtime error"
@@ -188,8 +190,8 @@ defmodule OperationTest do
   test "stores policy module and action" do
     defmodule Def9Operation do
       use Exop.Operation
-
       policy TruePolicy, :test
+      parameter :x, required: false
 
       def process(_params), do: current_policy()
     end
@@ -200,8 +202,8 @@ defmodule OperationTest do
   test "authorizes with provided policy" do
     defmodule Def10Operation do
       use Exop.Operation
-
       policy TruePolicy, :test
+      parameter :x, required: false
 
       def process(_params), do: authorize(user: %TestUser{})
     end
@@ -210,8 +212,8 @@ defmodule OperationTest do
 
     defmodule Def11Operation do
       use Exop.Operation
-
       policy FalsePolicy, :test
+      parameter :x, required: false
 
       def process(_params), do: authorize(user: %TestUser{})
     end
@@ -222,8 +224,8 @@ defmodule OperationTest do
   test "operation invokation stops if auth failed" do
     defmodule Def12Operation do
       use Exop.Operation
-
       policy FalsePolicy, :test
+      parameter :x, required: false
 
       def process(_params) do
         authorize %TestUser{}
@@ -238,6 +240,7 @@ defmodule OperationTest do
     defmodule Def14Operation do
       use Exop.Operation
       policy UnknownPolicy, :test
+      parameter :x, required: false
 
       def process(_params), do: authorize(%TestUser{})
     end
@@ -245,6 +248,7 @@ defmodule OperationTest do
     defmodule Def15Operation do
       use Exop.Operation
       policy TruePolicy, :unknown_action
+      parameter :x, required: false
 
       def process(_params), do: authorize(%TestUser{})
     end
@@ -258,6 +262,7 @@ defmodule OperationTest do
       use Exop.Operation
       policy TruePolicy, :test
       policy FalsePolicy, :test
+      parameter :x, required: false
 
       def process(_params), do: current_policy()
     end

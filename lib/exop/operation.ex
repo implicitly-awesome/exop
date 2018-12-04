@@ -49,6 +49,7 @@ defmodule Exop.Operation do
 
   defmacro __before_compile__(_env) do
     quote do
+      alias Exop.Utils
       alias Exop.Validation
       alias Exop.ValidationChecks
 
@@ -62,6 +63,15 @@ defmodule Exop.Operation do
 
       @exop_interruption :exop_interruption
       @exop_auth_error :exop_auth_error
+
+      if is_nil(@contract) || Enum.count(@contract) == 0 do
+        file = String.to_charlist(__ENV__.file())
+        line = __ENV__.line()
+        stacktrace = [{__MODULE__, :process, 1, [file: file, line: line]}]
+        msg = "An operation without a parameter definition"
+
+        IO.warn(msg, stacktrace)
+      end
 
       @spec contract :: list(map())
       def contract do
@@ -444,7 +454,7 @@ defmodule Exop.Operation do
       if Code.ensure_compiled?(fallback_module) && function_exported?(fallback_module, :process, 3) do
         @fallback_module %{module: fallback_module, opts: opts}
       else
-        Logger.warn("#{@module_name}: #{fallback_module}.run/1 wasn't found")
+        IO.warn("#{@module_name}: #{fallback_module}.run/1 wasn't found")
         @fallback_module nil
       end
     end

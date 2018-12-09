@@ -139,25 +139,35 @@ defmodule Exop.Validation do
   """
   @spec check_inner(map() | Keyword.t(), atom() | String.t(), map() | Keyword.t()) :: list
   def check_inner(check_items, item_name, checks) when is_map(checks) do
-    map =
-      case ValidationChecks.get_check_item(check_items, item_name) do
-        %_{} = struct -> Map.from_struct(struct)
-        x -> Enum.into(x, %{})
-      end
+    check_items
+    |> ValidationChecks.get_check_item(item_name)
+    |> case do
+      %{} = map -> map
+      %_{} = struct -> Map.from_struct(struct)
+      [x | _] = keyword when is_list(keyword) and is_tuple(x) -> Enum.into(keyword, %{})
+      [] -> %{}
+      _ -> nil
+    end
+    |> do_check_inner(item_name, checks)
+  end
 
+  def check_inner(_received_params, _contract_item_name, _check_params), do: true
+
+  defp do_check_inner(check_item, item_name, checks) when is_map(check_item) do
     received_params =
-      Enum.reduce(map, %{}, fn {inner_param_name, _inner_param_value}, acc ->
-        Map.put(acc, "#{item_name}[:#{inner_param_name}]", map[inner_param_name])
+      Enum.reduce(check_item, %{}, fn {inner_param_name, _inner_param_value}, acc ->
+        Map.put(acc, "#{item_name}[:#{inner_param_name}]", check_item[inner_param_name])
       end)
 
-    for {inner_param_name, _inner_param_value} <- map, into: [] do
+    for {inner_param_name, inner_opts} <- checks, into: [] do
       inner_name = "#{item_name}[:#{inner_param_name}]"
-      inner_opts = Map.get(checks, inner_param_name, [])
       validate_params(%{name: inner_name, opts: inner_opts}, received_params)
     end
   end
 
-  def check_inner(_received_params, _contract_item_name, _check_params), do: true
+  defp do_check_inner(_check_item, item_name, _checks) do
+    [%{item_name => "has wrong type"}]
+  end
 
   @spec check_list_item(map() | Keyword.t(), atom() | String.t(), map() | Keyword.t()) :: list
   def check_list_item(check_items, item_name, checks) when is_list(checks) do

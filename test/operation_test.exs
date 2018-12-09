@@ -668,4 +668,20 @@ defmodule OperationTest do
       assert Def43Operation.run() == {:ok, %{a: 7}}
     end
   end
+
+  test ":inner check validates a parameter type" do
+    defmodule Def44Operation do
+      use Exop.Operation
+
+      parameter :a, inner: %{b: [type: :atom], c: [type: :string]}
+
+      def process(params), do: params
+    end
+
+    assert Def44Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
+    assert Def44Operation.run(a: []) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+    assert Def44Operation.run(a: %{}) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+    assert Def44Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
+    assert Def44Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
+  end
 end

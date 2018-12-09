@@ -142,8 +142,8 @@ defmodule Exop.Validation do
     check_items
     |> ValidationChecks.get_check_item(item_name)
     |> case do
-      %{} = map -> map
       %_{} = struct -> Map.from_struct(struct)
+      %{} = map -> map
       [x | _] = keyword when is_list(keyword) and is_tuple(x) -> Enum.into(keyword, %{})
       [] -> %{}
       _ -> nil

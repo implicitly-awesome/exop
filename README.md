@@ -40,7 +40,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.2.0"}]
+  [{:exop, "~> 1.2.1"}]
 end
 ```
 
@@ -232,6 +232,12 @@ related inner items.
 # some_param = %{a: 3, b: "inner_b_attr"}
 
 parameter :some_param, type: :map, inner: %{
+  a: [type: :integer, required: true],
+  b: [type: :string, length: %{min: 1, max: 6}]
+}
+
+# you can omit `type` check while you're passing either Map or Keyword to an operation
+parameter :some_param, inner: %{
   a: [type: :integer, required: true],
   b: [type: :string, length: %{min: 1, max: 6}]
 }

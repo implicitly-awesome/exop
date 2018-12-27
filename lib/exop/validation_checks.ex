@@ -16,8 +16,7 @@ defmodule Exop.ValidationChecks do
 
   @no_check_item :exop_no_check_item
 
-  # @type check_error :: {:error, String.t}
-  @type check_error :: %{atom => String.t()}
+  @type check_error :: %{(atom() | String.t()) => String.t()}
 
   @known_types ~w(boolean integer float string tuple map struct list atom module function keyword)a
 
@@ -453,6 +452,16 @@ defmodule Exop.ValidationChecks do
     check_equals(check_items, item_name, check_value)
   end
 
+  @spec check_allow_nil(Keyword.t() | map(), atom() | String.t(), boolean()) :: true | check_error
+  def check_allow_nil(_check_items, _item_name, true), do: true
+
+  def check_allow_nil(check_items, item_name, false) do
+    check_item = get_check_item(check_items, item_name)
+
+    !is_nil(check_item) || %{item_name => "doesn't allow nil"}
+  end
+
+  @spec validate_struct(any(), any(), atom() | String.t()) :: boolean()
   defp validate_struct(%struct{}, %struct{}, _item_name), do: true
 
   defp validate_struct(%struct{}, struct, _item_name) when is_atom(struct), do: true

@@ -129,8 +129,17 @@ defmodule Exop.ValidationChecks do
   defp do_check_type(check_item, :float) when is_float(check_item), do: true
   defp do_check_type(check_item, :string) when is_binary(check_item), do: true
   defp do_check_type(check_item, :tuple) when is_tuple(check_item), do: true
-  defp do_check_type(%_{} = _check_item, :struct), do: true
-  defp do_check_type(_check_item, :struct), do: false
+
+  defp do_check_type(%_{} = _check_item, :struct) do
+    IO.warn("type check with :struct is deprecated, please use :map instead")
+    true
+  end
+
+  defp do_check_type(_check_item, :struct) do
+    IO.warn("type check with :struct is deprecated, please use :map instead")
+    false
+  end
+
   defp do_check_type(check_item, :map) when is_map(check_item), do: true
   defp do_check_type(check_item, :list) when is_list(check_item), do: true
   defp do_check_type(check_item, :atom) when is_atom(check_item), do: true

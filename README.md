@@ -40,7 +40,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.2.1"}]
+  [{:exop, "~> 1.2.2"}]
 end
 ```
 

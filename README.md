@@ -118,7 +118,6 @@ Exop handle almost all Elixir types:
 - :string
 - :tuple
 - :map
-- :struct
 - :keyword
 - :list
 - :atom
@@ -263,6 +262,7 @@ An item's checks could be any that Exop offers:
 ```elixir
 # list_param = ["1234567", "7chars"]
 
+# you can omit `type` check while you're passing a list to an operation
 parameter :list_param, list_item: %{type: :string, length: %{min: 7}}
 ```
 

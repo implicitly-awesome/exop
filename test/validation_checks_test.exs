@@ -5,6 +5,14 @@ defmodule ValidationChecksTest do
 
   import Exop.ValidationChecks
 
+  defmodule TestStruct do
+    defstruct [:qwerty]
+  end
+
+  defmodule TestStruct2 do
+    defstruct [:qwerty]
+  end
+
   test "get_check_item/2: returns value by key either from Keyword or Map" do
     assert get_check_item(%{a: 1, b: 2}, :a) == 1
     assert get_check_item([a: 1, b: 2], :b) == 2
@@ -77,6 +85,15 @@ defmodule ValidationChecksTest do
     assert check_type(%{a: []}, :a, :keyword) == true
     assert check_type(%{a: :atom}, :a, :keyword) == %{a: "has wrong type"}
     assert check_type(%{a: %{b: 1, c: "2"}}, :a, :keyword) == %{a: "has wrong type"}
+  end
+
+  test "check_type/3: checks structs" do
+    assert check_type(%{a: %TestStruct{qwerty: :asdfgh}}, :a, :struct) == true
+    assert check_type(%{a: %TestStruct{}}, :a, :struct) == true
+    assert check_type(%{a: %{b: 1, c: "2"}}, :a, :struct) == %{a: "has wrong type"}
+    assert check_type(%{a: %{}}, :a, :struct) == %{a: "has wrong type"}
+    assert check_type(%{a: [{:b, 1}, {:c, "2"}]}, :a, :struct) == %{a: "has wrong type"}
+    assert check_type(%{a: :atom}, :a, :struct) == %{a: "has wrong type"}
   end
 
   test "check_numericality/3: returns %{item_name => error_msg} if item is in params and is not a number" do
@@ -190,14 +207,6 @@ defmodule ValidationChecksTest do
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{max: 2})
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{is: 4})
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{in: 4..6})
-  end
-
-  defmodule TestStruct do
-    defstruct [:qwerty]
-  end
-
-  defmodule TestStruct2 do
-    defstruct [:qwerty]
   end
 
   test "check_struct/3: successes" do

@@ -5,7 +5,7 @@ defmodule Exop.Validation do
     Mostly invokes Exop.ValidationChecks module functions.
   """
 
-  alias Exop.ValidationChecks
+  import Exop.ValidationChecks
 
   defmodule ValidationError do
     @moduledoc """
@@ -88,7 +88,7 @@ defmodule Exop.Validation do
   end
 
   defp present?(received_params, contract_item_name) do
-    ValidationChecks.check_item_present?(received_params, contract_item_name)
+    check_item_present?(received_params, contract_item_name)
   end
 
   defp required?(opts), do: opts[:required] != false
@@ -102,11 +102,10 @@ defmodule Exop.Validation do
   end
 
   defp validate_params(%{name: name, opts: opts} = _contract_item, received_params) do
-    nil_is_allowed =
-      opts[:allow_nil] == true && ValidationChecks.check_item_present?(received_params, name) &&
-        is_nil(ValidationChecks.get_check_item(received_params, name))
+    is_nil? =
+      check_item_present?(received_params, name) && is_nil(get_check_item(received_params, name))
 
-    if nil_is_allowed do
+    if is_nil? and opts[:allow_nil] == true do
       []
     else
       # see changelog for ver. 1.2.0: everything except `required: false` is `required: true`
@@ -119,8 +118,8 @@ defmodule Exop.Validation do
           function_present?(__MODULE__, check_function_name) ->
             apply(__MODULE__, check_function_name, [received_params, name, check_params])
 
-          function_present?(ValidationChecks, check_function_name) ->
-            apply(ValidationChecks, check_function_name, [received_params, name, check_params])
+          function_present?(Exop.ValidationChecks, check_function_name) ->
+            apply(Exop.ValidationChecks, check_function_name, [received_params, name, check_params])
 
           true ->
             true
@@ -140,7 +139,7 @@ defmodule Exop.Validation do
   @spec check_inner(map() | Keyword.t(), atom() | String.t(), map() | Keyword.t()) :: list
   def check_inner(check_items, item_name, checks) when is_map(checks) do
     check_items
-    |> ValidationChecks.get_check_item(item_name)
+    |> get_check_item(item_name)
     |> case do
       %_{} = struct -> Map.from_struct(struct)
       %{} = map -> map
@@ -175,7 +174,7 @@ defmodule Exop.Validation do
   end
 
   def check_list_item(check_items, item_name, checks) when is_map(checks) do
-    list = ValidationChecks.get_check_item(check_items, item_name)
+    list = get_check_item(check_items, item_name)
 
     if is_list(list) do
       received_params =

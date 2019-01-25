@@ -1,6 +1,16 @@
+## [1.2.2] - 2019.01.25
+
+### Changes
+
+- `list_item` check allows you to omit `type` check definition, in this case `list_item` checks for the list type under the hood
+- `struct` type check is deprecated
+- `required: false` + `allow_nil: false` behavior has been fixed
+- `type: :struct` check has been revised
+
 ## [1.2.1] - 2018.12.09
 
 ### Changes
+
 - you get a warning if there is no any `parameter` definition
 - `inner` check allows you to omit `type` check definition, in this case `inner` checks for an appropriate type (either Map or Keyword) under the hood
 - `inner` returns an item's error as `"a[:c]" => ["is required"]`

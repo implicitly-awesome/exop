@@ -16,8 +16,7 @@ defmodule Exop.ValidationChecks do
 
   @no_check_item :exop_no_check_item
 
-  # @type check_error :: {:error, String.t}
-  @type check_error :: %{atom => String.t()}
+  @type check_error :: %{(atom() | String.t()) => String.t()}
 
   @known_types ~w(boolean integer float string tuple map struct list atom module function keyword)a
 
@@ -130,8 +129,18 @@ defmodule Exop.ValidationChecks do
   defp do_check_type(check_item, :float) when is_float(check_item), do: true
   defp do_check_type(check_item, :string) when is_binary(check_item), do: true
   defp do_check_type(check_item, :tuple) when is_tuple(check_item), do: true
+
+  defp do_check_type(%_{} = _check_item, :struct) do
+    IO.warn("type check with :struct is deprecated, please use :map instead")
+    true
+  end
+
+  defp do_check_type(_check_item, :struct) do
+    IO.warn("type check with :struct is deprecated, please use :map instead")
+    false
+  end
+
   defp do_check_type(check_item, :map) when is_map(check_item), do: true
-  defp do_check_type(check_item, :struct) when is_map(check_item), do: true
   defp do_check_type(check_item, :list) when is_list(check_item), do: true
   defp do_check_type(check_item, :atom) when is_atom(check_item), do: true
   defp do_check_type(check_item, :function) when is_function(check_item), do: true
@@ -452,6 +461,16 @@ defmodule Exop.ValidationChecks do
     check_equals(check_items, item_name, check_value)
   end
 
+  @spec check_allow_nil(Keyword.t() | map(), atom() | String.t(), boolean()) :: true | check_error
+  def check_allow_nil(_check_items, _item_name, true), do: true
+
+  def check_allow_nil(check_items, item_name, false) do
+    check_item = get_check_item(check_items, item_name)
+
+    !is_nil(check_item) || %{item_name => "doesn't allow nil"}
+  end
+
+  @spec validate_struct(any(), any(), atom() | String.t()) :: boolean()
   defp validate_struct(%struct{}, %struct{}, _item_name), do: true
 
   defp validate_struct(%struct{}, struct, _item_name) when is_atom(struct), do: true

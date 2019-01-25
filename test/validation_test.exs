@@ -37,7 +37,8 @@ defmodule ValidationTest do
     with_mock Exop.ValidationChecks, [__info__: fn(_) -> [check_required: true, check_type: true] end,
                                                           get_check_item: fn(_, _) -> "some_value" end,
                                                           check_required: fn(_, _, _) -> true end,
-                                                          check_type: fn(_, _, _) -> true end] do
+                                                          check_type: fn(_, _, _) -> true end,
+                                                          check_item_present?: fn(_, _) -> true end] do
 
       validate(contract, %{param: "some_value"}, [])
       assert called Exop.ValidationChecks.check_required(%{param: "some_value"}, :param, true)

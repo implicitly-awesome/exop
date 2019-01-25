@@ -565,7 +565,7 @@ defmodule OperationTest do
       assert Def36Operation.run(a: 1) == {:ok, %{a: 1}}
       assert Def36Operation.run(a: nil) == {:ok, %{a: nil}}
       assert Def36Operation.run(b: 1) == {:ok, %{b: 1}}
-      assert Def36Operation.run(b: nil) == {:error, {:validation, %{b: ["has wrong type"]}}}
+      assert Def36Operation.run(b: nil) == {:error, {:validation, %{b: ["doesn't allow nil", "has wrong type"]}}}
     end
 
     test "skips all checks" do
@@ -584,6 +584,20 @@ defmodule OperationTest do
       assert Def37Operation.run(a: 1) == {:error, {:validation, %{a: ["must be greater than 2"]}}}
       assert Def37Operation.run(a: "1") == {:error, {:validation, %{a: ["not a number", "has wrong type"]}}}
       assert Def37Operation.run(b: nil) == {:ok, %{b: nil}}
+    end
+
+    test "required: false + allow_nil: false" do
+      defmodule Def45Operation do
+        use Exop.Operation
+
+        parameter :a, required: false, allow_nil: false
+
+        def process(params), do: params
+      end
+
+      assert Def45Operation.run(a: :a) == {:ok, %{a: :a}}
+      assert Def45Operation.run() == {:ok, %{}}
+      assert Def45Operation.run(a: nil) == {:error, {:validation, %{a: ["doesn't allow nil"]}}}
     end
   end
 

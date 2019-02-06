@@ -7,8 +7,8 @@ defmodule ChainTest do
     parameter :a, type: :integer
     parameter :b, type: :integer
 
-    def process(params) do
-      result = params[:a] + params[:b]
+    def process(%{a: a, b: b}) do
+      result = a + b
       _next_params = [a: result]
     end
   end
@@ -17,9 +17,15 @@ defmodule ChainTest do
     use Exop.Operation
 
     parameter :a, type: :integer
+    parameter :additional, type: :integer, required: false
 
-    def process(params) do
-      result = params[:a] * 100
+    def process(%{a: a, additional: additional}) do
+      result = a * 100 * additional
+      _next_params = [a: result]
+    end
+
+    def process(%{a: a}) do
+      result = a * 100
       _next_params = [a: result]
     end
   end
@@ -86,14 +92,14 @@ defmodule ChainTest do
     initial_params = [a: 1, b: 2]
     result = TestChainSuccess.run(initial_params)
 
-    assert result == 30
+    assert {:ok, 30.0} = result
   end
 
   test "invokes defined operations one by one and return the first not-ok-tuple-result" do
     initial_params = [a: 1, b: 2]
     result = TestChainFail.run(initial_params)
 
-    assert result == {:error, {:validation, %{a: ["has wrong type"]}}}
+    assert {:error, {:validation, %{a: ["has wrong type"]}}} = result
   end
 
   test "invokes a fallback module of a failed operation" do
@@ -101,5 +107,39 @@ defmodule ChainTest do
     result = TestChainFallback.run(initial_params)
 
     assert result == "fallback!"
+  end
+
+  defmodule TestChainAdditionalParams do
+    use Exop.Chain
+
+    operation Sum
+    operation MultiplyByHundred, additional: 2
+    operation DivisionByTen
+  end
+
+  defmodule TestChainAdditionalParamsFunc do
+    use Exop.Chain
+
+    operation Sum
+    operation MultiplyByHundred, additional: &__MODULE__.additional/0
+    operation DivisionByTen
+
+    def additional, do: 3
+  end
+
+  describe "with additional params" do
+    test "allows to specify additional params" do
+      initial_params = [a: 1, b: 2]
+      result = TestChainAdditionalParams.run(initial_params)
+
+      assert {:ok, 60.0} = result
+    end
+
+    test "allows to specify additional params as a 0-arity func" do
+      initial_params = [a: 1, b: 2]
+      result = TestChainAdditionalParamsFunc.run(initial_params)
+
+      assert {:ok, 90.0} = result
+    end
   end
 end

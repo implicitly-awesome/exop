@@ -1,3 +1,10 @@
+## [1.2.3] - 2019.02.06
+
+### Changes
+
+- `Exop.Chain` bug  was fixed (the last operation in a chain returned a result not wrapped into ok-tuple)
+- `Exop.Chain` allows now to pass additional parameters to any operation in a chain
+
 ## [1.2.2] - 2019.01.25
 
 ### Changes

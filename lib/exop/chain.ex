@@ -41,10 +41,10 @@ defmodule Exop.Chain do
     end
   end
 
-  defmacro operation(operation, opts \\ []) do
-    quote bind_quoted: [operation: operation, opts: opts] do
+  defmacro operation(operation, additional_params \\ []) do
+    quote bind_quoted: [operation: operation, additional_params: additional_params] do
       {:module, operation} = Code.ensure_compiled(operation)
-      @operations %{operation: operation, opts: opts}
+      @operations %{operation: operation, additional_params: additional_params}
     end
   end
 
@@ -70,40 +70,70 @@ defmodule Exop.Chain do
               {:ok, any} | Validation.validation_error() | interrupt_result | auth_result
       def run(received_params) do
         try do
-          @operations |> Enum.reverse() |> invoke_operations({:ok, received_params})
+          ok_result = @operations |> Enum.reverse() |> invoke_operations({:ok, received_params})
+          {:ok, ok_result}
         catch
-          {@not_ok, not_ok} -> not_ok
+          {@not_ok, not_ok_result} -> not_ok_result
         end
       end
 
-      @spec invoke_operations([%{operation: atom(), opts: Keyword.t()}], any()) :: any()
+      @spec invoke_operations([%{operation: atom(), additional_params: Keyword.t()}], any()) :: any()
       defp invoke_operations([], result) do
         result
       end
 
-      defp invoke_operations([%{operation: operation, opts: opts} | []], {:ok, params} = _result) do
+      defp invoke_operations([%{operation: operation, additional_params: additional_params} | []], {:ok, params} = _result) do
+        params = params |> merge_params(additional_params) |> resolve_params_values()
+
         with {:ok, result} <- apply(operation, :run, [params]) do
           result
         else
           not_ok ->
             throw({@not_ok, not_ok})
-            :not_ok
+            @not_ok
         end
       end
 
-      defp invoke_operations([%{operation: operation, opts: opts} | tail], {:ok, params} = _result) do
+      defp invoke_operations([%{operation: operation, additional_params: additional_params} | tail], {:ok, params} = _result) do
+        params = params |> merge_params(additional_params) |> resolve_params_values()
+
         with {:ok, _} = result <- apply(operation, :run, [params]) do
           invoke_operations(tail, result)
         else
           not_ok ->
             throw({@not_ok, not_ok})
-            :not_ok
+            @not_ok
         end
       end
 
       defp invoke_operations(_operations, not_ok = _result) do
         throw({@not_ok, not_ok})
-        :not_ok
+        @not_ok
+      end
+
+      @spec merge_params(map() | keyword(), map() | keyword()) :: map()
+      defp merge_params(params, additional_params) when is_map(params) and is_map(additional_params) do
+        Map.merge(params, additional_params)
+      end
+
+      defp merge_params(params, additional_params) when is_list(params) and is_map(additional_params) do
+        params |> Enum.into(%{}) |> Map.merge(additional_params)
+      end
+
+      defp merge_params(params, additional_params) when is_map(params) and is_list(additional_params) do
+        Map.merge(params, Enum.into(additional_params, %{}))
+      end
+
+      defp merge_params(params, additional_params) when is_list(params) and is_list(additional_params) do
+        params |> Enum.into(%{}) |> Map.merge(Enum.into(additional_params, %{}))
+      end
+
+      @spec resolve_params_values(map()) :: map()
+      defp resolve_params_values(params) do
+        Enum.reduce(params, %{}, fn({k, v}, acc) ->
+          v = if is_function(v), do: v.(), else: v
+          Map.put(acc, k, v)
+        end)
       end
     end
   end

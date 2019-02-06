@@ -34,13 +34,13 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
   - [Fallback module](#fallback-module)
 - [Operation invocation](#operation-invocation)
 - [Operation results](#operation-results)
-- [Chain of operations](#chain-of-operations)
+- [Operations chain](#operations-chain)
 
 ## Installation
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.2.2"}]
+  [{:exop, "~> 1.2.3"}]
 end
 ```
 
@@ -578,7 +578,7 @@ An operation can return one of results listed below (depends on passed in params
 
 _For the "bang" version of `run/1` see results description above._
 
-## Chain of operations
+## Operations chain
 
 Sometimes you need to aggregate/group 'atom' operations into a single one operation responsible for
 some complex business process/logic.
@@ -617,9 +617,27 @@ operation as its params and so on.
 Once any of operations in the chain returns non-ok-tuple result (error result, interruption, auth error etc.)
 the chain execution interrupts and error result returned (as the chain (`CreateUser`) result).
 
+You can pass additional parameters to any operation in a chain (with either an exact value or 0-arity function):
+
+```elixir
+defmodule CreateUser do
+  use Exop.Chain
+
+  alias Operations.{User, Backoffice, Notifications}
+
+  operation User.Create
+  operation Backoffice.SaveStats, logger: MyFancyLoggerModule
+  # or
+  operation Backoffice.SaveStats, logger: &__MODULE__.logger/0
+  operation Notifications.SendEmail
+
+  def logger, do: MyFancyLoggerModule
+end
+```
+
 ## LICENSE
 
-    Copyright © 2016 - 2018 Andrey Chernykh ( andrei.chernykh@gmail.com )
+    Copyright © 2016 - 2019 Andrey Chernykh ( andrei.chernykh@gmail.com )
 
     This work is free. You can redistribute it and/or modify it under the
     terms of the MIT License. See the LICENSE file for more details.

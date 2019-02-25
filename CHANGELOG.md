@@ -1,3 +1,9 @@
+## [1.2.4] - yyyy.MM.dd
+
+### Changes
+
+- `use Exop.Chain` now accepts `:name_in_error` option: when it is set to `true` a failed operation in a chain returns the operation's module name as the first elements of output tuple `{YourOperation, {:error, _}}`
+
 ## [1.2.3] - 2019.02.06
 
 ### Changes

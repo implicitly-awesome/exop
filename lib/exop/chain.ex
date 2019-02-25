@@ -31,11 +31,13 @@ defmodule Exop.Chain do
   the chain execution interrupts and error result returned (as the chain (`CreateUser`) result).
   """
 
-  defmacro __using__(_opts) do
+  defmacro __using__(opts \\ []) do
     quote do
       import unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :operations, accumulate: true)
+
+      @error_includes_operation_name unquote(opts)[:name_in_error] == true
 
       @before_compile unquote(__MODULE__)
     end
@@ -60,7 +62,7 @@ defmodule Exop.Chain do
       #  {:error, {:auth, :unknown_action}}   |
       #  {:error, {:auth, atom}}
 
-      @not_ok :not_ok
+      @not_ok :exop_not_ok
 
       @doc """
       Invokes all operations defined in a chain. Returns either a result of the last operation
@@ -73,9 +75,15 @@ defmodule Exop.Chain do
           ok_result = @operations |> Enum.reverse() |> invoke_operations({:ok, received_params})
           {:ok, ok_result}
         catch
-          {@not_ok, not_ok_result} -> not_ok_result
+          {@not_ok, not_ok_result, operation} ->
+            add_operation_name(@error_includes_operation_name, not_ok_result, operation)
+          {@not_ok, not_ok_result} ->
+            not_ok_result
         end
       end
+
+      defp add_operation_name(true, not_ok_result, operation), do: {operation, not_ok_result}
+      defp add_operation_name(_, not_ok_result, _), do: not_ok_result
 
       @spec invoke_operations([%{operation: atom(), additional_params: Keyword.t()}], any()) :: any()
       defp invoke_operations([], result) do
@@ -85,11 +93,14 @@ defmodule Exop.Chain do
       defp invoke_operations([%{operation: operation, additional_params: additional_params} | []], {:ok, params} = _result) do
         params = params |> merge_params(additional_params) |> resolve_params_values()
 
-        with {:ok, result} <- apply(operation, :run, [params]) do
-          result
-        else
-          not_ok ->
-            throw({@not_ok, not_ok})
+        case apply(operation, :run, [params]) do
+          result when is_tuple(result) and elem(result, 0) == :error ->
+            throw({@not_ok, result, operation})
+            @not_ok
+          {:ok, result} ->
+            result
+          result ->
+            throw({@not_ok, result})
             @not_ok
         end
       end
@@ -97,11 +108,14 @@ defmodule Exop.Chain do
       defp invoke_operations([%{operation: operation, additional_params: additional_params} | tail], {:ok, params} = _result) do
         params = params |> merge_params(additional_params) |> resolve_params_values()
 
-        with {:ok, _} = result <- apply(operation, :run, [params]) do
-          invoke_operations(tail, result)
-        else
-          not_ok ->
-            throw({@not_ok, not_ok})
+        case apply(operation, :run, [params]) do
+          result when is_tuple(result) and elem(result, 0) == :error ->
+            throw({@not_ok, result, operation})
+            @not_ok
+          {:ok, _} = result ->
+            invoke_operations(tail, result)
+          result ->
+            throw({@not_ok, result})
             @not_ok
         end
       end

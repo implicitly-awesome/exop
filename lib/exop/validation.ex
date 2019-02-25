@@ -20,7 +20,7 @@ defmodule Exop.Validation do
           boolean()
   defp function_present?(module, function_name) do
     :functions
-    |> module.__info__
+    |> module.__info__()
     |> Keyword.has_key?(function_name)
   end
 
@@ -39,7 +39,8 @@ defmodule Exop.Validation do
     if Enum.empty?(validation_results) || Enum.all?(validation_results, &(&1 == true)) do
       :ok
     else
-      error_results = validation_results |> consolidate_errors
+      error_results = consolidate_errors(validation_results)
+
       {:error, {:validation, error_results}}
     end
   end

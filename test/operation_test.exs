@@ -617,7 +617,7 @@ defmodule OperationTest do
 
     test "with allow_nil" do
       defmodule Def39Operation do
-        use Exop.Operation
+        use Exop.Operation, name_in_errors: true
 
         parameter :a, type: :integer, allow_nil: true
 

@@ -91,7 +91,10 @@ defmodule Exop.Operation do
 
       def run(received_params) when is_map(received_params) do
         params = resolve_defaults(received_params, @contract, received_params)
-        result = params |> resolve_coercions(@contract, params) |> output()
+        result =
+          params
+          |> resolve_coercions(@contract, params)
+          |> output()
 
         with {:ok, _} = result <- result do
           result
@@ -197,9 +200,9 @@ defmodule Exop.Operation do
               | interrupt_result
       defp output(params) do
         case Enum.find(params, fn
-               {_, {:error, error_msg}} -> true
-               _ -> false
-             end) do
+              {_, {:error, error_msg}} -> true
+              _ -> false
+            end) do
           {_, {:error, _} = error} -> error
           _ -> output(params, Validation.valid?(@contract, params))
         end
@@ -224,7 +227,7 @@ defmodule Exop.Operation do
         end
       end
 
-      defp output(_params, {:error, {:validation, errors}} = validation_result) do
+      defp output(_params, {:error, {:validation, errors}} = validation_result) when is_map(errors) do
         errors |> mod_err_msg() |> Logger.warn()
         validation_result
       end

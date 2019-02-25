@@ -142,4 +142,34 @@ defmodule ChainTest do
       assert {:ok, 90.0} = result
     end
   end
+
+  defmodule TestChainFailOpname do
+    use Exop.Chain, name_in_error: true
+
+    operation Sum
+    operation Fail
+    operation DivisionByTen
+  end
+
+  defmodule TestChainFallbackOpname do
+    use Exop.Chain, name_in_error: true
+
+    operation Sum
+    operation WithFallback
+    operation DivisionByTen
+  end
+
+  describe "with operation name in error output" do
+    test "returns failed operation name" do
+      initial_params = [a: 1, b: 2]
+      result = TestChainFailOpname.run(initial_params)
+      assert {ChainTest.Fail, {:error, {:validation, %{a: ["has wrong type"]}}}} = result
+    end
+
+    test "doesn't affect an operation with a fallback" do
+      initial_params = [a: 1, b: 2]
+      result = TestChainFallbackOpname.run(initial_params)
+      assert result == "fallback!"
+    end
+  end
 end

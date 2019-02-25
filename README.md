@@ -635,6 +635,23 @@ defmodule CreateUser do
 end
 ```
 
+`use Exop.Chain` can take `:name_in_error` option, when it is set to `true` a failed operation in a chain returns the operation's module name as the first elements of output tuple `{YourOperation, {:error, _}}`
+
+```elixir
+defmodule YourChain do
+  use Exop.Chain, name_in_error: true
+
+  operation Op1
+  operation Op2Fail
+  operation Op3
+end
+
+iex> YourChain.run(a: "1", b: 2)
+{Op2Fail, {:error, {:validation, %{a: ["has wrong type"]}}}}
+```
+
+`name_in_error: true` doesn't affect operations with a fallback defined (unmodified fallback result is returned).
+
 ## LICENSE
 
     Copyright © 2016 - 2019 Andrey Chernykh ( andrei.chernykh@gmail.com )

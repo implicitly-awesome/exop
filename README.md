@@ -110,7 +110,7 @@ Checks whether a parameter's value is of declared type.
 parameter :some_param, type: :map
 ```
 
-Exop handle almost all Elixir types:
+Exop handle almost all Elixir types and some additional:
 
 - :boolean
 - :integer
@@ -123,10 +123,13 @@ Exop handle almost all Elixir types:
 - :atom
 - :module
 - :function
+- :uuid
 
 _Unknown type always passes this check._
 
 `module` 'type' means Exop expects a parameter's value to be an atom (a module name) and this module should be already loaded (ready to call it's functions)
+
+`uuid` is not actually a "type" but I placed this under `:type` check because there is no reason to have dedicated `:uuid` check.
 
 #### `required`
 

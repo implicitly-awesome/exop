@@ -96,6 +96,19 @@ defmodule ValidationChecksTest do
     assert check_type(%{a: :atom}, :a, :struct) == %{a: "has wrong type"}
   end
 
+  test "check_type/3: checks uuids" do
+    # uuid 1
+    assert check_type(%{a: "9689317e-39ac-11e9-b210-d663bd873d93"}, :a, :uuid) == true
+    # uuid 4
+    assert check_type(%{a: "7b79b77b-bc4c-4de1-a81f-1a07fc3289c2"}, :a, :uuid) == true
+
+    assert check_type(%{a: ""}, :a, :uuid) == %{a: "has wrong type"}
+    assert check_type(%{a: "qwerty"}, :a, :uuid) == %{a: "has wrong type"}
+    assert check_type(%{a: "qwerty-asdf"}, :a, :uuid) == %{a: "has wrong type"}
+    assert check_type(%{a: :b}, :a, :uuid) == %{a: "has wrong type"}
+    assert check_type(%{a: 1}, :a, :uuid) == %{a: "has wrong type"}
+  end
+
   test "check_numericality/3: returns %{item_name => error_msg} if item is in params and is not a number" do
     %{a: reason} = check_numericality(%{a: "1"}, :a, %{less_than: 3})
     assert is_binary(reason)

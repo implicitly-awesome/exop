@@ -77,6 +77,7 @@ defmodule Exop.Chain do
         catch
           {@not_ok, not_ok_result, operation} ->
             add_operation_name(@error_includes_operation_name, not_ok_result, operation)
+
           {@not_ok, not_ok_result} ->
             not_ok_result
         end
@@ -85,35 +86,46 @@ defmodule Exop.Chain do
       defp add_operation_name(true, not_ok_result, operation), do: {operation, not_ok_result}
       defp add_operation_name(_, not_ok_result, _), do: not_ok_result
 
-      @spec invoke_operations([%{operation: atom(), additional_params: Keyword.t()}], any()) :: any()
+      @spec invoke_operations([%{operation: atom(), additional_params: Keyword.t()}], any()) ::
+              any()
       defp invoke_operations([], result) do
         result
       end
 
-      defp invoke_operations([%{operation: operation, additional_params: additional_params} | []], {:ok, params} = _result) do
+      defp invoke_operations(
+             [%{operation: operation, additional_params: additional_params} | []],
+             {:ok, params} = _result
+           ) do
         params = params |> merge_params(additional_params) |> resolve_params_values()
 
         case apply(operation, :run, [params]) do
           result when is_tuple(result) and elem(result, 0) == :error ->
             throw({@not_ok, result, operation})
             @not_ok
+
           {:ok, result} ->
             result
+
           result ->
             throw({@not_ok, result})
             @not_ok
         end
       end
 
-      defp invoke_operations([%{operation: operation, additional_params: additional_params} | tail], {:ok, params} = _result) do
+      defp invoke_operations(
+             [%{operation: operation, additional_params: additional_params} | tail],
+             {:ok, params} = _result
+           ) do
         params = params |> merge_params(additional_params) |> resolve_params_values()
 
         case apply(operation, :run, [params]) do
           result when is_tuple(result) and elem(result, 0) == :error ->
             throw({@not_ok, result, operation})
             @not_ok
+
           {:ok, _} = result ->
             invoke_operations(tail, result)
+
           result ->
             throw({@not_ok, result})
             @not_ok
@@ -126,25 +138,29 @@ defmodule Exop.Chain do
       end
 
       @spec merge_params(map() | keyword(), map() | keyword()) :: map()
-      defp merge_params(params, additional_params) when is_map(params) and is_map(additional_params) do
+      defp merge_params(params, additional_params)
+           when is_map(params) and is_map(additional_params) do
         Map.merge(params, additional_params)
       end
 
-      defp merge_params(params, additional_params) when is_list(params) and is_map(additional_params) do
+      defp merge_params(params, additional_params)
+           when is_list(params) and is_map(additional_params) do
         params |> Enum.into(%{}) |> Map.merge(additional_params)
       end
 
-      defp merge_params(params, additional_params) when is_map(params) and is_list(additional_params) do
+      defp merge_params(params, additional_params)
+           when is_map(params) and is_list(additional_params) do
         Map.merge(params, Enum.into(additional_params, %{}))
       end
 
-      defp merge_params(params, additional_params) when is_list(params) and is_list(additional_params) do
+      defp merge_params(params, additional_params)
+           when is_list(params) and is_list(additional_params) do
         params |> Enum.into(%{}) |> Map.merge(Enum.into(additional_params, %{}))
       end
 
       @spec resolve_params_values(map()) :: map()
       defp resolve_params_values(params) do
-        Enum.reduce(params, %{}, fn({k, v}, acc) ->
+        Enum.reduce(params, %{}, fn {k, v}, acc ->
           v = if is_function(v), do: v.(), else: v
           Map.put(acc, k, v)
         end)

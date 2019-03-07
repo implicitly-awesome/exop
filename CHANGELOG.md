@@ -4,6 +4,7 @@
 
 - `use Exop.Chain` now accepts `:name_in_error` option: when it is set to `true` a failed operation in a chain returns the operation's module name as the first elements of output tuple `{YourOperation, {:error, _}}`
 - new `type: :uuid` check which supports both UUID1 and UUID4
+- new aliases for `:numericality` check (to make your code slim): `:eq, :gt, :gte, :lt, :lte`
 
 ## [1.2.3] - 2019.02.06
 

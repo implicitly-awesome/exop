@@ -1,8 +1,6 @@
 defmodule OperationTest do
   use ExUnit.Case, async: true
 
-  import Mock
-
   defmodule Operation do
     use Exop.Operation
 
@@ -31,14 +29,6 @@ defmodule OperationTest do
 
   test "defines run/1" do
     assert :functions |> Operation.__info__ |> Keyword.has_key?(:run)
-  end
-
-  test "run/1: calls Operation.Validation.valid?/2" do
-    with_mock Exop.Validation, [valid?: fn(_, _) -> :ok end] do
-      params = %{param1: "param1"}
-      Operation.run(params)
-      assert called Exop.Validation.valid?(Operation.contract, params)
-    end
   end
 
   test "process/1 takes a single param which is Map type" do

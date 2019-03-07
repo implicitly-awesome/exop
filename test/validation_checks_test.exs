@@ -120,20 +120,32 @@ defmodule ValidationChecksTest do
 
   test "check_numericality/3: fails" do
     [%{a: _}] = check_numericality(%{a: 1}, :a, %{equal_to: 3})
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{eq: 3})
     [%{a: _}] = check_numericality(%{a: 1}, :a, %{greater_than: 3})
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{gt: 3})
     [%{a: _}] = check_numericality(%{a: 1}, :a, %{greater_than_or_equal_to: 3})
+    [%{a: _}] = check_numericality(%{a: 1}, :a, %{gte: 3})
     [%{a: _}] = check_numericality(%{a: 5}, :a, %{less_than: 3})
+    [%{a: _}] = check_numericality(%{a: 5}, :a, %{lt: 3})
     [%{a: _}] = check_numericality(%{a: 5}, :a, %{less_than_or_equal_to: 3})
+    [%{a: _}] = check_numericality(%{a: 5}, :a, %{lte: 3})
   end
 
   test "check_numericality/3: successes" do
     assert check_numericality(%{a: 3}, :a, %{equal_to: 3}) == true
+    assert check_numericality(%{a: 3}, :a, %{eq: 3}) == true
     assert check_numericality(%{a: 5}, :a, %{greater_than: 3}) == true
+    assert check_numericality(%{a: 5}, :a, %{gt: 3}) == true
     assert check_numericality(%{a: 3}, :a, %{greater_than_or_equal_to: 3}) == true
+    assert check_numericality(%{a: 3}, :a, %{gte: 3}) == true
     assert check_numericality(%{a: 5}, :a, %{greater_than_or_equal_to: 3}) == true
+    assert check_numericality(%{a: 5}, :a, %{gte: 3}) == true
     assert check_numericality(%{a: 2}, :a, %{less_than: 3}) == true
+    assert check_numericality(%{a: 2}, :a, %{lt: 3}) == true
     assert check_numericality(%{a: 3}, :a, %{less_than_or_equal_to: 3}) == true
+    assert check_numericality(%{a: 3}, :a, %{lte: 3}) == true
     assert check_numericality(%{a: 2}, :a, %{less_than_or_equal_to: 3}) == true
+    assert check_numericality(%{a: 2}, :a, %{lte: 3}) == true
   end
 
   test "check_in/3: returns true if check values is not a list" do

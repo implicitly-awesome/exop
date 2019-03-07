@@ -163,11 +163,11 @@ Checks whether a parameter's value is a number and other numeric constraints.
 All possible constraints are listed in the example below.
 
 ```elixir
-parameter :some_param, numericality: %{equal_to: 10, # (aliases: `equals`, `is`)
-                                       greater_than: 0,
-                                       greater_than_or_equal_to: 10 # (alias: `min`),
-                                       less_than: 20,
-                                       less_than_or_equal_to: 10 # (alias: `max`)}
+parameter :some_param, numericality: %{equal_to: 10, # (aliases: `equals`, `is`, `eq`)
+                                       greater_than: 0, # (alias: `gt`)
+                                       greater_than_or_equal_to: 10 # (aliases: `min`, `gte`),
+                                       less_than: 20, # (alias: `lt`)
+                                       less_than_or_equal_to: 10 # (aliases: `max`, `lte`)}
 ```
 
 #### `equals`

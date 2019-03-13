@@ -7,6 +7,8 @@ defmodule Exop.Validation do
 
   import Exop.ValidationChecks
 
+  alias Exop.Utils
+
   defmodule ValidationError do
     @moduledoc """
       An operation's contract validation failure error.
@@ -19,9 +21,7 @@ defmodule Exop.Validation do
   @spec function_present?(Elixir.Exop.Validation | Elixir.Exop.ValidationChecks, atom()) ::
           boolean()
   defp function_present?(module, function_name) do
-    :functions
-    |> module.__info__()
-    |> Keyword.has_key?(function_name)
+    :functions |> module.__info__() |> Keyword.has_key?(function_name)
   end
 
   @doc """
@@ -134,24 +134,25 @@ defmodule Exop.Validation do
 
   ## Examples
 
-      iex> Exop.Validation.check_inner(%{param: 1}, :param, [type: :integer, required: true])
-      true
+      iex> Exop.Validation.check_inner(%{a: 1}, :a, [b: [type: :atom], c: [type: :string]])
+      [%{a: "has wrong type"}]
+
+      iex> Exop.Validation.check_inner(%{a: []}, :a, [b: [type: :atom], c: [type: :string]])
+      [[%{"a[:b]" => "is required"}, true], [%{"a[:c]" => "is required"}, true]]
+
+      iex> Exop.Validation.check_inner(%{a: %{b: :atom, c: "string"}}, :a, [b: [type: :atom], c: [type: :string]])
+      [[true, true], [true, true]]
   """
   @spec check_inner(map() | Keyword.t(), atom() | String.t(), map() | Keyword.t()) :: list
-  def check_inner(check_items, item_name, checks) when is_map(checks) do
-    check_items
-    |> get_check_item(item_name)
-    |> case do
-      %_{} = struct -> Map.from_struct(struct)
-      %{} = map -> map
-      [x | _] = keyword when is_list(keyword) and is_tuple(x) -> Enum.into(keyword, %{})
-      [] -> %{}
-      _ -> nil
-    end
-    |> do_check_inner(item_name, checks)
-  end
+  def check_inner(check_items, item_name, checks) do
+    checks = Utils.try_map(checks)
 
-  def check_inner(_received_params, _contract_item_name, _check_params), do: true
+    not is_map(checks) ||
+      check_items
+      |> get_check_item(item_name)
+      |> Utils.try_map()
+      |> do_check_inner(item_name, checks)
+  end
 
   defp do_check_inner(check_item, item_name, checks) when is_map(check_item) do
     received_params =
@@ -165,10 +166,25 @@ defmodule Exop.Validation do
     end
   end
 
-  defp do_check_inner(_check_item, item_name, _checks) do
-    [%{item_name => "has wrong type"}]
-  end
+  defp do_check_inner(_check_item, item_name, _checks), do: [%{item_name => "has wrong type"}]
 
+  @doc """
+  Checks items of the contract's list param with specified checks.
+
+  ## Examples
+
+      iex> Exop.Validation.check_list_item(%{a: 1}, :a, [type: :integer])
+      [%{a: "is not a list"}]
+
+      iex> Exop.Validation.check_list_item(%{a: []}, :a, [type: :integer])
+      []
+
+      iex> Exop.Validation.check_list_item(%{a: [1, :atom]}, :a, [type: :integer])
+      [[true, true], [true, %{"a[1]" => "has wrong type"}]]
+
+      iex> Exop.Validation.check_list_item(%{a: [1, 2]}, :a, [type: :integer])
+      [[true, true], [true, true]]
+  """
   @spec check_list_item(map() | Keyword.t(), atom() | String.t(), map() | Keyword.t()) :: list
   def check_list_item(check_items, item_name, checks) when is_list(checks) do
     check_list_item(check_items, item_name, Enum.into(checks, %{}))

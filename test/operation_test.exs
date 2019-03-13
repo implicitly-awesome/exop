@@ -688,4 +688,34 @@ defmodule OperationTest do
     assert Def44Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
     assert Def44Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
   end
+
+  test ":inner check accepts opts as both map and keyword" do
+    defmodule Def46Operation do
+      use Exop.Operation
+
+      parameter :a, inner: [b: [type: :atom], c: [type: :string]]
+
+      def process(params), do: params
+    end
+
+    defmodule Def47Operation do
+      use Exop.Operation
+
+      parameter :a, inner: %{b: [type: :atom], c: [type: :string]}
+
+      def process(params), do: params
+    end
+
+    assert Def46Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
+    assert Def46Operation.run(a: []) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+    assert Def46Operation.run(a: %{}) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+    assert Def46Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
+    assert Def46Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
+
+    assert Def47Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
+    assert Def47Operation.run(a: []) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+    assert Def47Operation.run(a: %{}) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+    assert Def47Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
+    assert Def47Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
+  end
 end

@@ -215,7 +215,7 @@ defmodule Exop.Operation do
               | interrupt_result
       defp output(params, :ok = _validation_result) do
         try do
-          result = params |> Enum.into(%{}) |> process()
+          result = process(params)
 
           case result do
             error_tuple when is_tuple(error_tuple) and elem(error_tuple, 0) == :error -> error_tuple
@@ -236,12 +236,7 @@ defmodule Exop.Operation do
 
       defp mod_err_msg(errors), do: "#{@module_name} errors: \n#{Validation.errors_message(errors)}"
 
-      @spec defined_params(Keyword.t() | map()) :: map()
-      def defined_params(received_params) when is_list(received_params) do
-        keys_to_filter = Keyword.keys(received_params) -- Enum.map(@contract, & &1[:name])
-        received_params |> Keyword.drop(keys_to_filter) |> Enum.into(%{})
-      end
-
+      @spec defined_params(map()) :: map()
       def defined_params(received_params) when is_map(received_params) do
         keys_to_filter = Map.keys(received_params) -- Enum.map(@contract, & &1[:name])
         Map.drop(received_params, keys_to_filter)

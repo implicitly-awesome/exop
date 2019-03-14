@@ -6,9 +6,13 @@ A library that helps you to organize your Elixir code in more domain-driven way.
 Exop provides macros which helps you to encapsulate business logic and offers you additionally:
 incoming params validation (with predefined contract), params coercion, policy check, fallback behavior and more.
 
-Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG.md) that was started from ver. 0.4.1 ¯\\\_(ツ)\_/¯
+### ExopData
+
+Interested in property-based testing? Check out new Exop family member - [ExopData](https://github.com/madeinussr/exop_data). If you use Exop to organize your code with ExopData you can get property generators in the most easiest way.
 
 ## Table of Contents
+
+Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG.md) that was started from ver. 0.4.1 ¯\\\_(ツ)\_/¯
 
 - [Installation](#installation)
 - [Operation definition](#operation-definition)

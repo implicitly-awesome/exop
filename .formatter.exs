@@ -3,6 +3,8 @@ locals_without_parens = [
   parameter: 2,
   operation: 1,
   operation: 2,
+  step: 1,
+  step: 2,
   policy: 2,
   authorize: 0,
   authorize: 1,

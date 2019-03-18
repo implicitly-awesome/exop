@@ -172,4 +172,19 @@ defmodule ChainTest do
       assert result == "fallback!"
     end
   end
+
+  defmodule TestChainSuccessSteps do
+    use Exop.Chain
+
+    step Sum
+    step MultiplyByHundred
+    step DivisionByTen
+  end
+
+  test "step/2 is an alias for operation/2" do
+    initial_params = [a: 1, b: 2]
+    result = TestChainSuccessSteps.run(initial_params)
+
+    assert {:ok, 30.0} = result
+  end
 end

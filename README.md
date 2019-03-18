@@ -602,6 +602,11 @@ defmodule CreateUser do
   operation User.Create
   operation Backoffice.SaveStats
   operation Notifications.SendEmail
+
+  # or you can use step alias:
+  #   step User.Create
+  #   step Backoffice.SaveStats
+  #   step Notifications.SendEmail
 end
 ```
 

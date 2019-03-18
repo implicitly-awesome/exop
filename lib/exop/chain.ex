@@ -50,6 +50,13 @@ defmodule Exop.Chain do
     end
   end
 
+  defmacro step(operation, additional_params \\ []) do
+    quote bind_quoted: [operation: operation, additional_params: additional_params] do
+      {:module, operation} = Code.ensure_compiled(operation)
+      @operations %{operation: operation, additional_params: additional_params}
+    end
+  end
+
   defmacro __before_compile__(_env) do
     quote do
       alias Exop.Validation

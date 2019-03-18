@@ -6,6 +6,7 @@
 - new `type: :uuid` check which supports both UUID1 and UUID4
 - new aliases for `:numericality` check (to make your code slim): `:eq, :gt, :gte, :lt, :lte`
 - `:inner` check now accepts opts as both map and keyword (earlier only map has been allowed)
+- a few macros (like `parameter`, `operation` etc.) `locals_without_parens` formatter rule has been exported. Place `import_deps: [:exop]` into your project's `.formatter.exs` file in order to use it.
 
 ## [1.2.3] - 2019.02.06
 

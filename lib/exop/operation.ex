@@ -16,7 +16,7 @@ defmodule Exop.Operation do
       end
   """
 
-  alias Exop.Validation
+  alias Exop.{Validation, TypeValidation}
 
   @doc """
   Operation's entry point. Takes defined contract as the single parameter.
@@ -367,7 +367,17 @@ defmodule Exop.Operation do
   """
   defmacro parameter(name, opts \\ []) when is_atom(name) or is_binary(name) do
     quote bind_quoted: [name: name, opts: opts] do
-      @contract %{name: name, opts: opts}
+      type_check = opts[:type]
+
+      if is_nil(type_check) or TypeValidation.type_supported?(type_check) do
+        @contract %{name: name, opts: opts}
+      else
+        raise ArgumentError,
+              "Unknown type check `#{inspect(type_check)}` for parameter `#{inspect(name)}` in module `#{
+                __MODULE__ |> Module.split() |> Enum.join(".")
+              }`, " <>
+                "supported type checks are `:#{Enum.join(TypeValidation.known_types(), "`, `:")}`."
+      end
     end
   end
 

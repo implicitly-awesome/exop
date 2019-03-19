@@ -52,8 +52,8 @@ defmodule ValidationChecksTest do
     assert check_type(%{}, :a, :integer) == true
   end
 
-  test "check_type/3: returns true if item is of unhandled type" do
-    assert check_type(%{a: 1}, :a, :unhandled) == true
+  test "check_type/3: returns false if item is of unknown type" do
+    assert %{a: "has wrong type"} == check_type(%{a: 1}, :a, :unknown)
   end
 
   test "check_type/3: returns true if item is one of handled type" do

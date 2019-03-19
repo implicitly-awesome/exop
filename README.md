@@ -124,7 +124,7 @@ Exop handle almost all Elixir types:
 - :module
 - :function
 
-_Unknown type always passes this check._
+_Unknown type always generates ArgumentError exception on compile time._
 
 `module` 'type' means Exop expects a parameter's value to be an atom (a module name) and this module should be already loaded (ready to call it's functions)
 

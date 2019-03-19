@@ -19,6 +19,27 @@ defmodule OperationTest do
     %{name: :param2, opts: [type: :string]}
   ]
 
+  def operation_with_unknown_type do
+    defmodule WrongOperation do
+      use Exop.Operation
+
+      parameter :b, type: :unknown
+
+      def process(_), do: :ok
+    end
+  rescue
+    e ->
+      e
+  end
+
+  test "operation with unknown type check" do
+    assert %ArgumentError{
+      message: "Unknown type check `:unknown` for parameter `:b` in module `OperationTest.WrongOperation`, " <>
+               "supported type checks are `:boolean`, `:integer`, `:float`, `:string`, `:tuple`, `:struct`, " <>
+               "`:map`, `:list`, `:atom`, `:function`, `:keyword`, `:module`."
+    } = operation_with_unknown_type()
+  end
+
   test "defines contract/0" do
     assert :functions |> Operation.__info__ |> Keyword.has_key?(:contract)
   end

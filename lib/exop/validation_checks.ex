@@ -14,11 +14,11 @@ defmodule Exop.ValidationChecks do
     * check_equals/3
   """
 
+  alias Exop.TypeValidation
+
   @no_check_item :exop_no_check_item
 
   @type check_error :: %{(atom() | String.t()) => String.t()}
-
-  @known_types ~w(boolean integer float string tuple map struct list atom module function keyword)a
 
   @doc """
   Returns an check_item's value from either a Keyword or a Map by an atom-key.
@@ -114,44 +114,11 @@ defmodule Exop.ValidationChecks do
     if check_item_present?(check_items, item_name) do
       check_item = get_check_item(check_items, item_name)
 
-      if Enum.member?(@known_types, check) do
-        do_check_type(check_item, check) || %{item_name => "has wrong type"}
-      else
-        true
-      end
+      TypeValidation.check_value(check_item, check) || %{item_name => "has wrong type"}
     else
       true
     end
   end
-
-  defp do_check_type(check_item, :boolean) when is_boolean(check_item), do: true
-  defp do_check_type(check_item, :integer) when is_integer(check_item), do: true
-  defp do_check_type(check_item, :float) when is_float(check_item), do: true
-  defp do_check_type(check_item, :string) when is_binary(check_item), do: true
-  defp do_check_type(check_item, :tuple) when is_tuple(check_item), do: true
-
-  defp do_check_type(%_{} = _check_item, :struct) do
-    IO.warn("type check with :struct is deprecated, please use :map instead")
-    true
-  end
-
-  defp do_check_type(_check_item, :struct) do
-    IO.warn("type check with :struct is deprecated, please use :map instead")
-    false
-  end
-
-  defp do_check_type(check_item, :map) when is_map(check_item), do: true
-  defp do_check_type(check_item, :list) when is_list(check_item), do: true
-  defp do_check_type(check_item, :atom) when is_atom(check_item), do: true
-  defp do_check_type(check_item, :function) when is_function(check_item), do: true
-  defp do_check_type([] = _check_item, :keyword), do: true
-  defp do_check_type([{atom, _} | _] = _check_item, :keyword) when is_atom(atom), do: true
-
-  defp do_check_type(check_item, :module) when is_atom(check_item) do
-    Code.ensure_loaded?(check_item)
-  end
-
-  defp do_check_type(_, _), do: false
 
   @doc """
   Checks an item_name over numericality constraints.

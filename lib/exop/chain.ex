@@ -77,12 +77,16 @@ defmodule Exop.Chain do
         end
       end
 
-      @spec invoke_operations([%{operation: atom(), additional_params: Keyword.t()}], any()) :: any()
+      @spec invoke_operations([%{operation: atom(), additional_params: Keyword.t()}], any()) ::
+              any()
       defp invoke_operations([], result) do
         result
       end
 
-      defp invoke_operations([%{operation: operation, additional_params: additional_params} | []], {:ok, params} = _result) do
+      defp invoke_operations(
+             [%{operation: operation, additional_params: additional_params} | []],
+             {:ok, params} = _result
+           ) do
         params = params |> merge_params(additional_params) |> resolve_params_values()
 
         with {:ok, result} <- apply(operation, :run, [params]) do
@@ -94,7 +98,10 @@ defmodule Exop.Chain do
         end
       end
 
-      defp invoke_operations([%{operation: operation, additional_params: additional_params} | tail], {:ok, params} = _result) do
+      defp invoke_operations(
+             [%{operation: operation, additional_params: additional_params} | tail],
+             {:ok, params} = _result
+           ) do
         params = params |> merge_params(additional_params) |> resolve_params_values()
 
         with {:ok, _} = result <- apply(operation, :run, [params]) do
@@ -112,25 +119,29 @@ defmodule Exop.Chain do
       end
 
       @spec merge_params(map() | keyword(), map() | keyword()) :: map()
-      defp merge_params(params, additional_params) when is_map(params) and is_map(additional_params) do
+      defp merge_params(params, additional_params)
+           when is_map(params) and is_map(additional_params) do
         Map.merge(params, additional_params)
       end
 
-      defp merge_params(params, additional_params) when is_list(params) and is_map(additional_params) do
+      defp merge_params(params, additional_params)
+           when is_list(params) and is_map(additional_params) do
         params |> Enum.into(%{}) |> Map.merge(additional_params)
       end
 
-      defp merge_params(params, additional_params) when is_map(params) and is_list(additional_params) do
+      defp merge_params(params, additional_params)
+           when is_map(params) and is_list(additional_params) do
         Map.merge(params, Enum.into(additional_params, %{}))
       end
 
-      defp merge_params(params, additional_params) when is_list(params) and is_list(additional_params) do
+      defp merge_params(params, additional_params)
+           when is_list(params) and is_list(additional_params) do
         params |> Enum.into(%{}) |> Map.merge(Enum.into(additional_params, %{}))
       end
 
       @spec resolve_params_values(map()) :: map()
       defp resolve_params_values(params) do
-        Enum.reduce(params, %{}, fn({k, v}, acc) ->
+        Enum.reduce(params, %{}, fn {k, v}, acc ->
           v = if is_function(v), do: v.(), else: v
           Map.put(acc, k, v)
         end)

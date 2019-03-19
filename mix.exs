@@ -11,7 +11,7 @@ defmodule Exop.Mixfile do
     [
       app: :exop,
       version: "1.3.0",
-      elixir: ">= 1.3.0",
+      elixir: ">= 1.6.0",
       name: "Exop",
       description: @description,
       package: package(),

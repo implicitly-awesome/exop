@@ -367,20 +367,16 @@ defmodule Exop.Operation do
   """
   defmacro parameter(name, opts \\ []) when is_atom(name) or is_binary(name) do
     quote bind_quoted: [name: name, opts: opts] do
-      case opts[:type] do
-        nil ->
-          @contract %{name: name, opts: opts}
+      type_check = opts[:type]
 
-        type ->
-          if TypeValidation.check_type(type) do
-            @contract %{name: name, opts: opts}
-          else
-            raise ArgumentError,
-                  "Unknown type check `#{inspect(type)}` for parameter `#{inspect(name)}` in module `#{
-                    __MODULE__ |> Module.split() |> Enum.join(".")
-                  }`, " <>
-                    "supported type checks are `:#{Enum.join(TypeValidation.known_types(), "`, `:")}`."
-          end
+      if is_nil(type_check) or TypeValidation.type_supported?(type_check) do
+        @contract %{name: name, opts: opts}
+      else
+        raise ArgumentError,
+              "Unknown type check `#{inspect(type_check)}` for parameter `#{inspect(name)}` in module `#{
+                __MODULE__ |> Module.split() |> Enum.join(".")
+              }`, " <>
+                "supported type checks are `:#{Enum.join(TypeValidation.known_types(), "`, `:")}`."
       end
     end
   end

@@ -2,10 +2,10 @@ defmodule Exop.TypeValidation do
   @known_types ~w(boolean integer float string tuple struct map list atom function keyword module)a
 
   Enum.each(@known_types, fn type ->
-    def check_type(unquote(type)), do: true
+    def type_supported?(unquote(type)), do: true
   end)
 
-  def check_type(_unknown_type), do: false
+  def type_supported?(_unknown_type), do: false
 
   def known_types, do: @known_types
 

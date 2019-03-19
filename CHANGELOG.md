@@ -1,6 +1,6 @@
 ## [1.3.0] - Future
 
-- Behaviour of unknown type checks has been changed. Now it generates ArgumentError exception on compile time.
+- Behaviour of unknown type checks has been changed. Now it generates ArgumentError exception on compile time if type check is not supported.
 
 ## [1.2.3] - 2019.02.06
 

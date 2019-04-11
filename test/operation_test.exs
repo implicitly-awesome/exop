@@ -300,12 +300,15 @@ defmodule OperationTest do
       use Exop.Operation
 
       parameter :a, func: &__MODULE__.validate/2, coerce_with: &__MODULE__.coerce/1
+      parameter :b, func: &__MODULE__.validate/1
 
-      def process(params), do: params[:a]
+      def process(params), do: params
 
-      def validate(_params, x), do: x > 0
+      def validate(_params, x), do: validate(x)
 
-      def coerce(_x), do: 0
+      def validate(x), do: x > 0
+
+      def coerce(x), do: x + 1
     end
 
     assert Def18Operation.run(a: 2) == {:ok, 4}
@@ -313,7 +316,9 @@ defmodule OperationTest do
 
     assert Def19Operation.run() == {:ok, "str"}
 
-    assert Def20Operation.run(a: 100) == {:error, {:validation, %{a: ["isn't valid"]}}}
+    assert Def20Operation.run(a: -1, b: 0) == {:error, {:validation, %{a: ["isn't valid"], b: ["isn't valid"]}}}
+    assert Def20Operation.run(a: 0, b: 0) == {:error, {:validation, %{b: ["isn't valid"]}}}
+    assert Def20Operation.run(a: 0, b: 1) == {:ok, %{a: 1, b: 1}}
   end
 
   test "run!/1: return operation's result with valid params" do

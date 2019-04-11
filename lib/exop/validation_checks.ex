@@ -438,10 +438,15 @@ defmodule Exop.ValidationChecks do
     check_item = get_check_item(check_items, item_name)
 
     check_result =
-      if :erlang.fun_info(check)[:arity] == 2 do
-        check.(check_items, check_item)
-      else
-        check.(check_items, item_name, check_item)
+      case :erlang.fun_info(check)[:arity] do
+        1 ->
+          check.(check_item)
+
+        2 ->
+          check.(check_items, check_item)
+
+        _ ->
+          check.(check_items, item_name, check_item)
       end
 
     case check_result do

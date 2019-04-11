@@ -295,11 +295,15 @@ Checks whether an item is valid over custom validation function.
 If this function returns `false`, validation will fail with default message `"isn't valid"`.
 
 ```elixir
+# arity of 1
+parameter :some_param, func: &is_atom/1
+
+# arity of 2
 parameter :some_param, func: &__MODULE__.your_validation/2
 
 def your_validation(_params, param_value), do: !is_nil(param_value)
 
-# or with a function with arity of 3
+# arity of 3
 
 parameter :some_param, func: &__MODULE__.your_validation/3
 
@@ -319,6 +323,8 @@ end
 ```
 
 Therefore, validation will fail, if the function returns either `false` or `{:error, your_error_msg}` tuple.
+
+`func/1` receives one argument which is the actual parameter value to check.
 
 `func/2` receives two arguments: the first is a contract of an operation (parameters with their values),
 the second - the actual parameter value to check. So, now you can validate a parameter depending on other parameters values.

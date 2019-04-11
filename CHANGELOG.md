@@ -1,4 +1,4 @@
-## Future Release
+## [1.2.5] - 2019.04.11
 
 ### Changes
 

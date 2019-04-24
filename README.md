@@ -40,7 +40,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.2.3"}]
+  [{:exop, "~> 1.3.0"}]
 end
 ```
 
@@ -51,7 +51,7 @@ defmodule IntegersDivision do
   use Exop.Operation
 
   parameter :a, type: :integer, default: 1
-  parameter :b, type: :integer, required: true,
+  parameter :b, type: :integer, required: false,
                 numericality: %{greater_than: 0}
 
   def process(params) do
@@ -231,13 +231,14 @@ related inner items.
 # some_param = %{a: 3, b: "inner_b_attr"}
 
 parameter :some_param, type: :map, inner: %{
-  a: [type: :integer, required: true],
+  a: [type: :integer],
   b: [type: :string, length: %{min: 1, max: 6}]
 }
 
-# you can omit `type` check while you're passing either Map or Keyword to an operation
-parameter :some_param, inner: %{
-  a: [type: :integer, required: true],
+# you can omit `type` and `inner` checks keywords in order to check inner of your parameter,
+# when `type` hasn't been specified explicitly, both keyword and map types pass the `type` validation
+parameter :some_param, %{
+  a: [type: :integer],
   b: [type: :string, length: %{min: 1, max: 6}]
 }
 ```
@@ -275,7 +276,7 @@ Even more complex like `inner`:
 # ]
 
 parameter :list_param, list_item: %{inner: %{
-                                              a: %{type: :integer, required: true},
+                                              a: %{type: :integer},
                                               b: %{type: :string, length: %{min: 7}}
                                             }}
 ```
@@ -442,7 +443,7 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
 
     policy MonthlyReportPolicy, :can_read?
 
-    parameter :user, required: true, struct: %User{}
+    parameter :user, struct: %User{}
 
     def process(%{user: %User{} = user}) do
       # make some reading...
@@ -458,7 +459,7 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
 
     policy MonthlyReportPolicy, :can_read?
 
-    parameter :user, required: true, struct: %User{}
+    parameter :user, struct: %User{}
 
     def process(params) do
       authorize(params.user)

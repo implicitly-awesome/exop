@@ -374,7 +374,11 @@ defmodule Exop.Operation do
       type_check = opts[:type]
 
       if is_nil(type_check) or TypeValidation.type_supported?(type_check) do
-        @contract %{name: name, opts: opts}
+        if is_map(opts) do
+          @contract %{name: name, opts: [inner: opts]}
+        else
+          @contract %{name: name, opts: opts}
+        end
       else
         raise ArgumentError,
               "Unknown type check `#{inspect(type_check)}` for parameter `#{inspect(name)}` in module `#{

@@ -720,6 +720,49 @@ defmodule OperationTest do
     assert Def44Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
   end
 
+  describe "implicit inner" do
+    test "works with maps" do
+      defmodule Def45Operation do
+        use Exop.Operation
+
+        parameter :a, %{b: [type: :atom], c: [type: :string]}
+
+        def process(params), do: params
+      end
+
+      assert Def45Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def45Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
+      assert Def45Operation.run(a: %{}) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+    end
+
+    test "works with keywords" do
+      defmodule Def46Operation do
+        use Exop.Operation
+
+        parameter :a, %{b: [type: :atom], c: [type: :string]}
+
+        def process(params), do: params
+      end
+
+      assert Def46Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def46Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
+      assert Def46Operation.run(a: []) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+    end
+
+    test "doesnt work" do
+      defmodule Def47Operation do
+        use Exop.Operation
+
+        parameter :a, [type: :atom]
+
+        def process(params), do: params
+      end
+
+      assert Def47Operation.run(a: :a) == {:ok, %{a: :a}}
+      assert Def47Operation.run(a: "a") == {:error, {:validation, %{a: ["has wrong type"]}}}
+    end
+  end
+
   defmodule Def46Struct, do: defstruct [:a, :b]
 
   test "run/1 accepts a struct as params" do

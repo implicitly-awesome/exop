@@ -32,7 +32,7 @@ defmodule Exop.Mixfile do
   defp deps do
     [
       {:mock, "~> 0.1", only: :test},
-      {:ex_doc, "~> 0.12", only: [:dev, :test, :docs]},
+      {:ex_doc, "~> 0.20", only: [:dev, :test, :docs]},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false}
     ]
   end

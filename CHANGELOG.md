@@ -6,6 +6,7 @@
 - behaviour of unknown type checks has been changed. Now it generates ArgumentError exception on compile time if type check is not supported.
 - `YourOperation.run/1` now accepts structs as well as keywords and maps
 - implicit inner: now you can omit `type` and `inner` checks keywords in order to check inner of your parameter
+- ex_doc 0.20 (better docs)
 
 ## [1.2.3] - 2019.02.06
 

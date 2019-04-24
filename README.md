@@ -604,7 +604,7 @@ This is how invoke this chain:
 iex> CreateUser.run(name: "User Name", age: 37, gender: "m")
 ```
 
-`Exop.Chain` defines `run/1` function under the hood (like common operations do) that takes `keyword()` or `map()` of params.
+`Exop.Chain` defines `run/1` function under the hood (like common operations do) that accepts `keyword()`, `map()` or `struct()` as params.
 Those params will be passed into the first operation in the chain.
 Bear in mind that each of chained operations (except the first one) awaits a returned result of
 a previous operation as incoming params.

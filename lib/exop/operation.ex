@@ -81,7 +81,7 @@ defmodule Exop.Operation do
       @doc """
       Runs an operation's process/1 function after a contract validation
       """
-      @spec run(Keyword.t() | map() | nil) ::
+      @spec run(Keyword.t() | map() | struct() | nil) ::
               {:ok, any} | Validation.validation_error() | interrupt_result | auth_result
       def run(received_params \\ %{})
 
@@ -89,7 +89,11 @@ defmodule Exop.Operation do
         received_params |> Enum.into(%{}) |> run()
       end
 
-      def run(received_params) when is_map(received_params) do
+      def run(%_{} = received_params) do
+        received_params |> Map.from_struct() |> run()
+      end
+
+      def run(%{} = received_params) do
         params = resolve_defaults(received_params, @contract, received_params)
         result = params |> resolve_coercions(@contract, params) |> output()
 

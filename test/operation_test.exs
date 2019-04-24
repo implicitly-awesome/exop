@@ -719,4 +719,22 @@ defmodule OperationTest do
     assert Def44Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
     assert Def44Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
   end
+
+  defmodule Def46Struct, do: defstruct [:a, :b]
+
+  test "run/1 accepts a struct as params" do
+    defmodule Def46Operation do
+      use Exop.Operation
+
+      parameter :a, type: :integer
+      parameter :b, type: :string
+
+      def process(params), do: params
+    end
+
+    assert Def46Operation.run(a: 1, b: "1") == {:ok, %{a: 1, b: "1"}}
+    assert Def46Operation.run(%{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
+    assert Def46Operation.run(%Def46Struct{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
+    assert Def46Operation.run(%Def46Struct{a: "1", b: "1"}) == {:error, {:validation, %{a: ["has wrong type"]}}}
+  end
 end

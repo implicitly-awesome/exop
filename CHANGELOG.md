@@ -7,6 +7,7 @@
 - `YourOperation.run/1` now accepts structs as well as keywords and maps
 - implicit inner: now you can omit `type` and `inner` checks keywords in order to check inner of your parameter
 - ex_doc 0.20 (better docs)
+- `:from` parameter option to be able pass one name of a parameter and work with it within an operation under another name
 
 ## [1.2.3] - 2019.02.06
 

@@ -608,7 +608,7 @@ defmodule OperationTest do
     end
 
     test "required: false + allow_nil: false" do
-      defmodule Def45Operation do
+      defmodule Def37aOperation do
         use Exop.Operation
 
         parameter :a, required: false, allow_nil: false
@@ -616,9 +616,9 @@ defmodule OperationTest do
         def process(params), do: params
       end
 
-      assert Def45Operation.run(a: :a) == {:ok, %{a: :a}}
-      assert Def45Operation.run() == {:ok, %{}}
-      assert Def45Operation.run(a: nil) == {:error, {:validation, %{a: ["doesn't allow nil"]}}}
+      assert Def37aOperation.run(a: :a) == {:ok, %{a: :a}}
+      assert Def37aOperation.run() == {:ok, %{}}
+      assert Def37aOperation.run(a: nil) == {:error, {:validation, %{a: ["doesn't allow nil"]}}}
     end
   end
 
@@ -763,10 +763,10 @@ defmodule OperationTest do
     end
   end
 
-  defmodule Def46Struct, do: defstruct [:a, :b]
+  defmodule Def48Struct, do: defstruct [:a, :b]
 
   test "run/1 accepts a struct as params" do
-    defmodule Def46Operation do
+    defmodule Def48Operation do
       use Exop.Operation
 
       parameter :a, type: :integer
@@ -775,9 +775,41 @@ defmodule OperationTest do
       def process(params), do: params
     end
 
-    assert Def46Operation.run(a: 1, b: "1") == {:ok, %{a: 1, b: "1"}}
-    assert Def46Operation.run(%{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
-    assert Def46Operation.run(%Def46Struct{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
-    assert Def46Operation.run(%Def46Struct{a: "1", b: "1"}) == {:error, {:validation, %{a: ["has wrong type"]}}}
+    assert Def48Operation.run(a: 1, b: "1") == {:ok, %{a: 1, b: "1"}}
+    assert Def48Operation.run(%{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
+    assert Def48Operation.run(%Def48Struct{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
+    assert Def48Operation.run(%Def48Struct{a: "1", b: "1"}) == {:error, {:validation, %{a: ["has wrong type"]}}}
+  end
+
+  describe ":from option" do
+    test "makes an alias bw received param and desired param" do
+      defmodule Def49Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer, from: "a"
+        parameter :b, type: :string, from: :bB
+
+        def process(params), do: params
+      end
+
+      defmodule Def50Operation do
+        use Exop.Operation
+
+        parameter :a, type: :integer, from: :aA
+        parameter :b, type: :string, from: :bB
+
+        def process(params), do: params
+      end
+
+      assert Def49Operation.run(%{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
+      assert Def49Operation.run(%{"a" => 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
+      assert Def49Operation.run(%{a: 1, bB: "1"}) == {:ok, %{a: 1, b: "1"}}
+      assert Def49Operation.run(%{"a" => 1, bB: "1"}) == {:ok, %{a: 1, b: "1"}}
+      assert Def49Operation.run(%{"a" => 1, bB: 1}) == {:error, {:validation, %{b: ["has wrong type"]}}}
+
+      assert Def50Operation.run(a: 1, b: "1") == {:ok, %{a: 1, b: "1"}}
+      assert Def50Operation.run(aA: 1, bB: "1") == {:ok, %{a: 1, b: "1"}}
+      assert Def50Operation.run(aA: 1, bB: 1) == {:error, {:validation, %{b: ["has wrong type"]}}}
+    end
   end
 end

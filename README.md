@@ -27,6 +27,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
     - [list_item](#list_item)
     - [func](#func)
     - [allow_nil](#allow_nil)
+    - [from](#from)
   - [Defined params](#defined-params)
   - [Interrupt](#interrupt)
   - [Coercion](#coercion)
@@ -349,6 +350,49 @@ end
 ```
 
 _By default (if you omit `allow_nil` attribute), a parameter is treated as `allow_nil: false`_
+
+#### from
+
+This option allows you to pass a parameter to `run/1` and `run!/1` functions with one name and work with this parameter within an operation under another name.
+
+```elixir
+defmodule YourOperation do
+  use Exop.Operation
+
+  parameter :a, type: :integer, from: "a"
+  parameter :b, type: :string, from: :bB
+
+  def process(params), do: params
+end
+
+# now you can invoke YourOperation with such params:
+#   Youroperation.run(%{"a" => 1, b: "1"})
+#   Youroperation.run(%{a: 1, bB: "1"})
+#   Youroperation.run(%{"a" => 1, bB: "1"})
+# and get:
+#   {:ok, %{a: 1, b: "1"}}
+```
+
+The same works for parameters given as a Keyword as well (in this case `:from` value should be an atom):
+
+```elixir
+defmodule YourOperation do
+  use Exop.Operation
+
+  parameter :a, type: :integer, from: :aA
+  parameter :b, type: :string, from: :bB
+
+  def process(params), do: params
+end
+
+# Youroperation.run(a: 1, b: "1")
+# Youroperation.run(aA: 1, bB: "1")
+# {:ok, %{a: 1, b: "1"}}
+```
+
+Why? Simply because sometimes you're not in control of incoming parameters but don't want to map them each time you need to use'em by yourself (good example: params in Phoenix controller's action, which come as a map with string keys).
+
+_This option doesn't work for `:inner` check's inner parameters currently._
 
 ### Defined params
 

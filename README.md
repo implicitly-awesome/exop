@@ -442,17 +442,27 @@ The flow looks like: `Resolve param default value -> Coerce -> Validate coerced`
 
 If coercion function returns an error tuple it will be treated as validation failure: an operation's invokation stops and that error tuple will be returned as a result.
 
+`:coerce_with` accepts 2-arity function. This function takes a tuple `{coerced_param_name, coerced_param_value}` as the first argument and a map with all the parameters that have been passed to either `run/1` or `run!/1` function as the second argument.
+
 ```elixir
-parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1
+parameter :a, type: :integer
+parameter :b, type: :string, coerce_with: &__MODULE__.to_string/2
+parameter :c, type: :string, coerce_with: &__MODULE__.to_string/2
 
-def coerce(param_value), do: param_value * 2
+def to_string({_, value}, %{a: _, b: _, c: _} = _received_params) when is_integer(value) do
+  Integer.to_string(c_value)
+end
 
-# or with a function with arity of 2
+def to_string({_, value}, _received_params) when is_binary(c_value) do
+  value
+end
 
-parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/2
-
-def coerce(:some_param = _param_name, param_value), do: param_value * 2
+def to_string({:c, c_value}, _received_params) do
+  # special coercion for :c parameter here
+end
 ```
+
+_Why it is so? Because there are cases when you can use the same coercion function for multiple params and/or coerce a parameter depending on another's value and need to have all this information._
 
 ### Policy check
 

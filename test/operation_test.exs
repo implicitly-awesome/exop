@@ -291,52 +291,67 @@ defmodule OperationTest do
     assert Def16Operation.run == {:ok, {FalsePolicy, :test}}
   end
 
-  test "coerce option changes a parameter value (and after defaults resolving)" do
+  test "coerce function takes coerced param tuple and a map with all params" do
     defmodule Def17Operation do
       use Exop.Operation
 
-      parameter :a, default: 5, coerce_with: &__MODULE__.coerce/1
+      parameter :a, default: 5, coerce_with: &__MODULE__.coerce/2
       parameter :b
 
       def process(params), do: {params[:a], params[:b]}
 
-      def coerce(x), do: x * 2
+      def coerce({:a, a}, %{a: a, b: _}), do: a * 2
     end
 
     assert Def17Operation.run(b: 0) == {:ok, {10, 0}}
+  end
+
+  test "coerce option changes a parameter value (and after defaults resolving)" do
+    defmodule Def17aOperation do
+      use Exop.Operation
+
+      parameter :a, default: 5, coerce_with: &__MODULE__.coerce/2
+      parameter :b
+
+      def process(params), do: {params[:a], params[:b]}
+
+      def coerce({_, a}, _), do: a * 2
+    end
+
+    assert Def17aOperation.run(b: 0) == {:ok, {10, 0}}
   end
 
   test "coerce option changes a parameter value before validation" do
     defmodule Def18Operation do
       use Exop.Operation
 
-      parameter :a, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1
+      parameter :a, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/2
 
       def process(params), do: params[:a]
 
-      def coerce(x), do: x * 2
+      def coerce({_, a}, _), do: a * 2
     end
 
     defmodule Def19Operation do
       use Exop.Operation
 
-      parameter :a, required: true, coerce_with: &__MODULE__.coerce/1
+      parameter :a, required: true, coerce_with: &__MODULE__.coerce/2
 
       def process(params), do: params[:a]
 
-      def coerce(_x), do: "str"
+      def coerce(_, _), do: "str"
     end
 
     defmodule Def20Operation do
       use Exop.Operation
 
-      parameter :a, func: &__MODULE__.validate/2, coerce_with: &__MODULE__.coerce/1
+      parameter :a, func: &__MODULE__.validate/2, coerce_with: &__MODULE__.coerce/2
 
       def process(params), do: params[:a]
 
       def validate(_params, x), do: x > 0
 
-      def coerce(_x), do: 0
+      def coerce(_, _), do: 0
     end
 
     assert Def18Operation.run(a: 2) == {:ok, 4}
@@ -477,11 +492,11 @@ defmodule OperationTest do
     defmodule Def30Operation do
       use Exop.Operation
 
-      parameter :list_param, list_item: [type: :string, length: %{min: 7}], coerce_with: &__MODULE__.make_list/1
+      parameter :list_param, list_item: [type: :string, length: %{min: 7}], coerce_with: &__MODULE__.make_list/2
 
       def process(params), do: {:ok, params[:list_param]}
 
-      def make_list(_), do: ["1234567", "7chars"]
+      def make_list(_, _), do: ["1234567", "7chars"]
     end
 
     assert Def30Operation.run() == {:error, {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
@@ -540,32 +555,16 @@ defmodule OperationTest do
     assert Def33Operation.run(a: 777) == {:ok, %{a: 777}}
   end
 
-  test "coerce_with can invoke a function with arity == 2 (passing param_name & param_value)" do
-    defmodule Def34Operation do
-      use Exop.Operation
-
-      parameter :a, type: :tuple, coerce_with: &__MODULE__.coerce_with_name/2
-
-      def process(params), do: params
-
-      def coerce_with_name(param_name, param_value) do
-        {List.duplicate(param_name, 2), param_value * 10}
-      end
-    end
-
-    assert Def34Operation.run(a: 1.1) == {:ok, %{a: {[:a, :a], 11}}}
-  end
-
   test "coerce_with respects an error-tuple result" do
     defmodule Def35Operation do
       use Exop.Operation
 
-      parameter :a, type: :integer, coerce_with: &__MODULE__.coerce/1
+      parameter :a, type: :integer, coerce_with: &__MODULE__.coerce/2
 
       def process(params), do: params
 
-      def coerce(1), do: {:error, :some_error}
-      def coerce(2), do: 2
+      def coerce({_, 1}, _), do: {:error, :some_error}
+      def coerce({_, 2}, _), do: 2
     end
 
     assert Def35Operation.run(a: 2) == {:ok, %{a: 2}}

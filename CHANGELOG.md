@@ -11,6 +11,7 @@
 - new checks for `:length`: `gte`, `gt`, `lte`, `lt`
 - `:length` doesnt work with numbers anymore
 - `:length` and `:numericality` checks return an error for unsupported types (previously unsupported type passed the check)
+- `:coerce_with` now accepts only a 2-arity function with a coerced param tuple and a map of all received params (see README for more info)
 
 ## [1.2.3] - 2019.02.06
 

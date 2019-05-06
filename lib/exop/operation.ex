@@ -185,15 +185,9 @@ defmodule Exop.Operation do
            ) do
         coerced_params =
           if Keyword.has_key?(contract_item_opts, :coerce_with) do
-            coerce_with = Keyword.get(contract_item_opts, :coerce_with)
+            coerce_func = Keyword.get(contract_item_opts, :coerce_with)
             check_item = ValidationChecks.get_check_item(coerced_params, contract_item_name)
-
-            coerced_value =
-              if :erlang.fun_info(coerce_with)[:arity] == 1 do
-                coerce_with.(check_item)
-              else
-                coerce_with.(contract_item_name, check_item)
-              end
+            coerced_value = coerce_func.({contract_item_name, check_item}, received_params)
 
             put_param_value(coerced_value, coerced_params, contract_item_name)
           else

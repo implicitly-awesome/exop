@@ -177,36 +177,68 @@ defmodule ValidationChecksTest do
 
   test "check_length/3: successes" do
     assert check_length(%{a: "123"}, :a, %{min: 0}) == [true]
+    assert check_length(%{a: "123"}, :a, %{gte: 0}) == [true]
+    assert check_length(%{a: "123"}, :a, %{gte: 3}) == [true]
+    assert check_length(%{a: "123"}, :a, %{gt: 0}) == [true]
     assert check_length(%{a: "123"}, :a, %{max: 4}) == [true]
+    assert check_length(%{a: "123"}, :a, %{lte: 4}) == [true]
+    assert check_length(%{a: "123"}, :a, %{lte: 3}) == [true]
+    assert check_length(%{a: "123"}, :a, %{lt: 4}) == [true]
     assert check_length(%{a: "123"}, :a, %{is: 3}) == [true]
     assert check_length(%{a: "123"}, :a, %{in: 2..4}) == [true]
 
-    assert check_length(%{a: 3}, :a, %{min: 0}) == [true]
-    assert check_length(%{a: 3}, :a, %{max: 4}) == [true]
-    assert check_length(%{a: 3}, :a, %{is: 3}) == [true]
-    assert check_length(%{a: 3}, :a, %{in: 2..4}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{min: 0}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{gte: 0}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{gte: 2}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{gt: 0}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{max: 4}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{lte: 4}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{lte: 2}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{lt: 4}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{is: 2}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{in: 2..4}) == [true]
 
     assert check_length(%{a: ~w(1 2 3)}, :a, %{min: 0}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{gte: 0}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{gte: 3}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{gt: 0}) == [true]
     assert check_length(%{a: ~w(1 2 3)}, :a, %{max: 4}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{lte: 4}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{lte: 3}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{lt: 4}) == [true]
     assert check_length(%{a: ~w(1 2 3)}, :a, %{is: 3}) == [true]
     assert check_length(%{a: ~w(1 2 3)}, :a, %{in: 2..4}) == [true]
   end
 
   test "check_length/3: fails" do
     [%{a: _}] = check_length(%{a: "123"}, :a, %{min: 4})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{gte: 4})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{gt: 4})
     [%{a: _}] = check_length(%{a: "123"}, :a, %{max: 2})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{lte: 2})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{lt: 2})
     [%{a: _}] = check_length(%{a: "123"}, :a, %{is: 4})
     [%{a: _}] = check_length(%{a: "123"}, :a, %{in: 4..6})
 
     [%{a: _}] = check_length(%{a: 3}, :a, %{min: 4})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{gte: 4})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{gt: 4})
     [%{a: _}] = check_length(%{a: 3}, :a, %{max: 2})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{lte: 2})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{lt: 2})
     [%{a: _}] = check_length(%{a: 3}, :a, %{is: 4})
     [%{a: _}] = check_length(%{a: 3}, :a, %{in: 4..6})
 
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{min: 4})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{gte: 4})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{gt: 4})
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{max: 2})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{lte: 2})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{lt: 2})
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{is: 4})
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{in: 4..6})
+
+    [%{a: "unknown check 'qwerty'"}] = check_length(%{a: ~w(1 2 3)}, :a, %{qwerty: 4})
   end
 
   test "check_struct/3: successes" do

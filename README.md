@@ -220,7 +220,7 @@ Checks the length of a parameter's value. The value should be one of handled typ
 All possible checks are listed in the example below.
 
 ```elixir
-parameter :some_param, length: %{min: 5, max: 10, is: 7, in: 5..8}
+parameter :some_param, length: %{gte: 5, gt: 4, min: 5, lte: 10, lt: 9, max: 10, is: 7, in: 5..8}
 ```
 
 #### `inner`

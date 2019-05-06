@@ -193,7 +193,9 @@ defmodule Exop.ValidationChecks do
     check_number(number, item_name, {:less_than_or_equal_to, check_value})
   end
 
-  defp check_number(_number, _item_name, _), do: true
+  defp check_number(_number, item_name, {check, _check_value}) do
+    %{item_name => "unknwon check '#{check}'"}
+  end
 
   @doc """
   Checks whether an item_name is a memeber of a list.
@@ -295,46 +297,62 @@ defmodule Exop.ValidationChecks do
     actual_length = get_length(check_item)
 
     for {check, check_value} <- checks, into: [] do
-      case check do
-        :min -> check_min_length(item_name, actual_length, check_value)
-        :max -> check_max_length(item_name, actual_length, check_value)
-        :is -> check_is_length(item_name, actual_length, check_value)
-        :in -> check_in_length(item_name, actual_length, check_value)
-        _ -> true
-      end
+      check_length(check, item_name, actual_length, check_value)
     end
   end
 
   @spec get_length(any) :: pos_integer
-  defp get_length(param) when is_number(param), do: param
   defp get_length(param) when is_list(param), do: length(param)
   defp get_length(param) when is_binary(param), do: String.length(param)
-  defp get_length(param) when is_atom(param), do: param |> Atom.to_string() |> get_length
-  defp get_length(param) when is_map(param), do: param |> Map.to_list() |> get_length
+  defp get_length(param) when is_atom(param), do: param |> Atom.to_string() |> get_length()
+  defp get_length(param) when is_map(param), do: param |> Map.keys() |> get_length()
   defp get_length(param) when is_tuple(param), do: tuple_size(param)
-  defp get_length(_param), do: 0
+  defp get_length(_param), do: {:error, :wrong_type}
 
-  @spec check_min_length(atom() | String.t(), pos_integer, number) :: true | check_error
-  defp check_min_length(item_name, actual_length, check_value) do
+  @spec check_length(atom(), atom() | String.t(), pos_integer, number) :: true | check_error
+  defp check_length(_check, item_name, {:error, :wrong_type}, _check_value) do
+    %{item_name => "length check supports only lists, binaries, atoms, maps and tuples"}
+  end
+
+  defp check_length(:min, item_name, actual_length, check_value) do
+    check_length(:gte, item_name, actual_length, check_value)
+  end
+
+  defp check_length(:gte, item_name, actual_length, check_value) do
     actual_length >= check_value ||
       %{item_name => "length must be greater than or equal to #{check_value}"}
   end
 
-  @spec check_max_length(atom() | String.t(), pos_integer, number) :: true | check_error
-  defp check_max_length(item_name, actual_length, check_value) do
+  defp check_length(:gt, item_name, actual_length, check_value) do
+    actual_length > check_value ||
+      %{item_name => "length must be greater than #{check_value}"}
+  end
+
+  defp check_length(:max, item_name, actual_length, check_value) do
+    check_length(:lte, item_name, actual_length, check_value)
+  end
+
+  defp check_length(:lte, item_name, actual_length, check_value) do
     actual_length <= check_value ||
       %{item_name => "length must be less than or equal to #{check_value}"}
   end
 
-  @spec check_is_length(atom() | String.t(), pos_integer, number) :: true | check_error
-  defp check_is_length(item_name, actual_length, check_value) do
+  defp check_length(:lt, item_name, actual_length, check_value) do
+    actual_length < check_value ||
+      %{item_name => "length must be less than #{check_value}"}
+  end
+
+  defp check_length(:is, item_name, actual_length, check_value) do
     actual_length == check_value || %{item_name => "length must be equal to #{check_value}"}
   end
 
-  @spec check_in_length(atom() | String.t(), pos_integer, Range.t()) :: true | check_error
-  defp check_in_length(item_name, actual_length, check_value) do
+  defp check_length(:in, item_name, actual_length, check_value) do
     Enum.member?(check_value, actual_length) ||
       %{item_name => "length must be in range #{check_value}"}
+  end
+
+  defp check_length(check, item_name, _actual_length, _check_value) do
+    %{item_name => "unknown check '#{check}'"}
   end
 
   @doc """

@@ -8,6 +8,9 @@
 - implicit inner: now you can omit `type` and `inner` checks keywords in order to check inner of your parameter
 - ex_doc 0.20 (better docs)
 - `:from` parameter option to be able pass one name of a parameter and work with it within an operation under another name
+- new checks for `:length`: `gte`, `gt`, `lte`, `lt`
+- `:length` doesnt work with numbers anymore
+- `:length` and `:numericality` checks return an error for unsupported types (previously unsupported type passed the check)
 
 ## [1.2.3] - 2019.02.06
 

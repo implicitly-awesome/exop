@@ -48,7 +48,7 @@ defmodule Exop.Operation do
   end
 
   defmacro __before_compile__(_env) do
-    quote do
+    quote generated: true, location: :keep do
       alias Exop.Utils
       alias Exop.Validation
       alias Exop.ValidationChecks

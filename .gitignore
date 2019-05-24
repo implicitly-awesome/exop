@@ -21,3 +21,4 @@ erl_crash.dump
 .history/
 .vscode/
 *.iml
+.elixir_ls/

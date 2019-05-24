@@ -354,10 +354,10 @@ defmodule YourOperation do
   def process(params), do: params
 end
 
-{:ok, %{a: 1}} = YourOperation.run(a: 1)
-{:ok, %{a: nil}} = YourOperation.run(a: nil)
-{:ok, %{b: 1}} = YourOperation.run(b: 1)
-{:error, {:validation, %{b: ["has wrong type"]}}} = YourOperation.run(b: nil)
+{:ok, %{a: 1}} = YourOperation.run(a: 1, b: 1)
+{:ok, %{a: nil}} = YourOperation.run(a: nil, b: 1)
+{:ok, %{b: 1}} = YourOperation.run(a: nil, b: 1)
+{:error, {:validation, %{b: ["doesn't allow nil", "has wrong type"]}}} = YourOperation.run(a: nil, b: nil)
 ```
 
 _By default (if you omit `allow_nil` attribute), a parameter is treated as `allow_nil: false`_

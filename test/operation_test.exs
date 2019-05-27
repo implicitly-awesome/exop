@@ -35,7 +35,7 @@ defmodule OperationTest do
              message:
                "Unknown type check `:unknown` for parameter `:b` in module `OperationTest.WrongOperation`, " <>
                  "supported type checks are `:boolean`, `:integer`, `:float`, `:string`, `:tuple`, `:struct`, " <>
-                 "`:map`, `:list`, `:atom`, `:function`, `:keyword`, `:module`."
+                 "`:map`, `:list`, `:atom`, `:function`, `:keyword`, `:module`, `:uuid`."
            } = operation_with_unknown_type()
   end
 

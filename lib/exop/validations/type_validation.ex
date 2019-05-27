@@ -1,5 +1,5 @@
 defmodule Exop.TypeValidation do
-  @known_types ~w(boolean integer float string tuple struct map list atom function keyword module)a
+  @known_types ~w(boolean integer float string tuple struct map list atom function keyword module uuid)a
 
   Enum.each(@known_types, fn type ->
     def type_supported?(unquote(type)), do: true

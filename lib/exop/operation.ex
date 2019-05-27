@@ -239,19 +239,15 @@ defmodule Exop.Operation do
         end
       end
 
-      defp output(_params, {:error, {:validation, errors}} = validation_result) do
+      defp output(_params, {:error, {:validation, errors}} = validation_result)
+           when is_map(errors) do
         errors |> mod_err_msg() |> Logger.warn()
         validation_result
       end
 
       defp mod_err_msg(errors), do: "#{@module_name} errors: \n#{Validation.errors_message(errors)}"
 
-      @spec defined_params(Keyword.t() | map()) :: map()
-      def defined_params(received_params) when is_list(received_params) do
-        keys_to_filter = Keyword.keys(received_params) -- Enum.map(@contract, & &1[:name])
-        received_params |> Keyword.drop(keys_to_filter) |> Enum.into(%{})
-      end
-
+      @spec defined_params(map()) :: map()
       def defined_params(received_params) when is_map(received_params) do
         keys_to_filter = Map.keys(received_params) -- Enum.map(@contract, & &1[:name])
         Map.drop(received_params, keys_to_filter)

@@ -1,8 +1,6 @@
 defmodule OperationTest do
   use ExUnit.Case, async: true
 
-  import Mock
-
   defmodule Operation do
     use Exop.Operation
 
@@ -34,36 +32,30 @@ defmodule OperationTest do
 
   test "operation with unknown type check" do
     assert %ArgumentError{
-      message: "Unknown type check `:unknown` for parameter `:b` in module `OperationTest.WrongOperation`, " <>
-               "supported type checks are `:boolean`, `:integer`, `:float`, `:string`, `:tuple`, `:struct`, " <>
-               "`:map`, `:list`, `:atom`, `:function`, `:keyword`, `:module`."
-    } = operation_with_unknown_type()
+             message:
+               "Unknown type check `:unknown` for parameter `:b` in module `OperationTest.WrongOperation`, " <>
+                 "supported type checks are `:boolean`, `:integer`, `:float`, `:string`, `:tuple`, `:struct`, " <>
+                 "`:map`, `:list`, `:atom`, `:function`, `:keyword`, `:module`."
+           } = operation_with_unknown_type()
   end
 
   test "defines contract/0" do
-    assert :functions |> Operation.__info__ |> Keyword.has_key?(:contract)
+    assert :functions |> Operation.__info__() |> Keyword.has_key?(:contract)
   end
 
   test "stores defined properties in a contract" do
-    assert Operation.contract |> is_list
-    assert Operation.contract |> List.first |> is_map
-    assert Enum.sort(Operation.contract) == Enum.sort(@valid_contract)
+    assert Operation.contract() |> is_list
+    assert Operation.contract() |> List.first() |> is_map
+    assert Enum.sort(Operation.contract()) == Enum.sort(@valid_contract)
   end
 
   test "defines run/1" do
-    assert :functions |> Operation.__info__ |> Keyword.has_key?(:run)
-  end
-
-  test "run/1: calls Operation.Validation.valid?/2" do
-    with_mock Exop.Validation, [valid?: fn(_, _) -> :ok end] do
-      params = %{param1: "param1"}
-      Operation.run(params)
-      assert called Exop.Validation.valid?(Operation.contract, params)
-    end
+    assert :functions |> Operation.__info__() |> Keyword.has_key?(:run)
   end
 
   test "process/1 takes a single param which is Map type" do
-    assert Operation.run(param1: 1, param2: "string") == {:ok, ["This is the process/1 params", %{param1: 1, param2: "string"}]}
+    assert Operation.run(param1: 1, param2: "string") ==
+             {:ok, ["This is the process/1 params", %{param1: 1, param2: "string"}]}
   end
 
   test "run/1: returns :validation_failed error when contract didn't pass validation" do
@@ -83,7 +75,7 @@ defmodule OperationTest do
       end
     end
 
-    assert DefOperation.run == {:ok, 999}
+    assert DefOperation.run() == {:ok, 999}
   end
 
   test "run/1: pass default value of required missed parameter (thus pass a validation)" do
@@ -115,7 +107,10 @@ defmodule OperationTest do
   end
 
   test "params/1: doesn't invoke a contract validation" do
-    assert Operation.process(param1: "not integer", param2: 777) == ["This is the process/1 params", [param1: "not integer", param2: 777]]
+    assert Operation.process(param1: "not integer", param2: 777) == [
+             "This is the process/1 params",
+             [param1: "not integer", param2: 777]
+           ]
   end
 
   test "defined_params/0: returns params that were defined in the contract, filter out others" do
@@ -174,7 +169,7 @@ defmodule OperationTest do
       end
     end
 
-    assert Def7Operation.run == {:interrupt, %{my_error: "oops"}}
+    assert Def7Operation.run() == {:interrupt, %{my_error: "oops"}}
   end
 
   test "interrupt/1: pass other exceptions" do
@@ -189,7 +184,7 @@ defmodule OperationTest do
       end
     end
 
-    assert_raise(RuntimeError, fn -> Def8Operation.run end)
+    assert_raise(RuntimeError, fn -> Def8Operation.run() end)
   end
 
   defmodule TruePolicy do
@@ -217,7 +212,7 @@ defmodule OperationTest do
       def process(_params), do: current_policy()
     end
 
-    assert Def9Operation.run == {:ok, {TruePolicy, :test}}
+    assert Def9Operation.run() == {:ok, {TruePolicy, :test}}
   end
 
   test "authorizes with provided policy" do
@@ -229,7 +224,7 @@ defmodule OperationTest do
       def process(_params), do: authorize(user: %TestUser{})
     end
 
-    assert Def10Operation.run == {:ok, :ok}
+    assert Def10Operation.run() == {:ok, :ok}
 
     defmodule Def11Operation do
       use Exop.Operation
@@ -239,7 +234,7 @@ defmodule OperationTest do
       def process(_params), do: authorize(user: %TestUser{})
     end
 
-    assert Def11Operation.run == {:error, {:auth, :test}}
+    assert Def11Operation.run() == {:error, {:auth, :test}}
   end
 
   test "operation invokation stops if auth failed" do
@@ -254,7 +249,7 @@ defmodule OperationTest do
       end
     end
 
-    assert Def12Operation.run == {:error, {:auth, :test}}
+    assert Def12Operation.run() == {:error, {:auth, :test}}
   end
 
   test "returns errors with malformed policy definition" do
@@ -274,8 +269,8 @@ defmodule OperationTest do
       def process(_params), do: authorize(%TestUser{})
     end
 
-    assert Def14Operation.run == {:error, {:auth, :unknown_policy}}
-    assert Def15Operation.run == {:error, {:auth, :unknown_policy}}
+    assert Def14Operation.run() == {:error, {:auth, :unknown_policy}}
+    assert Def15Operation.run() == {:error, {:auth, :unknown_policy}}
   end
 
   test "the last policy definition overrides previous definitions" do
@@ -288,7 +283,7 @@ defmodule OperationTest do
       def process(_params), do: current_policy()
     end
 
-    assert Def16Operation.run == {:ok, {FalsePolicy, :test}}
+    assert Def16Operation.run() == {:ok, {FalsePolicy, :test}}
   end
 
   test "coerce function takes coerced param tuple and a map with all params" do
@@ -346,12 +341,17 @@ defmodule OperationTest do
       use Exop.Operation
 
       parameter :a, func: &__MODULE__.validate/2, coerce_with: &__MODULE__.coerce/2
+      parameter :b, func: &__MODULE__.validate/1
 
-      def process(params), do: params[:a]
+      def process(params), do: params
 
-      def validate(_params, x), do: x > 0
+      def validate(_params, x), do: validate(x)
 
-      def coerce(_, _), do: 0
+      def validate(x), do: x > 0
+
+      def coerce(x), do: x + 1
+
+      def coerce({:a, a_value}, _received_params), do: a_value + 1
     end
 
     assert Def18Operation.run(a: 2) == {:ok, 4}
@@ -359,7 +359,11 @@ defmodule OperationTest do
 
     assert Def19Operation.run() == {:ok, "str"}
 
-    assert Def20Operation.run(a: 100) == {:error, {:validation, %{a: ["isn't valid"]}}}
+    assert Def20Operation.run(a: -1, b: 0) ==
+             {:error, {:validation, %{a: ["isn't valid"], b: ["isn't valid"]}}}
+
+    assert Def20Operation.run(a: 0, b: 0) == {:error, {:validation, %{b: ["isn't valid"]}}}
+    assert Def20Operation.run(a: 0, b: 1) == {:ok, %{a: 1, b: 1}}
   end
 
   test "run!/1: return operation's result with valid params" do
@@ -480,26 +484,34 @@ defmodule OperationTest do
     defmodule Def29Operation do
       use Exop.Operation
 
-      parameter :list_param, list_item: %{type: :string, length: %{min: 7}}, default: ["1234567", "7chars"]
+      parameter :list_param,
+        list_item: %{type: :string, length: %{min: 7}},
+        default: ["1234567", "7chars"]
 
       def process(params), do: {:ok, params[:list_param]}
     end
 
-    assert Def29Operation.run() == {:error, {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
+    assert Def29Operation.run() ==
+             {:error,
+              {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
   end
 
   test "list_item + coerce_with" do
     defmodule Def30Operation do
       use Exop.Operation
 
-      parameter :list_param, list_item: [type: :string, length: %{min: 7}], coerce_with: &__MODULE__.make_list/2
+      parameter :list_param,
+        list_item: [type: :string, length: %{min: 7}],
+        coerce_with: &__MODULE__.make_list/2
 
       def process(params), do: {:ok, params[:list_param]}
 
       def make_list(_, _), do: ["1234567", "7chars"]
     end
 
-    assert Def30Operation.run() == {:error, {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
+    assert Def30Operation.run() ==
+             {:error,
+              {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
   end
 
   test "string-named parameters are allowed" do
@@ -512,9 +524,15 @@ defmodule OperationTest do
       def process(params), do: {:ok, params}
     end
 
-    assert Def31Operation.run() == {:error, {:validation, %{"a" => ["is required"], "b" => ["is required"]}}}
-    assert Def31Operation.run(%{"a" => 1, "b" => "2"}) == {:error, {:validation, %{"a" => ["has wrong type"], "b" => ["has wrong type"]}}}
-    assert Def31Operation.run(%{"a" => "1", b: 2}) == {:error, {:validation, %{"b" => ["is required"]}}}
+    assert Def31Operation.run() ==
+             {:error, {:validation, %{"a" => ["is required"], "b" => ["is required"]}}}
+
+    assert Def31Operation.run(%{"a" => 1, "b" => "2"}) ==
+             {:error, {:validation, %{"a" => ["has wrong type"], "b" => ["has wrong type"]}}}
+
+    assert Def31Operation.run(%{"a" => "1", b: 2}) ==
+             {:error, {:validation, %{"b" => ["is required"]}}}
+
     assert Def31Operation.run(%{"a" => "1", "b" => 2}) == {:ok, %{"a" => "1", "b" => 2}}
   end
 
@@ -528,8 +546,12 @@ defmodule OperationTest do
       def process(params), do: {:ok, params}
     end
 
-    assert Def32Operation.run() == {:error, {:validation, %{"a" => ["is required"], :b => ["is required"]}}}
-    assert Def32Operation.run(%{"a" => 1, b: "2"}) == {:error, {:validation, %{"a" => ["has wrong type"], :b => ["has wrong type"]}}}
+    assert Def32Operation.run() ==
+             {:error, {:validation, %{"a" => ["is required"], :b => ["is required"]}}}
+
+    assert Def32Operation.run(%{"a" => 1, b: "2"}) ==
+             {:error, {:validation, %{"a" => ["has wrong type"], :b => ["has wrong type"]}}}
+
     assert Def32Operation.run(%{"a" => "1"}) == {:error, {:validation, %{:b => ["is required"]}}}
     assert Def32Operation.run(%{"a" => "1", b: 2}) == {:ok, %{"a" => "1", :b => 2}}
   end
@@ -585,14 +607,21 @@ defmodule OperationTest do
       assert Def36Operation.run(a: 1) == {:ok, %{a: 1}}
       assert Def36Operation.run(a: nil) == {:ok, %{a: nil}}
       assert Def36Operation.run(b: 1) == {:ok, %{b: 1}}
-      assert Def36Operation.run(b: nil) == {:error, {:validation, %{b: ["doesn't allow nil", "has wrong type"]}}}
+
+      assert Def36Operation.run(b: nil) ==
+               {:error, {:validation, %{b: ["doesn't allow nil", "has wrong type"]}}}
     end
 
     test "skips all checks" do
       defmodule Def37Operation do
         use Exop.Operation
 
-        parameter :a, type: :integer, numericality: [greater_than: 2], allow_nil: true, required: false
+        parameter :a,
+          type: :integer,
+          numericality: [greater_than: 2],
+          allow_nil: true,
+          required: false
+
         parameter :b, allow_nil: true, func: &__MODULE__.nil_check/2, required: false
 
         def nil_check(_, nil), do: {:error, :this_is_nil}
@@ -602,7 +631,10 @@ defmodule OperationTest do
 
       assert Def37Operation.run(a: nil) == {:ok, %{a: nil}}
       assert Def37Operation.run(a: 1) == {:error, {:validation, %{a: ["must be greater than 2"]}}}
-      assert Def37Operation.run(a: "1") == {:error, {:validation, %{a: ["not a number", "has wrong type"]}}}
+
+      assert Def37Operation.run(a: "1") ==
+               {:error, {:validation, %{a: ["not a number", "has wrong type"]}}}
+
       assert Def37Operation.run(b: nil) == {:ok, %{b: nil}}
     end
 
@@ -637,7 +669,7 @@ defmodule OperationTest do
 
     test "with allow_nil" do
       defmodule Def39Operation do
-        use Exop.Operation
+        use Exop.Operation, name_in_errors: true
 
         parameter :a, type: :integer, allow_nil: true
 
@@ -713,8 +745,13 @@ defmodule OperationTest do
     end
 
     assert Def44Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
-    assert Def44Operation.run(a: []) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
-    assert Def44Operation.run(a: %{}) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+
+    assert Def44Operation.run(a: []) ==
+             {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+
+    assert Def44Operation.run(a: %{}) ==
+             {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+
     assert Def44Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
     assert Def44Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
   end
@@ -731,7 +768,9 @@ defmodule OperationTest do
 
       assert Def45Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
       assert Def45Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
-      assert Def45Operation.run(a: %{}) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+
+      assert Def45Operation.run(a: %{}) ==
+               {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
     end
 
     test "works with keywords" do
@@ -745,14 +784,16 @@ defmodule OperationTest do
 
       assert Def46Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
       assert Def46Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
-      assert Def46Operation.run(a: []) == {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+
+      assert Def46Operation.run(a: []) ==
+               {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
     end
 
     test "doesnt work" do
       defmodule Def47Operation do
         use Exop.Operation
 
-        parameter :a, [type: :atom]
+        parameter :a, type: :atom
 
         def process(params), do: params
       end
@@ -762,7 +803,7 @@ defmodule OperationTest do
     end
   end
 
-  defmodule Def48Struct, do: defstruct [:a, :b]
+  defmodule(Def48Struct, do: defstruct([:a, :b]))
 
   test "run/1 accepts a struct as params" do
     defmodule Def48Operation do
@@ -777,7 +818,9 @@ defmodule OperationTest do
     assert Def48Operation.run(a: 1, b: "1") == {:ok, %{a: 1, b: "1"}}
     assert Def48Operation.run(%{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
     assert Def48Operation.run(%Def48Struct{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
-    assert Def48Operation.run(%Def48Struct{a: "1", b: "1"}) == {:error, {:validation, %{a: ["has wrong type"]}}}
+
+    assert Def48Operation.run(%Def48Struct{a: "1", b: "1"}) ==
+             {:error, {:validation, %{a: ["has wrong type"]}}}
   end
 
   describe ":from option" do
@@ -804,11 +847,53 @@ defmodule OperationTest do
       assert Def49Operation.run(%{"a" => 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
       assert Def49Operation.run(%{a: 1, bB: "1"}) == {:ok, %{a: 1, b: "1"}}
       assert Def49Operation.run(%{"a" => 1, bB: "1"}) == {:ok, %{a: 1, b: "1"}}
-      assert Def49Operation.run(%{"a" => 1, bB: 1}) == {:error, {:validation, %{b: ["has wrong type"]}}}
+
+      assert Def49Operation.run(%{"a" => 1, bB: 1}) ==
+               {:error, {:validation, %{b: ["has wrong type"]}}}
 
       assert Def50Operation.run(a: 1, b: "1") == {:ok, %{a: 1, b: "1"}}
       assert Def50Operation.run(aA: 1, bB: "1") == {:ok, %{a: 1, b: "1"}}
       assert Def50Operation.run(aA: 1, bB: 1) == {:error, {:validation, %{b: ["has wrong type"]}}}
     end
+  end
+
+  test ":inner check accepts opts as both map and keyword" do
+    defmodule Def51Operation do
+      use Exop.Operation
+
+      parameter :a, inner: [b: [type: :atom], c: [type: :string]]
+
+      def process(params), do: params
+    end
+
+    defmodule Def52Operation do
+      use Exop.Operation
+
+      parameter :a, inner: %{b: [type: :atom], c: [type: :string]}
+
+      def process(params), do: params
+    end
+
+    assert Def51Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
+
+    assert Def51Operation.run(a: []) ==
+             {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+
+    assert Def51Operation.run(a: %{}) ==
+             {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+
+    assert Def51Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
+    assert Def51Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
+
+    assert Def52Operation.run(a: :a) == {:error, {:validation, %{a: ["has wrong type"]}}}
+
+    assert Def52Operation.run(a: []) ==
+             {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+
+    assert Def52Operation.run(a: %{}) ==
+             {:error, {:validation, %{"a[:b]" => ["is required"], "a[:c]" => ["is required"]}}}
+
+    assert Def52Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
+    assert Def52Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
   end
 end

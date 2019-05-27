@@ -12,6 +12,8 @@ defmodule Exop.ValidationChecks do
     * check_struct/3
     * check_func/3
     * check_equals/3
+    * check_exactly/3
+    * check_allow_nil/3
   """
 
   alias Exop.TypeValidation
@@ -157,6 +159,10 @@ defmodule Exop.ValidationChecks do
     if number == check_value, do: true, else: %{item_name => "must be equal to #{check_value}"}
   end
 
+  defp check_number(number, item_name, {:eq, check_value}) do
+    check_number(number, item_name, {:equal_to, check_value})
+  end
+
   defp check_number(number, item_name, {:equals, check_value}) do
     check_number(number, item_name, {:equal_to, check_value})
   end
@@ -169,6 +175,10 @@ defmodule Exop.ValidationChecks do
     if number > check_value, do: true, else: %{item_name => "must be greater than #{check_value}"}
   end
 
+  defp check_number(number, item_name, {:gt, check_value}) do
+    check_number(number, item_name, {:greater_than, check_value})
+  end
+
   defp check_number(number, item_name, {:greater_than_or_equal_to, check_value}) do
     if number >= check_value,
       do: true,
@@ -179,14 +189,26 @@ defmodule Exop.ValidationChecks do
     check_number(number, item_name, {:greater_than_or_equal_to, check_value})
   end
 
+  defp check_number(number, item_name, {:gte, check_value}) do
+    check_number(number, item_name, {:greater_than_or_equal_to, check_value})
+  end
+
   defp check_number(number, item_name, {:less_than, check_value}) do
     if number < check_value, do: true, else: %{item_name => "must be less than #{check_value}"}
+  end
+
+  defp check_number(number, item_name, {:lt, check_value}) do
+    check_number(number, item_name, {:less_than, check_value})
   end
 
   defp check_number(number, item_name, {:less_than_or_equal_to, check_value}) do
     if number <= check_value,
       do: true,
       else: %{item_name => "must be less than or equal to #{check_value}"}
+  end
+
+  defp check_number(number, item_name, {:lte, check_value}) do
+    check_number(number, item_name, {:less_than_or_equal_to, check_value})
   end
 
   defp check_number(number, item_name, {:max, check_value}) do
@@ -400,10 +422,15 @@ defmodule Exop.ValidationChecks do
     check_item = get_check_item(check_items, item_name)
 
     check_result =
-      if :erlang.fun_info(check)[:arity] == 2 do
-        check.(check_items, check_item)
-      else
-        check.(check_items, item_name, check_item)
+      case :erlang.fun_info(check)[:arity] do
+        1 ->
+          check.(check_item)
+
+        2 ->
+          check.(check_items, check_item)
+
+        _ ->
+          check.(check_items, item_name, check_item)
       end
 
     case check_result do

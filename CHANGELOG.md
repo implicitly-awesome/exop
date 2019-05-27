@@ -13,6 +13,23 @@
 - `:length` and `:numericality` checks return an error for unsupported types (previously unsupported type passed the check)
 - `:coerce_with` now accepts only a 2-arity function with a coerced param tuple and a map of all received params (see README for more info)
 
+## [1.2.5] - 2019.04.11
+
+### Changes
+
+- allow to pass function of arity one to `func` validation
+
+## [1.2.4] - 2019.03.28
+
+### Changes
+
+- `use Exop.Chain` now accepts `:name_in_error` option: when it is set to `true` a failed operation in a chain returns the operation's module name as the first elements of output tuple `{YourOperation, {:error, _}}`
+- new `type: :uuid` check which supports both UUID1 and UUID4
+- new aliases for `:numericality` check (to make your code slim): `:eq, :gt, :gte, :lt, :lte`
+- `:inner` check now accepts opts as both map and keyword (earlier only map has been allowed)
+- a few macros (like `parameter`, `operation` etc.) `locals_without_parens` formatter rule has been exported. Place `import_deps: [:exop]` into your project's `.formatter.exs` file in order to use it.
+- `step/2` has been added as an alias for `Exop.Chain`'s `operation/2` macro
+
 ## [1.2.3] - 2019.02.06
 
 ### Changes

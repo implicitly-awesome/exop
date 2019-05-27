@@ -6,9 +6,13 @@ A library that helps you to organize your Elixir code in more domain-driven way.
 Exop provides macros which helps you to encapsulate business logic and offers you additionally:
 incoming params validation (with predefined contract), params coercion, policy check, fallback behavior and more.
 
-Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG.md) that was started from ver. 0.4.1 ¯\\\_(ツ)\_/¯
+### ExopData
+
+Interested in property-based testing? Check out new Exop family member - [ExopData](https://github.com/madeinussr/exop_data). If you use Exop to organize your code with ExopData you can get property generators in the most easiest way.
 
 ## Table of Contents
+
+Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG.md) that was started from ver. 0.4.1 ¯\\\_(ツ)\_/¯
 
 - [Installation](#installation)
 - [Operation definition](#operation-definition)
@@ -111,7 +115,7 @@ Checks whether a parameter's value is of declared type.
 parameter :some_param, type: :map
 ```
 
-Exop handle almost all Elixir types:
+Exop handle almost all Elixir types and some additional:
 
 - :boolean
 - :integer
@@ -124,10 +128,13 @@ Exop handle almost all Elixir types:
 - :atom
 - :module
 - :function
+- :uuid
 
 _Unknown type always generates ArgumentError exception on compile time._
 
 `module` 'type' means Exop expects a parameter's value to be an atom (a module name) and this module should be already loaded (ready to call it's functions)
+
+`uuid` is not actually a "type" but I placed this under `:type` check because there is no reason to have dedicated `:uuid` check.
 
 #### `required`
 
@@ -161,11 +168,11 @@ Checks whether a parameter's value is a number and other numeric constraints.
 All possible constraints are listed in the example below.
 
 ```elixir
-parameter :some_param, numericality: %{equal_to: 10, # (aliases: `equals`, `is`)
-                                       greater_than: 0,
-                                       greater_than_or_equal_to: 10 # (alias: `min`),
-                                       less_than: 20,
-                                       less_than_or_equal_to: 10 # (alias: `max`)}
+parameter :some_param, numericality: %{equal_to: 10, # (aliases: `equals`, `is`, `eq`)
+                                       greater_than: 0, # (alias: `gt`)
+                                       greater_than_or_equal_to: 10 # (aliases: `min`, `gte`),
+                                       less_than: 20, # (alias: `lt`)
+                                       less_than_or_equal_to: 10 # (aliases: `max`, `lte`)}
 ```
 
 #### `equals`
@@ -290,11 +297,15 @@ Checks whether an item is valid over custom validation function.
 If this function returns `false`, validation will fail with default message `"isn't valid"`.
 
 ```elixir
+# arity of 1
+parameter :some_param, func: &is_atom/1
+
+# arity of 2
 parameter :some_param, func: &__MODULE__.your_validation/2
 
 def your_validation(_params, param_value), do: !is_nil(param_value)
 
-# or with a function with arity of 3
+# arity of 3
 
 parameter :some_param, func: &__MODULE__.your_validation/3
 
@@ -314,6 +325,8 @@ end
 ```
 
 Therefore, validation will fail, if the function returns either `false` or `{:error, your_error_msg}` tuple.
+
+`func/1` receives one argument which is the actual parameter value to check.
 
 `func/2` receives two arguments: the first is a contract of an operation (parameters with their values),
 the second - the actual parameter value to check. So, now you can validate a parameter depending on other parameters values.
@@ -650,6 +663,11 @@ defmodule CreateUser do
   operation User.Create
   operation Backoffice.SaveStats
   operation Notifications.SendEmail
+
+  # or you can use step alias:
+  #   step User.Create
+  #   step Backoffice.SaveStats
+  #   step Notifications.SendEmail
 end
 ```
 
@@ -689,6 +707,23 @@ defmodule CreateUser do
   def logger, do: MyFancyLoggerModule
 end
 ```
+
+`use Exop.Chain` can take `:name_in_error` option, when it is set to `true` a failed operation in a chain returns the operation's module name as the first elements of output tuple `{YourOperation, {:error, _}}`
+
+```elixir
+defmodule YourChain do
+  use Exop.Chain, name_in_error: true
+
+  operation Op1
+  operation Op2Fail
+  operation Op3
+end
+
+iex> YourChain.run(a: "1", b: 2)
+{Op2Fail, {:error, {:validation, %{a: ["has wrong type"]}}}}
+```
+
+`name_in_error: true` doesn't affect operations with a fallback defined (unmodified fallback result is returned).
 
 ## LICENSE
 

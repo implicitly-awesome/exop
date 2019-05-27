@@ -26,6 +26,7 @@ defmodule Exop.Operation do
               {:ok, any}
               | Validation.validation_error()
               | {:interrupt, any}
+              | {:error, any}
               | :ok
               | no_return
 
@@ -82,7 +83,11 @@ defmodule Exop.Operation do
       Runs an operation's process/1 function after a contract validation
       """
       @spec run(Keyword.t() | map() | nil) ::
-              {:ok, any} | Validation.validation_error() | interrupt_result | auth_result
+              {:ok, any}
+              | Validation.validation_error()
+              | interrupt_result
+              | auth_result
+              | {:error, any}
       def run(received_params \\ %{})
 
       def run(received_params) when is_list(received_params) do

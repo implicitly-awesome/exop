@@ -362,8 +362,6 @@ end
 {:error, {:validation, %{b: ["doesn't allow nil", "has wrong type"]}}} = YourOperation.run(a: nil, b: nil)
 ```
 
-_By default (if you omit `allow_nil` attribute), a parameter is treated as `allow_nil: false`_
-
 #### from
 
 This option allows you to pass a parameter to `run/1` and `run!/1` functions with one name and work with this parameter within an operation under another name.

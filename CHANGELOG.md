@@ -12,6 +12,7 @@
 - `:length` doesnt work with numbers anymore
 - `:length` and `:numericality` checks return an error for unsupported types (previously unsupported type passed the check)
 - `:coerce_with` now accepts only a 2-arity function with a coerced param tuple and a map of all received params (see README for more info)
+- `defined_params/1` function has been removed, now `process/1` function takes only parameters defined in a operation's contract. You still can pass any parameters in `run/1` or `run!/1` but Exop will proceed only with parameters declared in the contract
 
 ## [1.2.5] - 2019.04.11
 

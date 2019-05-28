@@ -407,25 +407,6 @@ Why? Simply because sometimes you're not in control of incoming parameters but d
 
 _This option doesn't work for `:inner` check's inner parameters currently._
 
-### Defined params
-
-If for some reason you have to deal only with parameters that were defined in the contract,
-or you need to get a map of contract parameters with their values, you can get
-it with `defined_params/1` function.
-
-```elixir
-# ...
-parameter :a
-parameter :b, default: 2
-
-def process(params) do
-  params |> defined_params
-end
-# ...
-
-SomeOperation.run(a: 1, c: 3) # {:ok, %{a: 1, b: 2}}
-```
-
 ### Interrupt
 
 In some cases you might want to make an 'early return' from `process/1` function.
@@ -600,9 +581,11 @@ specify `return: false` option or just omit it in a fallback definition.
 
 As said earlier, operations in most cases called by `run/1` function. This function
 receives parameters collection. It's not required to pass to `run/1` function parameters
-only described in the operation's contract, but only described parameters will be validated.
+only described in the operation's contract, but only described parameters will be validated and gived to `process/1` function, all other will be filtered out from the process.
 
-`run/1` function validate received parameters over the contract and if all parameters passed
+_filtering out parameters which are not defined in a contract is here to support the whole idea of defining the right operation's contract and take care of what you really need for a certain business process / function_
+
+`run/1` function validates received parameters over the contract and if all parameters passed
 the validation, the `run/1` function calls the code defined in `process/1` function.
 
 ```elixir

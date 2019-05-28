@@ -100,7 +100,8 @@ defmodule Exop.Operation do
       end
 
       def run(%{} = received_params) do
-        params = resolve_from(received_params, @contract, received_params)
+        params = defined_params(received_params)
+        params = resolve_from(received_params, @contract, params)
         params = resolve_defaults(received_params, @contract, params)
 
         result = params |> resolve_coercions(@contract, params) |> output()
@@ -108,7 +109,7 @@ defmodule Exop.Operation do
         with {:ok, _} = result <- result do
           result
         else
-          error -> invoke_fallback(@fallback_module, received_params, error)
+          error -> invoke_fallback(@fallback_module, params, error)
         end
       end
 
@@ -171,7 +172,7 @@ defmodule Exop.Operation do
             received_params
             |> Map.get(alias_name, @no_value)
             |> put_param_value(resolved_params, contract_item_name)
-            |> Map.drop([alias_name])
+            |> Map.delete(alias_name)
           else
             resolved_params
           end
@@ -248,9 +249,8 @@ defmodule Exop.Operation do
       defp mod_err_msg(errors), do: "#{@module_name} errors: \n#{Validation.errors_message(errors)}"
 
       @spec defined_params(map()) :: map()
-      def defined_params(received_params) when is_map(received_params) do
-        keys_to_filter = Map.keys(received_params) -- Enum.map(@contract, & &1[:name])
-        Map.drop(received_params, keys_to_filter)
+      defp defined_params(received_params) when is_map(received_params) do
+        Map.take(received_params, Enum.map(@contract, & &1[:name]))
       end
 
       @spec interrupt(any) :: no_return()

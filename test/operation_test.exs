@@ -113,36 +113,6 @@ defmodule OperationTest do
            ]
   end
 
-  test "defined_params/0: returns params that were defined in the contract, filter out others" do
-    defmodule Def4Operation do
-      use Exop.Operation
-
-      parameter :a
-      parameter :b
-
-      def process(params) do
-        params |> defined_params
-      end
-    end
-
-    assert Def4Operation.run(a: 1, b: 2, c: 3) == {:ok, %{a: 1, b: 2}}
-  end
-
-  test "defined_params/0: respects defaults" do
-    defmodule Def5Operation do
-      use Exop.Operation
-
-      parameter :a
-      parameter :b, default: 2
-
-      def process(params) do
-        params |> defined_params
-      end
-    end
-
-    assert Def5Operation.run(a: 1, c: 3) == {:ok, %{a: 1, b: 2}}
-  end
-
   test "run/1: returns the last defined value for duplicated keys" do
     defmodule Def6Operation do
       use Exop.Operation
@@ -895,5 +865,20 @@ defmodule OperationTest do
 
     assert Def52Operation.run(a: [b: :b, c: "c"]) == {:ok, %{a: [b: :b, c: "c"]}}
     assert Def52Operation.run(a: %{b: :b, c: "c"}) == {:ok, %{a: %{b: :b, c: "c"}}}
+  end
+
+  defmodule Def53Operation do
+    use Exop.Operation
+
+    parameter :a, type: :integer
+    parameter :b, type: :string
+
+    def process(params), do: params
+  end
+
+  test "process/1 takes only params defined in the contract" do
+    result = Def53Operation.run!(a: 1, b: "1", c: 2)
+
+    assert [:a, :b] = Map.keys(result)
   end
 end

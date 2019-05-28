@@ -1,4 +1,4 @@
-## [1.3.0] - Future
+## [1.3.0] - 2019.05.28
 
 **breaking changes in this version!**
 

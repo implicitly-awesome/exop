@@ -103,15 +103,19 @@ defmodule Exop.Validation do
   end
 
   defp validate_params(%{name: name, opts: opts} = _contract_item, received_params) do
+    # see changelog for ver. 1.2.0: everything except `required: false` is `required: true`
+    opts = explicit_required(opts)
+
     is_nil? =
       check_item_present?(received_params, name) && is_nil(get_check_item(received_params, name))
 
-    if is_nil? and opts[:allow_nil] == true do
-      []
+    if is_nil? do
+      if opts[:allow_nil] == true do
+        []
+      else
+        [Exop.ValidationChecks.check_allow_nil(received_params, name, false)]
+      end
     else
-      # see changelog for ver. 1.2.0: everything except `required: false` is `required: true`
-      opts = explicit_required(opts)
-
       for {check_name, check_params} <- opts, into: [] do
         check_function_name = String.to_atom("check_#{check_name}")
 

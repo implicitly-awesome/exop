@@ -1,3 +1,7 @@
+## [1.3.1] - yyyy.MM.dd
+
+- `allow_nil` check behavior bug has been fixed (default value and validations skipping)
+
 ## [1.3.0] - 2019.05.28
 
 **breaking changes in this version!**

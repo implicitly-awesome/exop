@@ -394,13 +394,10 @@ defmodule OperationTest do
 
       parameter :param
 
-      def process(params) do
-        if params[:param], do: params[:param], else: {:error, :ooops}
-      end
+      def process(params), do: {:error, :ooops}
     end
 
-    assert Def25Operation.run(param: 111) == {:ok, 111}
-    assert Def25Operation.run(param: nil) == {:error, :ooops}
+    assert Def25Operation.run(param: 111) == {:error, :ooops}
   end
 
   test "run!/1: returns unwrapped error tuple if process/1 returns it" do
@@ -409,13 +406,10 @@ defmodule OperationTest do
 
       parameter :param
 
-      def process(params) do
-        if params[:param], do: params[:param], else: {:error, :ooops}
-      end
+      def process(params), do: {:error, :ooops}
     end
 
-    assert Def26Operation.run!(param: 111) == 111
-    assert Def26Operation.run!(param: nil) == {:error, :ooops}
+    assert Def26Operation.run!(param: 111) == {:error, :ooops}
   end
 
   test "custom validation function takes a contract as the first parameter" do
@@ -578,8 +572,7 @@ defmodule OperationTest do
       assert Def36Operation.run(a: nil) == {:ok, %{a: nil}}
       assert Def36Operation.run(b: 1) == {:ok, %{b: 1}}
 
-      assert Def36Operation.run(b: nil) ==
-               {:error, {:validation, %{b: ["doesn't allow nil", "has wrong type"]}}}
+      assert Def36Operation.run(b: nil) == {:error, {:validation, %{b: ["doesn't allow nil"]}}}
     end
 
     test "skips all checks" do
@@ -594,6 +587,8 @@ defmodule OperationTest do
 
         parameter :b, allow_nil: true, func: &__MODULE__.nil_check/2, required: false
 
+        parameter :c, type: :integer, allow_nil: false, required: false
+
         def nil_check(_, nil), do: {:error, :this_is_nil}
 
         def process(params), do: params
@@ -606,6 +601,8 @@ defmodule OperationTest do
                {:error, {:validation, %{a: ["not a number", "has wrong type"]}}}
 
       assert Def37Operation.run(b: nil) == {:ok, %{b: nil}}
+
+      assert Def37Operation.run(c: nil) == {:error, {:validation, %{c: ["doesn't allow nil"]}}}
     end
 
     test "required: false + allow_nil: false" do
@@ -621,6 +618,19 @@ defmodule OperationTest do
       assert Def37aOperation.run() == {:ok, %{}}
       assert Def37aOperation.run(a: nil) == {:error, {:validation, %{a: ["doesn't allow nil"]}}}
     end
+
+    test "allow_nil: false by default" do
+      defmodule Def37bOperation do
+        use Exop.Operation
+
+        parameter :a, type: :atom
+
+        def process(params), do: params
+      end
+
+      assert Def37bOperation.run(a: :atom) == {:ok, %{a: :atom}}
+      assert Def37bOperation.run(a: nil) == {:error, {:validation, %{a: ["doesn't allow nil"]}}}
+    end
   end
 
   describe "when parameter is required" do
@@ -633,7 +643,7 @@ defmodule OperationTest do
         def process(params), do: params
       end
 
-      assert Def38Operation.run(a: nil) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def38Operation.run(a: nil) == {:error, {:validation, %{a: ["doesn't allow nil"]}}}
       assert Def38Operation.run() == {:error, {:validation, %{a: ["is required"]}}}
     end
 
@@ -659,7 +669,7 @@ defmodule OperationTest do
         def process(params), do: params
       end
 
-      assert Def40Operation.run(a: nil) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def40Operation.run(a: nil) == {:error, {:validation, %{a: ["doesn't allow nil"]}}}
       assert Def40Operation.run() == {:ok, %{a: 7}}
     end
   end
@@ -674,7 +684,7 @@ defmodule OperationTest do
         def process(params), do: params
       end
 
-      assert Def41Operation.run(a: nil) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def41Operation.run(a: nil) == {:error, {:validation, %{a: ["doesn't allow nil"]}}}
       assert Def41Operation.run() == {:ok, %{}}
     end
 
@@ -700,7 +710,7 @@ defmodule OperationTest do
         def process(params), do: params
       end
 
-      assert Def43Operation.run(a: nil) == {:error, {:validation, %{a: ["has wrong type"]}}}
+      assert Def43Operation.run(a: nil) == {:error, {:validation, %{a: ["doesn't allow nil"]}}}
       assert Def43Operation.run() == {:ok, %{a: 7}}
     end
   end

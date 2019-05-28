@@ -1,6 +1,17 @@
 sudo: false
 language: elixir
 elixir:
-  - 1.3.0
+  - 1.6.0
+  - 1.6.6
+  - 1.7.0
+  - 1.8.0
 otp_release:
-  - 18.3
+  - 19.0
+  - 20.0
+  - 21.0
+matrix:
+  exclude:
+    - elixir: 1.6.0
+      otp_release: 21.0
+    - elixir: 1.8.0
+      otp_release: 19.0

@@ -31,6 +31,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
     - [list_item](#list_item)
     - [func](#func)
     - [allow_nil](#allow_nil)
+    - [from](#from)
   - [Defined params](#defined-params)
   - [Interrupt](#interrupt)
   - [Coercion](#coercion)
@@ -44,7 +45,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.2.5"}]
+  [{:exop, "~> 1.3.0"}]
 end
 ```
 
@@ -55,7 +56,7 @@ defmodule IntegersDivision do
   use Exop.Operation
 
   parameter :a, type: :integer, default: 1
-  parameter :b, type: :integer, required: true,
+  parameter :b, type: :integer, required: false,
                 numericality: %{greater_than: 0}
 
   def process(params) do
@@ -129,7 +130,7 @@ Exop handle almost all Elixir types and some additional:
 - :function
 - :uuid
 
-_Unknown type always passes this check._
+_Unknown type always generates ArgumentError exception on compile time._
 
 `module` 'type' means Exop expects a parameter's value to be an atom (a module name) and this module should be already loaded (ready to call it's functions)
 
@@ -226,7 +227,7 @@ Checks the length of a parameter's value. The value should be one of handled typ
 All possible checks are listed in the example below.
 
 ```elixir
-parameter :some_param, length: %{min: 5, max: 10, is: 7, in: 5..8}
+parameter :some_param, length: %{gte: 5, gt: 4, min: 5, lte: 10, lt: 9, max: 10, is: 7, in: 5..8}
 ```
 
 #### `inner`
@@ -238,13 +239,14 @@ related inner items.
 # some_param = %{a: 3, b: "inner_b_attr"}
 
 parameter :some_param, type: :map, inner: %{
-  a: [type: :integer, required: true],
+  a: [type: :integer],
   b: [type: :string, length: %{min: 1, max: 6}]
 }
 
-# you can omit `type` check while you're passing either Map or Keyword to an operation
-parameter :some_param, inner: %{
-  a: [type: :integer, required: true],
+# you can omit `type` and `inner` checks keywords in order to check inner of your parameter,
+# when `type` hasn't been specified explicitly, both keyword and map types pass the `type` validation
+parameter :some_param, %{
+  a: [type: :integer],
   b: [type: :string, length: %{min: 1, max: 6}]
 }
 ```
@@ -282,7 +284,7 @@ Even more complex like `inner`:
 # ]
 
 parameter :list_param, list_item: %{inner: %{
-                                              a: %{type: :integer, required: true},
+                                              a: %{type: :integer},
                                               b: %{type: :string, length: %{min: 7}}
                                             }}
 ```
@@ -362,24 +364,48 @@ end
 
 _By default (if you omit `allow_nil` attribute), a parameter is treated as `allow_nil: false`_
 
-### Defined params
+#### from
 
-If for some reason you have to deal only with parameters that were defined in the contract,
-or you need to get a map of contract parameters with their values, you can get
-it with `defined_params/1` function.
+This option allows you to pass a parameter to `run/1` and `run!/1` functions with one name and work with this parameter within an operation under another name.
 
 ```elixir
-# ...
-parameter :a
-parameter :b, default: 2
+defmodule YourOperation do
+  use Exop.Operation
 
-def process(params) do
-  params |> defined_params
+  parameter :a, type: :integer, from: "a"
+  parameter :b, type: :string, from: :bB
+
+  def process(params), do: params
 end
-# ...
 
-SomeOperation.run(a: 1, c: 3) # {:ok, %{a: 1, b: 2}}
+# now you can invoke YourOperation with such params:
+#   Youroperation.run(%{"a" => 1, b: "1"})
+#   Youroperation.run(%{a: 1, bB: "1"})
+#   Youroperation.run(%{"a" => 1, bB: "1"})
+# and get:
+#   {:ok, %{a: 1, b: "1"}}
 ```
+
+The same works for parameters given as a Keyword as well (in this case `:from` value should be an atom):
+
+```elixir
+defmodule YourOperation do
+  use Exop.Operation
+
+  parameter :a, type: :integer, from: :aA
+  parameter :b, type: :string, from: :bB
+
+  def process(params), do: params
+end
+
+# Youroperation.run(a: 1, b: "1")
+# Youroperation.run(aA: 1, bB: "1")
+# {:ok, %{a: 1, b: "1"}}
+```
+
+Why? Simply because sometimes you're not in control of incoming parameters but don't want to map them each time you need to use'em by yourself (good example: params in Phoenix controller's action, which come as a map with string keys).
+
+_This option doesn't work for `:inner` check's inner parameters currently._
 
 ### Interrupt
 
@@ -410,17 +436,27 @@ The flow looks like: `Resolve param default value -> Coerce -> Validate coerced`
 
 If coercion function returns an error tuple it will be treated as validation failure: an operation's invokation stops and that error tuple will be returned as a result.
 
+`:coerce_with` accepts 2-arity function. This function takes a tuple `{coerced_param_name, coerced_param_value}` as the first argument and a map with all the parameters that have been passed to either `run/1` or `run!/1` function as the second argument.
+
 ```elixir
-parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1
+parameter :a, type: :integer
+parameter :b, type: :string, coerce_with: &__MODULE__.to_string/2
+parameter :c, type: :string, coerce_with: &__MODULE__.to_string/2
 
-def coerce(param_value), do: param_value * 2
+def to_string({_, value}, %{a: _, b: _, c: _} = _received_params) when is_integer(value) do
+  Integer.to_string(c_value)
+end
 
-# or with a function with arity of 2
+def to_string({_, value}, _received_params) when is_binary(c_value) do
+  value
+end
 
-parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/2
-
-def coerce(:some_param = _param_name, param_value), do: param_value * 2
+def to_string({:c, c_value}, _received_params) do
+  # special coercion for :c parameter here
+end
 ```
+
+_Why it is so? Because there are cases when you can use the same coercion function for multiple params and/or coerce a parameter depending on another's value and need to have all this information._
 
 ### Policy check
 
@@ -455,7 +491,7 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
 
     policy MonthlyReportPolicy, :can_read?
 
-    parameter :user, required: true, struct: %User{}
+    parameter :user, struct: %User{}
 
     def process(%{user: %User{} = user}) do
       # make some reading...
@@ -471,7 +507,7 @@ _Bear in mind: only `true` return-value treated as true, everything else returne
 
     policy MonthlyReportPolicy, :can_read?
 
-    parameter :user, required: true, struct: %User{}
+    parameter :user, struct: %User{}
 
     def process(params) do
       authorize(params.user)
@@ -545,9 +581,11 @@ specify `return: false` option or just omit it in a fallback definition.
 
 As said earlier, operations in most cases called by `run/1` function. This function
 receives parameters collection. It's not required to pass to `run/1` function parameters
-only described in the operation's contract, but only described parameters will be validated.
+only described in the operation's contract, but only described parameters will be validated and gived to `process/1` function, all other will be filtered out from the process.
 
-`run/1` function validate received parameters over the contract and if all parameters passed
+_filtering out parameters which are not defined in a contract is here to support the whole idea of defining the right operation's contract and take care of what you really need for a certain business process / function_
+
+`run/1` function validates received parameters over the contract and if all parameters passed
 the validation, the `run/1` function calls the code defined in `process/1` function.
 
 ```elixir
@@ -622,7 +660,7 @@ This is how invoke this chain:
 iex> CreateUser.run(name: "User Name", age: 37, gender: "m")
 ```
 
-`Exop.Chain` defines `run/1` function under the hood (like common operations do) that takes `keyword()` or `map()` of params.
+`Exop.Chain` defines `run/1` function under the hood (like common operations do) that accepts `keyword()`, `map()` or `struct()` as params.
 Those params will be passed into the first operation in the chain.
 Bear in mind that each of chained operations (except the first one) awaits a returned result of
 a previous operation as incoming params.

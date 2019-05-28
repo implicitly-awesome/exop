@@ -10,8 +10,8 @@ defmodule Exop.Mixfile do
   def project do
     [
       app: :exop,
-      version: "1.2.5",
-      elixir: "~> 1.3",
+      version: "1.3.0",
+      elixir: ">= 1.6.0",
       name: "Exop",
       description: @description,
       package: package(),
@@ -31,15 +31,16 @@ defmodule Exop.Mixfile do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.12", only: [:dev, :test, :docs]},
-      {:dialyxir, "~> 1.0.0-rc.3", only: [:dev], runtime: false}
+      {:mock, "~> 0.1", only: :test},
+      {:ex_doc, "~> 0.20", only: [:dev, :test, :docs]},
+      {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false}
     ]
   end
 
   defp package do
     [
       files: ["lib", "mix.exs", "README.md", "LICENSE"],
-      maintainers: ["Andrey Chernykh"],
+      maintainers: ["Andrey Chernykh", "Aleksandr Fomin"],
       licenses: ["MIT"],
       links: %{"Github" => "https://github.com/madeinussr/exop"}
     ]

@@ -52,8 +52,8 @@ defmodule ValidationChecksTest do
     assert check_type(%{}, :a, :integer) == true
   end
 
-  test "check_type/3: returns true if item is of unhandled type" do
-    assert check_type(%{a: 1}, :a, :unhandled) == true
+  test "check_type/3: returns false if item is of unknown type" do
+    assert %{a: "has wrong type"} == check_type(%{a: 1}, :a, :unknown)
   end
 
   test "check_type/3: returns true if item is one of handled type" do
@@ -202,36 +202,68 @@ defmodule ValidationChecksTest do
 
   test "check_length/3: successes" do
     assert check_length(%{a: "123"}, :a, %{min: 0}) == [true]
+    assert check_length(%{a: "123"}, :a, %{gte: 0}) == [true]
+    assert check_length(%{a: "123"}, :a, %{gte: 3}) == [true]
+    assert check_length(%{a: "123"}, :a, %{gt: 0}) == [true]
     assert check_length(%{a: "123"}, :a, %{max: 4}) == [true]
+    assert check_length(%{a: "123"}, :a, %{lte: 4}) == [true]
+    assert check_length(%{a: "123"}, :a, %{lte: 3}) == [true]
+    assert check_length(%{a: "123"}, :a, %{lt: 4}) == [true]
     assert check_length(%{a: "123"}, :a, %{is: 3}) == [true]
     assert check_length(%{a: "123"}, :a, %{in: 2..4}) == [true]
 
-    assert check_length(%{a: 3}, :a, %{min: 0}) == [true]
-    assert check_length(%{a: 3}, :a, %{max: 4}) == [true]
-    assert check_length(%{a: 3}, :a, %{is: 3}) == [true]
-    assert check_length(%{a: 3}, :a, %{in: 2..4}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{min: 0}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{gte: 0}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{gte: 2}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{gt: 0}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{max: 4}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{lte: 4}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{lte: 2}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{lt: 4}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{is: 2}) == [true]
+    assert check_length(%{a: %{b: 1, c: 2}}, :a, %{in: 2..4}) == [true]
 
     assert check_length(%{a: ~w(1 2 3)}, :a, %{min: 0}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{gte: 0}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{gte: 3}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{gt: 0}) == [true]
     assert check_length(%{a: ~w(1 2 3)}, :a, %{max: 4}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{lte: 4}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{lte: 3}) == [true]
+    assert check_length(%{a: ~w(1 2 3)}, :a, %{lt: 4}) == [true]
     assert check_length(%{a: ~w(1 2 3)}, :a, %{is: 3}) == [true]
     assert check_length(%{a: ~w(1 2 3)}, :a, %{in: 2..4}) == [true]
   end
 
   test "check_length/3: fails" do
     [%{a: _}] = check_length(%{a: "123"}, :a, %{min: 4})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{gte: 4})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{gt: 4})
     [%{a: _}] = check_length(%{a: "123"}, :a, %{max: 2})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{lte: 2})
+    [%{a: _}] = check_length(%{a: "123"}, :a, %{lt: 2})
     [%{a: _}] = check_length(%{a: "123"}, :a, %{is: 4})
     [%{a: _}] = check_length(%{a: "123"}, :a, %{in: 4..6})
 
     [%{a: _}] = check_length(%{a: 3}, :a, %{min: 4})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{gte: 4})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{gt: 4})
     [%{a: _}] = check_length(%{a: 3}, :a, %{max: 2})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{lte: 2})
+    [%{a: _}] = check_length(%{a: 3}, :a, %{lt: 2})
     [%{a: _}] = check_length(%{a: 3}, :a, %{is: 4})
     [%{a: _}] = check_length(%{a: 3}, :a, %{in: 4..6})
 
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{min: 4})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{gte: 4})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{gt: 4})
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{max: 2})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{lte: 2})
+    [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{lt: 2})
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{is: 4})
     [%{a: _}] = check_length(%{a: ~w(1 2 3)}, :a, %{in: 4..6})
+
+    [%{a: "unknown check 'qwerty'"}] = check_length(%{a: ~w(1 2 3)}, :a, %{qwerty: 4})
   end
 
   test "check_struct/3: successes" do
@@ -243,17 +275,30 @@ defmodule ValidationChecksTest do
 
   test "check_struct/3: fails" do
     assert check_struct(%{a: %TestStruct2{}}, :a, %TestStruct{}) == %{a: "is not expected struct"}
-    assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{}) == %{a: "is not expected struct"}
-    assert check_struct(%{a: %TestStruct2{}}, :a, %TestStruct{qwerty: "123"}) == %{a: "is not expected struct"}
-    assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{qwerty: "123"}) == %{a: "is not expected struct"}
+
+    assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{}) == %{
+             a: "is not expected struct"
+           }
+
+    assert check_struct(%{a: %TestStruct2{}}, :a, %TestStruct{qwerty: "123"}) == %{
+             a: "is not expected struct"
+           }
+
+    assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{qwerty: "123"}) == %{
+             a: "is not expected struct"
+           }
+
     assert check_struct(%{a: %TestStruct2{}}, :a, TestStruct) == %{a: "is not expected struct"}
-    assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, TestStruct) == %{a: "is not expected struct"}
+
+    assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, TestStruct) == %{
+             a: "is not expected struct"
+           }
   end
 
   test "check_equals/3: success" do
     assert check_equals(%{a: 1.0}, :a, 1.0) == true
     assert check_equals(%{a: :a}, :a, :a) == true
-    assert check_equals(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 3]) == true
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, b: 2, c: 3) == true
     assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}, {:c, 3}]) == true
     assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, c: 3}) == true
   end
@@ -262,15 +307,18 @@ defmodule ValidationChecksTest do
     assert check_equals(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1"}
     assert check_equals(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1"}
     assert check_equals(%{a: :a}, :a, :b) == %{a: "must be equal to :b"}
-    assert check_equals(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 1]) == %{a: "must be equal to [b: 2, c: 1]"}
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, b: 2, c: 1) == %{a: "must be equal to [b: 2, c: 1]"}
     assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{a: "must be equal to [b: 2]"}
-    assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{a: "must be equal to %{b: 2, d: 3}"}
+
+    assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{
+             a: "must be equal to %{b: 2, d: 3}"
+           }
   end
 
   test "check_exactly/3: success" do
     assert check_exactly(%{a: 1.0}, :a, 1.0) == true
     assert check_exactly(%{a: :a}, :a, :a) == true
-    assert check_exactly(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 3]) == true
+    assert check_exactly(%{a: [b: 2, c: 3]}, :a, b: 2, c: 3) == true
     assert check_exactly(%{a: [b: 2, c: 3]}, :a, [{:b, 2}, {:c, 3}]) == true
     assert check_exactly(%{a: %{b: 2, c: 3}}, :a, %{b: 2, c: 3}) == true
   end
@@ -279,9 +327,16 @@ defmodule ValidationChecksTest do
     assert check_exactly(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1"}
     assert check_exactly(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1"}
     assert check_exactly(%{a: :a}, :a, :b) == %{a: "must be equal to :b"}
-    assert check_exactly(%{a: [b: 2, c: 3]}, :a, [b: 2, c: 1]) == %{a: "must be equal to [b: 2, c: 1]"}
+
+    assert check_exactly(%{a: [b: 2, c: 3]}, :a, b: 2, c: 1) == %{
+             a: "must be equal to [b: 2, c: 1]"
+           }
+
     assert check_exactly(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{a: "must be equal to [b: 2]"}
-    assert check_exactly(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{a: "must be equal to %{b: 2, d: 3}"}
+
+    assert check_exactly(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{
+             a: "must be equal to %{b: 2, d: 3}"
+           }
   end
 
   def validation(params, :a, param_value), do: validation(params, param_value)
@@ -309,7 +364,10 @@ defmodule ValidationChecksTest do
 
   test "check_func/3: fails" do
     assert check_func(%{a: 98}, :a, &__MODULE__.validation/2) == %{a: "isn't valid"}
-    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/2) == %{a: "Custom error message"}
+
+    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/2) == %{
+             a: "Custom error message"
+           }
   end
 
   test "check_func/3: validation func can expect 3 args: params, param_name and param_value " do
@@ -318,7 +376,11 @@ defmodule ValidationChecksTest do
     assert check_func(%{b: 100}, :b, &__MODULE__.validation_verbose/3) == %{b: "isn't valid"}
 
     assert check_func(%{a: 98}, :a, &__MODULE__.validation/3) == %{a: "isn't valid"}
-    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/3) == %{a: "Custom error message"}
+
+    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/3) == %{
+             a: "Custom error message"
+           }
+
     assert check_func(%{b: 98}, :b, &__MODULE__.validation_verbose/3) == %{b: "isn't valid"}
   end
 
@@ -328,7 +390,11 @@ defmodule ValidationChecksTest do
     assert check_numericality(%{a: 3}, :a, %{is: 3}) == true
     assert check_numericality(%{a: 2}, :a, %{is: 3}) == [%{a: "must be equal to 3"}]
     assert check_numericality(%{a: 3}, :a, %{min: 1}) == true
-    assert check_numericality(%{a: 1}, :a, %{min: 3}) == [%{a: "must be greater than or equal to 3"}]
+
+    assert check_numericality(%{a: 1}, :a, %{min: 3}) == [
+             %{a: "must be greater than or equal to 3"}
+           ]
+
     assert check_numericality(%{a: 1}, :a, %{max: 3}) == true
     assert check_numericality(%{a: 3}, :a, %{max: 1}) == [%{a: "must be less than or equal to 1"}]
   end

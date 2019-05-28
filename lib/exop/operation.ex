@@ -16,7 +16,7 @@ defmodule Exop.Operation do
       end
   """
 
-  alias Exop.Validation
+  alias Exop.{Validation, TypeValidation}
 
   @doc """
   Operation's entry point. Takes defined contract as the single parameter.
@@ -26,6 +26,7 @@ defmodule Exop.Operation do
               {:ok, any}
               | Validation.validation_error()
               | {:interrupt, any}
+              | {:error, any}
               | :ok
               | no_return
 
@@ -48,7 +49,7 @@ defmodule Exop.Operation do
   end
 
   defmacro __before_compile__(_env) do
-    quote do
+    quote generated: true, location: :keep do
       alias Exop.Utils
       alias Exop.Validation
       alias Exop.ValidationChecks
@@ -63,6 +64,7 @@ defmodule Exop.Operation do
 
       @exop_interruption :exop_interruption
       @exop_auth_error :exop_auth_error
+      @no_value :exop_no_value
 
       if is_nil(@contract) || Enum.count(@contract) == 0 do
         file = String.to_charlist(__ENV__.file())
@@ -81,26 +83,33 @@ defmodule Exop.Operation do
       @doc """
       Runs an operation's process/1 function after a contract validation
       """
-      @spec run(Keyword.t() | map() | nil) ::
-              {:ok, any} | Validation.validation_error() | interrupt_result | auth_result
+      @spec run(Keyword.t() | map() | struct() | nil) ::
+              {:ok, any}
+              | Validation.validation_error()
+              | interrupt_result
+              | auth_result
+              | {:error, any}
       def run(received_params \\ %{})
 
       def run(received_params) when is_list(received_params) do
         received_params |> Enum.into(%{}) |> run()
       end
 
-      def run(received_params) when is_map(received_params) do
-        params = resolve_defaults(received_params, @contract, received_params)
+      def run(%_{} = received_params) do
+        received_params |> Map.from_struct() |> run()
+      end
 
-        result =
-          params
-          |> resolve_coercions(@contract, params)
-          |> output()
+      def run(%{} = received_params) do
+        params = defined_params(received_params)
+        params = resolve_from(received_params, @contract, params)
+        params = resolve_defaults(received_params, @contract, params)
+
+        result = params |> resolve_coercions(@contract, params) |> output()
 
         with {:ok, _} = result <- result do
           result
         else
-          error -> invoke_fallback(@fallback_module, received_params, error)
+          error -> invoke_fallback(@fallback_module, params, error)
         end
       end
 
@@ -127,11 +136,7 @@ defmodule Exop.Operation do
         end
       end
 
-      @spec resolve_defaults(
-              Keyword.t() | map(),
-              list(%{name: atom, opts: Keyword.t()}),
-              Keyword.t() | map()
-            ) :: Keyword.t() | map()
+      @spec resolve_defaults(map(), list(%{name: atom, opts: Keyword.t()}), map()) :: map()
       defp resolve_defaults(_received_params, [], resolved_params), do: resolved_params
 
       defp resolve_defaults(
@@ -144,7 +149,7 @@ defmodule Exop.Operation do
                !ValidationChecks.check_item_present?(received_params, contract_item_name) do
             contract_item_opts
             |> Keyword.get(:default)
-            |> put_into_collection(resolved_params, contract_item_name)
+            |> put_param_value(resolved_params, contract_item_name)
           else
             resolved_params
           end
@@ -152,11 +157,31 @@ defmodule Exop.Operation do
         resolve_defaults(received_params, contract_tail, resolved_params)
       end
 
-      @spec resolve_coercions(
-              Keyword.t() | map(),
-              list(%{name: atom() | String.t(), opts: Keyword.t()}),
-              Keyword.t() | map()
-            ) :: Keyword.t() | map()
+      @spec resolve_from(map(), list(%{name: atom, opts: Keyword.t()}), map()) :: map()
+      defp resolve_from(_received_params, [], resolved_params), do: resolved_params
+
+      defp resolve_from(
+             received_params,
+             [%{name: contract_item_name, opts: contract_item_opts} | contract_tail],
+             resolved_params
+           ) do
+        alias_name = Keyword.get(contract_item_opts, :from)
+
+        resolved_params =
+          if alias_name do
+            received_params
+            |> Map.get(alias_name, @no_value)
+            |> put_param_value(resolved_params, contract_item_name)
+            |> Map.delete(alias_name)
+          else
+            resolved_params
+          end
+
+        resolve_from(received_params, contract_tail, resolved_params)
+      end
+
+      @spec resolve_coercions(map(), list(%{name: atom() | String.t(), opts: Keyword.t()}), map()) ::
+              map()
       defp resolve_coercions(_received_params, [], coerced_params), do: coerced_params
 
       defp resolve_coercions(
@@ -166,17 +191,11 @@ defmodule Exop.Operation do
            ) do
         coerced_params =
           if Keyword.has_key?(contract_item_opts, :coerce_with) do
-            coerce_with = Keyword.get(contract_item_opts, :coerce_with)
+            coerce_func = Keyword.get(contract_item_opts, :coerce_with)
             check_item = ValidationChecks.get_check_item(coerced_params, contract_item_name)
+            coerced_value = coerce_func.({contract_item_name, check_item}, received_params)
 
-            coerced_value =
-              if :erlang.fun_info(coerce_with)[:arity] == 1 do
-                coerce_with.(check_item)
-              else
-                coerce_with.(contract_item_name, check_item)
-              end
-
-            put_into_collection(coerced_value, coerced_params, contract_item_name)
+            put_param_value(coerced_value, coerced_params, contract_item_name)
           else
             coerced_params
           end
@@ -184,21 +203,16 @@ defmodule Exop.Operation do
         resolve_coercions(received_params, contract_tail, coerced_params)
       end
 
-      @spec put_into_collection(any(), Keyword.t() | map(), atom() | String.t()) ::
+      @spec put_param_value(any(), Keyword.t() | map(), atom() | String.t()) ::
               Keyword.t() | map()
-      defp put_into_collection(value, collection, item_name) when is_map(collection) do
+      defp put_param_value(@no_value, collection, _item_name), do: collection
+
+      defp put_param_value(value, collection, item_name) when is_map(collection) do
         Map.put(collection, item_name, value)
       end
 
-      defp put_into_collection(value, collection, item_name) when is_list(collection) do
-        Keyword.put(collection, item_name, value)
-      end
-
-      @spec output(Keyword.t() | map()) ::
-              {:ok, any()}
-              | {:error, any()}
-              | Validation.validation_error()
-              | interrupt_result
+      @spec output(map()) ::
+              {:ok, any()} | {:error, any()} | Validation.validation_error() | interrupt_result
       defp output(params) do
         case Enum.find(params, fn
                {_, {:error, error_msg}} -> true
@@ -209,10 +223,8 @@ defmodule Exop.Operation do
         end
       end
 
-      @spec output(Keyword.t() | map(), :ok | {:error, {:validation, map()}}) ::
-              {:ok, any()}
-              | Validation.validation_error()
-              | interrupt_result
+      @spec output(map(), :ok | {:error, {:validation, map()}}) ::
+              {:ok, any()} | Validation.validation_error() | interrupt_result
       defp output(params, :ok = _validation_result) do
         try do
           result = process(params)
@@ -237,9 +249,8 @@ defmodule Exop.Operation do
       defp mod_err_msg(errors), do: "#{@module_name} errors: \n#{Validation.errors_message(errors)}"
 
       @spec defined_params(map()) :: map()
-      def defined_params(received_params) when is_map(received_params) do
-        keys_to_filter = Map.keys(received_params) -- Enum.map(@contract, & &1[:name])
-        Map.drop(received_params, keys_to_filter)
+      defp defined_params(received_params) when is_map(received_params) do
+        Map.take(received_params, Enum.map(@contract, & &1[:name]))
       end
 
       @spec interrupt(any) :: no_return()
@@ -367,7 +378,21 @@ defmodule Exop.Operation do
   """
   defmacro parameter(name, opts \\ []) when is_atom(name) or is_binary(name) do
     quote bind_quoted: [name: name, opts: opts] do
-      @contract %{name: name, opts: opts}
+      type_check = opts[:type]
+
+      if is_nil(type_check) or TypeValidation.type_supported?(type_check) do
+        if is_map(opts) do
+          @contract %{name: name, opts: [inner: opts]}
+        else
+          @contract %{name: name, opts: opts}
+        end
+      else
+        raise ArgumentError,
+              "Unknown type check `#{inspect(type_check)}` for parameter `#{inspect(name)}` in module `#{
+                __MODULE__ |> Module.split() |> Enum.join(".")
+              }`, " <>
+                "supported type checks are `:#{Enum.join(TypeValidation.known_types(), "`, `:")}`."
+      end
     end
   end
 

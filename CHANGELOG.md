@@ -1,3 +1,19 @@
+## [1.3.0] - 2019.05.28
+
+**breaking changes in this version!**
+
+- Exop supports elixir >= 1.6.0
+- behaviour of unknown type checks has been changed. Now it generates ArgumentError exception on compile time if type check is not supported.
+- `YourOperation.run/1` now accepts structs as well as keywords and maps
+- implicit inner: now you can omit `type` and `inner` checks keywords in order to check inner of your parameter
+- ex_doc 0.20 (better docs)
+- `:from` parameter option to be able pass one name of a parameter and work with it within an operation under another name
+- new checks for `:length`: `gte`, `gt`, `lte`, `lt`
+- `:length` doesnt work with numbers anymore
+- `:length` and `:numericality` checks return an error for unsupported types (previously unsupported type passed the check)
+- `:coerce_with` now accepts only a 2-arity function with a coerced param tuple and a map of all received params (see README for more info)
+- `defined_params/1` function has been removed, now `process/1` function takes only parameters defined in a operation's contract. You still can pass any parameters in `run/1` or `run!/1` but Exop will proceed only with parameters declared in the contract
+
 ## [1.2.5] - 2019.04.11
 
 ### Changes

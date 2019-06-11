@@ -394,7 +394,7 @@ defmodule OperationTest do
 
       parameter :param
 
-      def process(params), do: {:error, :ooops}
+      def process(_params), do: {:error, :ooops}
     end
 
     assert Def25Operation.run(param: 111) == {:error, :ooops}
@@ -406,7 +406,7 @@ defmodule OperationTest do
 
       parameter :param
 
-      def process(params), do: {:error, :ooops}
+      def process(_params), do: {:error, :ooops}
     end
 
     assert Def26Operation.run!(param: 111) == {:error, :ooops}

@@ -25,16 +25,25 @@ defmodule ValidationTest do
   end
 
   test "validate/3: returns true if item's contract has unknown check", _context do
-    contract = [%{
-      name: :param,
-      opts: [unknown_check: "whatever"]
-    }]
+    contract = [
+      %{
+        name: :param,
+        opts: [unknown_check: "whatever"]
+      }
+    ]
+
     assert validate(contract, %{param: "some_value"}, []) == [true, true]
   end
 
   test "validate/3: accumulates related checks results", %{contract: contract} do
     assert validate(contract, %{param2: "some_value"}, []) ==
-      [%{param: "is required"}, true, true, %{param2: "has wrong type"}, %{param2: "must be one of [1, 2, 3]"}]
+             [
+               %{param: "is required"},
+               true,
+               true,
+               %{param2: "has wrong type"},
+               %{param2: "must be one of [1, 2, 3]"}
+             ]
   end
 
   test "valid?/2: returns :ok if all params conform the contract", %{contract: contract} do
@@ -44,7 +53,8 @@ defmodule ValidationTest do
   end
 
   test "valid?/2: returns {:error, :validation_failed, reasons} if at least one
-        of params doesn't conform the contract", %{contract: contract} do
+        of params doesn't conform the contract",
+       %{contract: contract} do
     received_params = [param: "param", param2: 4]
 
     {:error, {:validation, reasons}} = valid?(contract, received_params)
@@ -57,16 +67,18 @@ defmodule ValidationTest do
     {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
     assert reasons |> Map.get(:param2) |> is_list
-    assert reasons |> Map.get(:param2) |> List.first |> is_binary
+    assert reasons |> Map.get(:param2) |> List.first() |> is_binary
   end
 
   test "valid?/2: validates a parameter inner item over inner option checks" do
     contract = [
-      %{name: :map_param, opts: [
-        type: :map,
-        inner: %{
-          a: %{type: :integer},
-          b: %{type: :string, length: %{min: 7}}
+      %{
+        name: :map_param,
+        opts: [
+          type: :map,
+          inner: %{
+            a: %{type: :integer},
+            b: %{type: :string, length: %{min: 7}}
           }
         ]
       }
@@ -83,11 +95,13 @@ defmodule ValidationTest do
 
   test "valid?/2: validates parent parameter itself while validating its inner" do
     contract = [
-      %{name: :map_param, opts: [
-        type: :map,
-        inner: %{
-          a: [type: :integer],
-          b: [type: :string, length: %{min: 7}]
+      %{
+        name: :map_param,
+        opts: [
+          type: :map,
+          inner: %{
+            a: [type: :integer],
+            b: [type: :string, length: %{min: 7}]
           }
         ]
       }
@@ -97,7 +111,7 @@ defmodule ValidationTest do
 
     {:error, {:validation, reasons}} = valid?(contract, received_params)
     assert is_map(reasons)
-    keys = reasons |> Map.keys
+    keys = reasons |> Map.keys()
     assert Enum.member?(keys, :map_param)
     assert Enum.member?(keys, "map_param[:a]")
     assert Enum.member?(keys, "map_param[:b]")
@@ -105,13 +119,16 @@ defmodule ValidationTest do
 
   test "valid?/2: validates an inner struct parameter with inner option checks" do
     contract = [
-      %{name: :map_param, opts: [
-        type: :map,
-        inner: %{
-          a: %{type: :integer},
-          b: %{type: :string, length: %{min: 7}}
-        }
-      ]}
+      %{
+        name: :map_param,
+        opts: [
+          type: :map,
+          inner: %{
+            a: %{type: :integer},
+            b: %{type: :string, length: %{min: 7}}
+          }
+        ]
+      }
     ]
 
     received_params = [map_param: %TestStruct{a: "2", b: "6chars"}]
@@ -141,10 +158,13 @@ defmodule ValidationTest do
     {:error, {:validation, reasons}} = valid?(contract, received_params)
 
     assert %{
-      "list_param[0]" => ["has wrong type", "length check supports only lists, binaries, atoms, maps and tuples"],
-      "list_param[1]" => ["length must be greater than or equal to 7"],
-      "list_param[2]" => ["has wrong type", "length must be greater than or equal to 7"]
-    } == reasons
+             "list_param[0]" => [
+               "has wrong type",
+               "length check supports only lists, binaries, atoms, maps and tuples"
+             ],
+             "list_param[1]" => ["length must be greater than or equal to 7"],
+             "list_param[2]" => ["doesn't allow nil"]
+           } == reasons
   end
 
   test "valid?/2: validates a list parameter items with list_item option checks (inner)" do
@@ -153,10 +173,12 @@ defmodule ValidationTest do
         name: :list_param,
         opts: [
           type: :list,
-          list_item: %{inner: %{
-            a: %{type: :integer},
-            b: %{type: :string, length: %{min: 7}}
-          }}
+          list_item: %{
+            inner: %{
+              a: %{type: :integer},
+              b: %{type: :string, length: %{min: 7}}
+            }
+          }
         ]
       }
     ]
@@ -171,9 +193,9 @@ defmodule ValidationTest do
     {:error, {:validation, reasons}} = valid?(contract, received_params)
 
     assert %{
-      "list_param[0][:b]" => ["length must be greater than or equal to 7"],
-      "list_param[1][:a]" => ["has wrong type"]
-    } == reasons
+             "list_param[0][:b]" => ["length must be greater than or equal to 7"],
+             "list_param[1][:a]" => ["has wrong type"]
+           } == reasons
   end
 
   test "valid?/2: validates a list parameter items with list_item option checks (not list)" do

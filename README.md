@@ -45,7 +45,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.3.0"}]
+  [{:exop, "~> 1.3.1"}]
 end
 ```
 
@@ -342,9 +342,8 @@ _it's possible to combine :func check with others (though not preferable), just 
 
 #### allow_nil
 
-It is not a parameter check itself, because it doesn't return any validation errors.
 It is a parameter attribute which allow you to have other checks for a parameter whilst have a possibility to pass `nil` as the parameter's value.
-If `nil` is passed _all_ the parameter's checks are ignored during validation.
+If `allow_nil: true` and `nil` is passed as a parameter value _all_ the parameter's checks are ignored during validation.
 
 ```elixir
 defmodule YourOperation do
@@ -356,11 +355,12 @@ defmodule YourOperation do
   def process(params), do: params
 end
 
-{:ok, %{a: 1}} = YourOperation.run(a: 1, b: 1)
-{:ok, %{a: nil}} = YourOperation.run(a: nil, b: 1)
-{:ok, %{b: 1}} = YourOperation.run(a: nil, b: 1)
-{:error, {:validation, %{b: ["doesn't allow nil", "has wrong type"]}}} = YourOperation.run(a: nil, b: nil)
+{:ok, %{a: 1, b: 1}} = YourOperation.run(a: 1, b: 1)
+{:ok, %{a: nil, b: 1}} = YourOperation.run(a: nil, b: 1)
+{:error, {:validation, %{b: ["doesn't allow nil"]}}} = YourOperation.run(a: nil, b: nil)
 ```
+
+_By default (if you omit `allow_nil`), a parameter is treated as `allow_nil: false`_
 
 #### from
 

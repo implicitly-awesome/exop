@@ -1,4 +1,4 @@
-## [1.3.1] - yyyy.MM.dd
+## [1.3.1] - 2019.06.11
 
 - `allow_nil` check behavior bug has been fixed (default value and validations skipping)
 

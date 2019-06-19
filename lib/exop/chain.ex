@@ -43,6 +43,8 @@ defmodule Exop.Chain do
     end
   end
 
+  @doc "Defines one of a chain's operation."
+  @spec operation(module(), keyword()) :: any()
   defmacro operation(operation, additional_params \\ []) do
     quote bind_quoted: [operation: operation, additional_params: additional_params] do
       {:module, operation} = Code.ensure_compiled(operation)
@@ -50,6 +52,8 @@ defmodule Exop.Chain do
     end
   end
 
+  @doc "Defines one of a chain's operation."
+  @spec step(module(), keyword()) :: any()
   defmacro step(operation, additional_params \\ []) do
     quote bind_quoted: [operation: operation, additional_params: additional_params] do
       {:module, operation} = Code.ensure_compiled(operation)

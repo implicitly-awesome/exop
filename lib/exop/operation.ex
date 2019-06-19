@@ -258,7 +258,7 @@ defmodule Exop.Operation do
         throw({@exop_interruption, reason})
       end
 
-      @spec do_authorize(Exop.Policy.t(), atom(), any()) :: no_return()
+      @spec do_authorize(module(), atom(), any()) :: no_return()
       defp do_authorize(nil, _action, _opts) do
         throw({@exop_auth_error, :undefined_policy})
       end
@@ -376,6 +376,7 @@ defmodule Exop.Operation do
 
   _For more information and examples check out general Exop docs._
   """
+  @spec parameter(atom() | binary(), keyword()) :: any()
   defmacro parameter(name, opts \\ []) when is_atom(name) or is_binary(name) do
     quote bind_quoted: [name: name, opts: opts] do
       type_check = opts[:type]
@@ -423,6 +424,7 @@ defmodule Exop.Operation do
         def can_write?(_opts), do: false
       end
   """
+  @spec policy(module(), atom()) :: any()
   defmacro policy(policy_module, action_name) when is_atom(action_name) do
     quote bind_quoted: [policy_module: policy_module, action_name: action_name] do
       @policy_module policy_module
@@ -434,6 +436,7 @@ defmodule Exop.Operation do
   Authorizes an action with predefined policy (see `policy` macro docs).
   If authorization fails, any code after (below) auth check will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)
   """
+  @spec authorize(any()) :: any()
   defmacro authorize(opts \\ nil) do
     quote bind_quoted: [opts: opts] do
       do_authorize(@policy_module, @policy_action_name, opts)
@@ -443,6 +446,7 @@ defmodule Exop.Operation do
   @doc """
   Returns policy that was defined in an operation.
   """
+  @spec current_policy() :: any()
   defmacro current_policy do
     quote do
       {@policy_module, @policy_action_name}
@@ -474,6 +478,7 @@ defmodule Exop.Operation do
   If `return: true` option is provided then failed operation's `run/1` will return the
   fallback's `process/3` result.
   """
+  @spec fallback(module(), any()) :: any()
   defmacro fallback(fallback_module, opts \\ []) do
     quote bind_quoted: [fallback_module: fallback_module, opts: opts] do
       if Code.ensure_compiled?(fallback_module) && function_exported?(fallback_module, :process, 3) do

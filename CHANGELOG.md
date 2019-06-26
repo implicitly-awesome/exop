@@ -1,3 +1,7 @@
+## [1.3.2] - yyyy.MM.dd
+
+- got rid some dialyzer warnings
+
 ## [1.3.1] - 2019.06.11
 
 - `allow_nil` check behavior bug has been fixed (default value and validations skipping)

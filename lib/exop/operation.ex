@@ -378,7 +378,7 @@ defmodule Exop.Operation do
   """
   @spec parameter(atom() | binary(), keyword()) :: any()
   defmacro parameter(name, opts \\ []) when is_atom(name) or is_binary(name) do
-    quote bind_quoted: [name: name, opts: opts] do
+    quote generated: true, bind_quoted: [name: name, opts: opts] do
       type_check = opts[:type]
 
       if is_nil(type_check) or TypeValidation.type_supported?(type_check) do
@@ -426,19 +426,19 @@ defmodule Exop.Operation do
   """
   @spec policy(module(), atom()) :: any()
   defmacro policy(policy_module, action_name) when is_atom(action_name) do
-    quote bind_quoted: [policy_module: policy_module, action_name: action_name] do
+    quote generated: true, bind_quoted: [policy_module: policy_module, action_name: action_name] do
       @policy_module policy_module
       @policy_action_name action_name
     end
   end
 
   @doc """
-  Authorizes an action with predefined policy (see `policy` macro docs).
+  Authorizes an action with predefined policy (see `Policy check` macro docs).
   If authorization fails, any code after (below) auth check will be postponed (an error `{:error, {:auth, _reason}}` will be returned immediately)
   """
   @spec authorize(any()) :: any()
   defmacro authorize(opts \\ nil) do
-    quote bind_quoted: [opts: opts] do
+    quote generated: true, bind_quoted: [opts: opts] do
       do_authorize(@policy_module, @policy_action_name, opts)
     end
   end
@@ -480,7 +480,7 @@ defmodule Exop.Operation do
   """
   @spec fallback(module(), any()) :: any()
   defmacro fallback(fallback_module, opts \\ []) do
-    quote bind_quoted: [fallback_module: fallback_module, opts: opts] do
+    quote generated: true, bind_quoted: [fallback_module: fallback_module, opts: opts] do
       if Code.ensure_compiled?(fallback_module) && function_exported?(fallback_module, :process, 3) do
         @fallback_module %{module: fallback_module, opts: opts}
       else

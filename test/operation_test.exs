@@ -158,14 +158,10 @@ defmodule OperationTest do
   end
 
   defmodule TruePolicy do
-    use Exop.Policy
-
     def test(_opts), do: true
   end
 
   defmodule FalsePolicy do
-    use Exop.Policy
-
     def test(_opts), do: false
   end
 

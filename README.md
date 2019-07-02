@@ -460,11 +460,10 @@ _Why it is so? Because there are cases when you can use the same coercion functi
 
 It is possible to define a policy that will be used for authorizing the possibility to invoke an operation. So far, there is a simple policy implementation and usage:
 
-- first of all, define a policy module _(`use Exop.Policy` is not actual since ver. 1.1.1 - it is not mandatory to use this macro. Just define a module with a bunch of functions that take a single argument (any type) and return either true or false)_
+_Just define a module with a bunch of functions that take a single argument (any type) and return either true or false_
 
 ```elixir
   defmodule MonthlyReportPolicy do
-    # not only Keyword or Map as an argument since 1.1.1
     def can_read?(%{user_role: "admin"}), do: true
     def can_read?("admin"), do: true
     def can_read?(%User{role: "manager"}), do: true

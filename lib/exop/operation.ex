@@ -269,21 +269,14 @@ defmodule Exop.Operation do
 
       defp do_authorize(policy, action, opts) do
         try do
-          if policy.__info__(:functions)[:authorize] == 2 do
-            case apply(policy, :authorize, [action, opts]) do
-              false -> throw({@exop_auth_error, action})
+          if is_integer(policy.__info__(:functions)[action]) do
+            case apply(policy, action, [opts]) do
               true -> :ok
+              false -> throw({@exop_auth_error, action})
+              reason -> throw({@exop_auth_error, reason})
             end
           else
-            if policy.__info__(:functions)[action] == 1 do
-              if apply(policy, action, [opts]) == true do
-                :ok
-              else
-                throw({@exop_auth_error, action})
-              end
-            else
-              throw({@exop_auth_error, :unknown_policy})
-            end
+            throw({@exop_auth_error, :unknown_policy})
           end
         rescue
           UndefinedFunctionError -> throw({@exop_auth_error, :unknown_policy})

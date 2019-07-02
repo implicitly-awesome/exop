@@ -458,9 +458,9 @@ _Why it is so? Because there are cases when you can use the same coercion functi
 
 ### Policy check
 
-It is possible to define a policy that will be used for authorizing the possibility to invoke an operation. So far, there is a simple policy implementation and usage:
+It is possible to define a policy that will be used for authorizing the possibility to invoke an operation. So far, there is a simple policy implementation and usage.
 
-_Just define a module with a bunch of functions that take a single argument (any type) and return either true or false_
+Just define a module with a bunch of functions, each takes a single argument (any type) and returns true/false (authorization result) or any term (which will be represented as authorization error reason.
 
 ```elixir
   defmodule MonthlyReportPolicy do
@@ -470,15 +470,14 @@ _Just define a module with a bunch of functions that take a single argument (any
     def can_read?(:manager), do: true
     def can_read?(_opts), do: false
 
-    def can_write?(%{user_role: "manager"}), do: true
-    def can_write?(_opts), do: false
+    def can_write?(%{user_role: "admin"}), do: true
+    def can_write?(%{user_role: "manager"}), do: false
+    def can_write?(_), do: [:your, "reason"] # (the result error will be: {:error, {:auth, [:your, "reason"]}})
   end
 ```
 
 In this policy two actions (checks) defined (`can_read?/1` & `can_write?/1`).
 Every action expects an argument for a check. It's up to you how to handle this argument and turn it into the actual check.
-
-_Bear in mind: only `true` return-value treated as true, everything else returned form an action treated as false_
 
 - next step - link an operation and a policy
 

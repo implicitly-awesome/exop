@@ -110,7 +110,7 @@ defmodule Exop.TypeValidation do
   defp c(_), do: throw(:error)
 
   defp check_struct_exists(struct_name) when is_atom(struct_name) do
-    if function_exported?(struct_name, :__struct__, 0) do
+    if Code.ensure_compiled?(struct_name) && function_exported?(struct_name, :__struct__, 0) do
       :ok
     else
       {:error, {:unknown_struct, struct_name}}

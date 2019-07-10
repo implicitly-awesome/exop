@@ -374,18 +374,26 @@ defmodule Exop.Operation do
     quote generated: true, bind_quoted: [name: name, opts: opts] do
       type_check = opts[:type]
 
-      if is_nil(type_check) or TypeValidation.type_supported?(type_check) do
-        if is_map(opts) do
-          @contract %{name: name, opts: [inner: opts]}
-        else
-          @contract %{name: name, opts: opts}
-        end
+      if is_map(opts) do
+        @contract %{name: name, opts: [inner: opts]}
       else
-        raise ArgumentError,
-              "Unknown type check `#{inspect(type_check)}` for parameter `#{inspect(name)}` in module `#{
-                __MODULE__ |> Module.split() |> Enum.join(".")
-              }`, " <>
-                "supported type checks are `:#{Enum.join(TypeValidation.known_types(), "`, `:")}`."
+        case TypeValidation.type_supported?(type_check, opts) do
+          :ok ->
+            @contract %{name: name, opts: opts}
+
+          {:error, {:unknown_type, unknown_type}} ->
+            raise ArgumentError,
+                  "Unknown type check `#{inspect(unknown_type)}` for parameter `#{inspect(name)}` in module `#{
+                    __MODULE__ |> Module.split() |> Enum.join(".")
+                  }`, " <>
+                    "supported type checks are `:#{Enum.join(TypeValidation.known_types(), "`, `:")}`."
+
+          {:error, {:unknown_struct, unknown_struct}} ->
+            raise ArgumentError,
+                  "Unknown struct `#{inspect(unknown_struct)}` is beeing used for for parameter `#{
+                    inspect(name)
+                  }` in module `#{__MODULE__ |> Module.split() |> Enum.join(".")}`."
+        end
       end
     end
   end

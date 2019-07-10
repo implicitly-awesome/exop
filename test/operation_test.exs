@@ -30,6 +30,19 @@ defmodule OperationTest do
       e
   end
 
+  def operation_with_unknown_struct do
+    defmodule UnknownStructOperation do
+      use Exop.Operation
+
+      parameter :b, struct: UnknownStruct
+
+      def process(_), do: :ok
+    end
+  rescue
+    e ->
+      e
+  end
+
   test "operation with unknown type check" do
     assert %ArgumentError{
              message:
@@ -37,6 +50,13 @@ defmodule OperationTest do
                  "supported type checks are `:boolean`, `:integer`, `:float`, `:string`, `:tuple`, `:struct`, " <>
                  "`:map`, `:list`, `:atom`, `:function`, `:keyword`, `:module`, `:uuid`."
            } = operation_with_unknown_type()
+  end
+
+  test "operation with unknown struct" do
+    assert %ArgumentError{
+             message:
+               "Unknown struct `UnknownStruct` is beeing used for for parameter `:b` in module `OperationTest.UnknownStructOperation`."
+           } = operation_with_unknown_struct()
   end
 
   test "defines contract/0" do

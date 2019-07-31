@@ -1,9 +1,5 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/exop.svg)](https://hex.pm/packages/exop) [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/exop/) [![Build Status](https://travis-ci.org/madeinussr/exop.svg?branch=master)](https://travis-ci.org/madeinussr/exop)
 
-#### New versions
-
-_Guys, too much work these days, so new releases will be shipped with some delay. However I'm working on them constantly._
-
 # Exop
 
 A library that helps you to organize your Elixir code in more domain-driven way.

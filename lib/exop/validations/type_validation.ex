@@ -2,10 +2,30 @@ defmodule Exop.TypeValidation do
   @known_types ~w(boolean integer float string tuple struct map list atom function keyword module uuid)a
 
   Enum.each(@known_types, fn type ->
-    def type_supported?(unquote(type)), do: true
+    def type_supported?(unquote(type), _opts), do: :ok
   end)
 
-  def type_supported?(_unknown_type), do: false
+  def type_supported?(nil, nil), do: :ok
+
+  def type_supported?(nil, []), do: :ok
+
+  def type_supported?(nil, opts) when is_list(opts) do
+    if Keyword.has_key?(opts, :struct) do
+      opts
+      |> Keyword.get(:struct)
+      |> check_struct_exists()
+    else
+      :ok
+    end
+  end
+
+  def type_supported?(nil, _opts) do
+    :ok
+  end
+
+  def type_supported?(unknown_type, _opts) do
+    {:error, {:unknown_type, unknown_type}}
+  end
 
   def known_types, do: @known_types
 
@@ -88,4 +108,20 @@ defmodule Exop.TypeValidation do
   defp c(?e), do: ?e
   defp c(?f), do: ?f
   defp c(_), do: throw(:error)
+
+  defp check_struct_exists(struct_name) when is_atom(struct_name) do
+    if Code.ensure_compiled?(struct_name) && function_exported?(struct_name, :__struct__, 0) do
+      :ok
+    else
+      {:error, {:unknown_struct, struct_name}}
+    end
+  end
+
+  defp check_struct_exists(%_{}) do
+    :ok
+  end
+
+  defp check_struct_exists(unknown_struct) do
+    {:error, {:unknown_struct, unknown_struct}}
+  end
 end

@@ -323,7 +323,7 @@ defmodule Exop.ValidationChecks do
     end
   end
 
-  @spec get_length(any) :: pos_integer
+  @spec get_length(any) :: pos_integer() | {:error, :wrong_type}
   defp get_length(param) when is_list(param), do: length(param)
   defp get_length(param) when is_binary(param), do: String.length(param)
   defp get_length(param) when is_atom(param), do: param |> Atom.to_string() |> get_length()
@@ -331,7 +331,8 @@ defmodule Exop.ValidationChecks do
   defp get_length(param) when is_tuple(param), do: tuple_size(param)
   defp get_length(_param), do: {:error, :wrong_type}
 
-  @spec check_length(atom(), atom() | String.t(), pos_integer, number) :: true | check_error
+  @spec check_length(atom(), atom() | String.t(), pos_integer | {:error, :wrong_type}, number) ::
+          true | check_error
   defp check_length(_check, item_name, {:error, :wrong_type}, _check_value) do
     %{item_name => "length check supports only lists, binaries, atoms, maps and tuples"}
   end

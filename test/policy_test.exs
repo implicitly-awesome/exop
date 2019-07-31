@@ -9,7 +9,7 @@ defmodule PolicyTest do
     def can_read?(%User{name: "admin"}), do: true
     def can_read?(_opts), do: false
 
-    def can_write?(_opts), do: "just string"
+    def can_write?(_opts), do: ["just something", :that_will_be, {"an", :error, Reason}]
 
     def can_error?(_opts), do: raise(ArithmeticError, "2 + 2 != 5")
   end
@@ -47,75 +47,33 @@ defmodule PolicyTest do
     end
   end
 
-  describe "new style policy" do
-    test "only true is treated as true" do
-      assert WriteOperation.run(user: %User{name: "admin"}) == {:error, {:auth, :can_write?}}
-    end
-
-    test "errors are passed through" do
-      assert_raise ArithmeticError, fn ->
-        ErrorOperation.run(user: %User{name: "admin"})
-      end
-    end
-
-    test "ReadOperation: admin user can read" do
-      assert ReadOperation.run(user: %User{name: "admin"}) == {:ok, :read_result}
-    end
-
-    test "ReadOperation: Not admin user can't read" do
-      assert ReadOperation.run(user: %User{name: "manager"}) == {:error, {:auth, :can_read?}}
-    end
-  end
-
-  defmodule LegacyPolicy do
-    use Exop.Policy
-
-    def can_true?(_opts), do: true
-
-    def can_false?(_opts), do: false
-
-    def can_smth?(_opts), do: "just string"
-
-    def can_error?(_opts), do: raise(ArithmeticError, "oops")
-
-    def can_read?(%User{name: "admin"}), do: true
-    def can_read?(_opts), do: false
-  end
-
-  defmodule LegacyReadOperation do
+  defmodule CustomErrorOperation do
     use Exop.Operation
-    policy LegacyPolicy, :can_read?
+    policy TestPolicy, :can_custom_error?
     parameter :user, required: true, struct: %User{}
 
     def process(params) do
       authorize(params[:user])
-      :read_result
+      :custom_error_result
     end
   end
 
-  describe "legacy policy" do
-    test "legacy policy: has authorize/2 function" do
-      assert Enum.member?(LegacyPolicy.__info__(:functions), {:authorize, 2})
-    end
+  test "only true is treated as true" do
+    assert WriteOperation.run(user: %User{name: "admin"}) ==
+             {:error, {:auth, ["just something", :that_will_be, {"an", :error, Reason}]}}
+  end
 
-    test "legacy policy: only true is treated as true" do
-      assert LegacyPolicy.authorize(:can_true?, user: %User{})
-      refute LegacyPolicy.authorize(:can_false?, user: %User{})
-      refute LegacyPolicy.authorize(:can_smth?, user: %User{})
+  test "errors are passed through" do
+    assert_raise ArithmeticError, fn ->
+      ErrorOperation.run(user: %User{name: "admin"})
     end
+  end
 
-    test "legacy policy: errors are passed through" do
-      assert_raise ArithmeticError, fn ->
-        LegacyPolicy.authorize(:can_error?, user: %User{})
-      end
-    end
+  test "ReadOperation: admin user can read" do
+    assert ReadOperation.run(user: %User{name: "admin"}) == {:ok, :read_result}
+  end
 
-    test "LegacyReadOperation: admin user can read" do
-      assert LegacyReadOperation.run(user: %User{name: "admin"}) == {:ok, :read_result}
-    end
-
-    test "LegacyReadOperation: Not admin user can't read" do
-      assert LegacyReadOperation.run(user: %User{name: "manager"}) == {:error, {:auth, :can_read?}}
-    end
+  test "ReadOperation: Not admin user can't read" do
+    assert ReadOperation.run(user: %User{name: "manager"}) == {:error, {:auth, :can_read?}}
   end
 end

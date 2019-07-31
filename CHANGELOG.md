@@ -1,3 +1,11 @@
+## [1.3.2] - 2019.07.31
+
+- got rid some dialyzer warnings
+- specs for macros were added
+- Exop.Policy module has been removed because simplified policy check is here since v1.1.1
+- if Exop.Policy action returns something different from either `true` or `false`, this output is treated as authorization error message (reason)
+- behaviour of unknown struct checks has been changed. Now it generates ArgumentError exception on compile time if struct parameter is not existing struct.
+
 ## [1.3.1] - 2019.06.11
 
 - `allow_nil` check behavior bug has been fixed (default value and validations skipping)

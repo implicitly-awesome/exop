@@ -907,4 +907,30 @@ defmodule OperationTest do
 
     assert [:a, :b] = Map.keys(result)
   end
+
+  defmodule Def54Operation do
+    use Exop.Operation
+
+    parameter :a,
+      inner: %{
+        b: [type: :integer, coerce_with: &__MODULE__.coerce_int/2],
+        c: [type: :integer, coerce_with: &__MODULE__.coerce_int/2],
+        d: [type: :integer],
+        e: [inner: %{f: [type: :integer, coerce_with: &__MODULE__.coerce_int/2]}]
+      }
+
+    def coerce_int({_, int}, _) when is_integer(int), do: Integer.to_string(int)
+
+    def coerce_int({_, str}, _) when is_binary(str) do
+      {int, ""} = Integer.parse(str)
+      int
+    end
+
+    def process(params), do: params
+  end
+
+  test "inner + coerce_with" do
+    assert {:ok, params} = Def54Operation.run(a: %{b: "1", c: "2", d: 3, e: %{f: "4"}})
+    assert %{a: %{b: 1, c: 2, d: 3, e: %{f: 4}}} = params
+  end
 end

@@ -100,11 +100,11 @@ defmodule Exop.Operation do
       end
 
       def run(%{} = received_params) do
-        params = defined_params(received_params)
-        params = resolve_from(received_params, @contract, params)
-        params = resolve_defaults(received_params, @contract, params)
+        params = Utils.defined_params(@contract, received_params)
+        params = Utils.resolve_from(received_params, @contract, params)
+        params = Utils.resolve_defaults(received_params, @contract, params)
 
-        result = params |> resolve_coercions(@contract, params) |> output()
+        result = params |> Utils.resolve_coercions(@contract, params) |> output()
 
         with {:ok, _} = result <- result do
           result
@@ -134,81 +134,6 @@ defmodule Exop.Operation do
           result ->
             result
         end
-      end
-
-      @spec resolve_defaults(map(), list(%{name: atom, opts: Keyword.t()}), map()) :: map()
-      defp resolve_defaults(_received_params, [], resolved_params), do: resolved_params
-
-      defp resolve_defaults(
-             received_params,
-             [%{name: contract_item_name, opts: contract_item_opts} | contract_tail],
-             resolved_params
-           ) do
-        resolved_params =
-          if Keyword.has_key?(contract_item_opts, :default) &&
-               !ValidationChecks.check_item_present?(received_params, contract_item_name) do
-            contract_item_opts
-            |> Keyword.get(:default)
-            |> put_param_value(resolved_params, contract_item_name)
-          else
-            resolved_params
-          end
-
-        resolve_defaults(received_params, contract_tail, resolved_params)
-      end
-
-      @spec resolve_from(map(), list(%{name: atom, opts: Keyword.t()}), map()) :: map()
-      defp resolve_from(_received_params, [], resolved_params), do: resolved_params
-
-      defp resolve_from(
-             received_params,
-             [%{name: contract_item_name, opts: contract_item_opts} | contract_tail],
-             resolved_params
-           ) do
-        alias_name = Keyword.get(contract_item_opts, :from)
-
-        resolved_params =
-          if alias_name do
-            received_params
-            |> Map.get(alias_name, @no_value)
-            |> put_param_value(resolved_params, contract_item_name)
-            |> Map.delete(alias_name)
-          else
-            resolved_params
-          end
-
-        resolve_from(received_params, contract_tail, resolved_params)
-      end
-
-      @spec resolve_coercions(map(), list(%{name: atom() | String.t(), opts: Keyword.t()}), map()) ::
-              map()
-      defp resolve_coercions(_received_params, [], coerced_params), do: coerced_params
-
-      defp resolve_coercions(
-             received_params,
-             [%{name: contract_item_name, opts: contract_item_opts} | contract_tail],
-             coerced_params
-           ) do
-        coerced_params =
-          if Keyword.has_key?(contract_item_opts, :coerce_with) do
-            coerce_func = Keyword.get(contract_item_opts, :coerce_with)
-            check_item = ValidationChecks.get_check_item(coerced_params, contract_item_name)
-            coerced_value = coerce_func.({contract_item_name, check_item}, received_params)
-
-            put_param_value(coerced_value, coerced_params, contract_item_name)
-          else
-            coerced_params
-          end
-
-        resolve_coercions(received_params, contract_tail, coerced_params)
-      end
-
-      @spec put_param_value(any(), Keyword.t() | map(), atom() | String.t()) ::
-              Keyword.t() | map()
-      defp put_param_value(@no_value, collection, _item_name), do: collection
-
-      defp put_param_value(value, collection, item_name) when is_map(collection) do
-        Map.put(collection, item_name, value)
       end
 
       @spec output(map()) ::
@@ -247,11 +172,6 @@ defmodule Exop.Operation do
       end
 
       defp mod_err_msg(errors), do: "#{@module_name} errors: \n#{Validation.errors_message(errors)}"
-
-      @spec defined_params(map()) :: map()
-      defp defined_params(received_params) when is_map(received_params) do
-        Map.take(received_params, Enum.map(@contract, & &1[:name]))
-      end
 
       @spec interrupt(any) :: no_return()
       def interrupt(reason \\ nil) do

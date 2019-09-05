@@ -111,7 +111,13 @@ defmodule Exop.Utils do
             end
           end)
 
-        put_param_value(coerced_inners, received_params, contract_item_name)
+        if is_map(coerced_inners) do
+          received_params[contract_item_name]
+          |> Map.merge(coerced_inners)
+          |> put_param_value(received_params, contract_item_name)
+        else
+          put_param_value(coerced_inners, received_params, contract_item_name)
+        end
       else
         if Keyword.has_key?(contract_item_opts, :coerce_with) do
           coerce_func = Keyword.get(contract_item_opts, :coerce_with)

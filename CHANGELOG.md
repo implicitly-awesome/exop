@@ -1,6 +1,6 @@
 ## [1.3.3] - yyyy.MM.dd
 
-- the issue with `coerce_with/2` within an `inner` check has been fixed (coercion simply didn't work)
+- the issue with `coerce_with/2` within an `inner` check has been fixed (coercion simply didn't work in inner)
 
 ## [1.3.2] - 2019.07.31
 

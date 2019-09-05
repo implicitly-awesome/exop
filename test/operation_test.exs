@@ -930,7 +930,7 @@ defmodule OperationTest do
   end
 
   test "inner + coerce_with" do
-    assert {:ok, params} = Def54Operation.run(a: %{b: "1", c: "2", d: 3, e: %{f: "4"}})
-    assert %{a: %{b: 1, c: 2, d: 3, e: %{f: 4}}} = params
+    assert {:ok, params} = Def54Operation.run(a: %{b: "1", c: "2", d: 3, e: %{f: "4"}, g: 1}, h: 2)
+    assert %{a: %{b: 1, c: 2, d: 3, e: %{f: 4}, g: 1}} = params
   end
 end

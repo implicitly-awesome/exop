@@ -2,7 +2,7 @@
 
 #### New versions
 
-_Guys, too much work these days, so new releases will be shipped with some delay. However I'm working on them constantly._
+_Guys, too much work these days, so new releases will be shipped with some delay. However, I work on them constantly._
 
 # Exop
 

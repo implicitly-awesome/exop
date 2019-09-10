@@ -1,3 +1,8 @@
+## [1.3.3] - 2019.09.10
+
+- the issue with `coerce_with/2` within an `inner` check has been fixed (coercion simply didn't work in inner)
+- parameters `:default` option now accepts 1-arity function as well as a certain value (see README)
+
 ## [1.3.2] - 2019.07.31
 
 - got rid some dialyzer warnings

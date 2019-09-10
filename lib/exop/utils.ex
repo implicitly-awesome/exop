@@ -68,9 +68,16 @@ defmodule Exop.Utils do
     resolved_params =
       if Keyword.has_key?(contract_item_opts, :default) &&
            !ValidationChecks.check_item_present?(received_params, contract_item_name) do
-        contract_item_opts
-        |> Keyword.get(:default)
-        |> put_param_value(resolved_params, contract_item_name)
+        default_value = Keyword.get(contract_item_opts, :default)
+
+        default_value =
+          if is_function(default_value) do
+            default_value.(received_params)
+          else
+            default_value
+          end
+
+        put_param_value(default_value, resolved_params, contract_item_name)
       else
         resolved_params
       end

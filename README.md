@@ -164,6 +164,16 @@ and if the parameter is missed - assign default value to it.
 
 ```elixir
 parameter :some_param, default: "default value"
+
+# default value can be also a 1-arity function output
+parameter :a, type: :integer, default: &__MODULE__.default_a/1
+parameter :b, type: :integer
+
+# this function takes params given to `run/1`
+def default_a(params), do: params.b + 1
+
+#iex> YourOperation.run(b: 1)
+#iex> %{a: 2, b: 1}
 ```
 
 #### `numericality`

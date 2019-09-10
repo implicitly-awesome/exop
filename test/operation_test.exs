@@ -933,4 +933,20 @@ defmodule OperationTest do
     assert {:ok, params} = Def54Operation.run(a: %{b: "1", c: "2", d: 3, e: %{f: "4"}, g: 1}, h: 2)
     assert %{a: %{b: 1, c: 2, d: 3, e: %{f: 4}, g: 1}} = params
   end
+
+  defmodule Def55Operation do
+    use Exop.Operation
+
+    parameter :a, type: :integer, default: &__MODULE__.default_a/1
+    parameter :b, type: :integer
+
+    def default_a(params), do: params.b + 1
+
+    def process(params), do: params
+  end
+
+  test "default can accept a function" do
+    assert {:ok, params} = Def55Operation.run(b: 1)
+    assert %{a: 2, b: 1} = params
+  end
 end

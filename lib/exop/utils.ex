@@ -137,7 +137,7 @@ defmodule Exop.Utils do
         end
       end
 
-    resolve_coercions(received_params, contract_tail, coerced_params)
+    resolve_coercions(coerced_params, contract_tail, coerced_params)
   end
 
   @spec fetch_inner_checks(list()) :: map() | nil

@@ -1,3 +1,7 @@
+## [1.3.4] - 2019.09.18
+
+- a bug in `coerce_with/2` refactored behavior was fixed
+
 ## [1.3.3] - 2019.09.10
 
 - the issue with `coerce_with/2` within an `inner` check has been fixed (coercion simply didn't work in inner)

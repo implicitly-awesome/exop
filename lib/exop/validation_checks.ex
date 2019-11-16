@@ -195,7 +195,7 @@ defmodule Exop.ValidationChecks do
   end
 
   defp check_number(number, item_name, {:less_than, check_value}) do
-    if number < check_value, do: true, else: %{item_name => "must be less than #{check_value}"}
+    if number < check_value, do: true, else: %{item_name => "must be less than #{check_value}. got: #{inspect number}"}
   end
 
   defp check_number(number, item_name, {:lt, check_value}) do
@@ -217,7 +217,7 @@ defmodule Exop.ValidationChecks do
   end
 
   defp check_number(_number, item_name, {check, _check_value}) do
-    %{item_name => "unknwon check '#{check}'"}
+    %{item_name => "unknown check '#{check}'"}
   end
 
   @doc """
@@ -489,5 +489,6 @@ defmodule Exop.ValidationChecks do
 
   defp validate_struct(%struct{}, struct, _item_name) when is_atom(struct), do: true
 
-  defp validate_struct(_item, _check, item_name), do: %{item_name => "is not expected struct"}
+  defp validate_struct(item, check, item_name),
+       do: %{item_name => "is not expected struct. expected: #{inspect check}, got: #{inspect item}"}
 end

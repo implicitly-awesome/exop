@@ -99,7 +99,7 @@ defmodule ChainTest do
     initial_params = [a: 1, b: 2]
     result = TestChainFail.run(initial_params)
 
-    assert {:error, {:validation, %{a: ["has wrong type"]}}} = result
+    assert {:error, {:validation, %{a: ["has wrong type; expected type: string, got: 3"]}}} = result
   end
 
   test "invokes a fallback module of a failed operation" do
@@ -163,7 +163,10 @@ defmodule ChainTest do
     test "returns failed operation name" do
       initial_params = [a: 1, b: 2]
       result = TestChainFailOpname.run(initial_params)
-      assert {ChainTest.Fail, {:error, {:validation, %{a: ["has wrong type"]}}}} = result
+
+      assert {ChainTest.Fail,
+              {:error, {:validation, %{a: ["has wrong type; expected type: string, got: 3"]}}}} =
+               result
     end
 
     test "doesn't affect an operation with a fallback" do

@@ -109,7 +109,7 @@ defmodule Exop.ValidationChecks do
       true
 
       iex> Exop.ValidationChecks.check_type(%{a: nil}, :a, :string)
-      %{:a => "has wrong type"}
+      %{:a => "has wrong type; expected type: string, got: nil"}
   """
   @spec check_type(Keyword.t() | map(), atom() | String.t(), atom()) :: true | check_error
   def check_type(check_items, item_name, check) do
@@ -117,7 +117,7 @@ defmodule Exop.ValidationChecks do
       check_item = get_check_item(check_items, item_name)
 
       TypeValidation.check_value(check_item, check) ||
-        %{item_name => "has wrong type. expected type: #{check}, got: #{inspect(check_item)}"}
+        %{item_name => "has wrong type; expected type: #{check}, got: #{inspect(check_item)}"}
     else
       true
     end
@@ -157,7 +157,11 @@ defmodule Exop.ValidationChecks do
 
   @spec check_number(number, atom() | String.t(), {atom, number}) :: boolean
   defp check_number(number, item_name, {:equal_to, check_value}) do
-    if number == check_value, do: true, else: %{item_name => "must be equal to #{check_value}. got: #{inspect number}"}
+    if number == check_value do
+      true
+    else
+      %{item_name => "must be equal to #{check_value}; got: #{inspect(number)}"}
+    end
   end
 
   defp check_number(number, item_name, {:eq, check_value}) do
@@ -173,7 +177,11 @@ defmodule Exop.ValidationChecks do
   end
 
   defp check_number(number, item_name, {:greater_than, check_value}) do
-    if number > check_value, do: true, else: %{item_name => "must be greater than #{check_value}. got: #{inspect number}"}
+    if number > check_value do
+      true
+    else
+      %{item_name => "must be greater than #{check_value}; got: #{inspect(number)}"}
+    end
   end
 
   defp check_number(number, item_name, {:gt, check_value}) do
@@ -181,9 +189,11 @@ defmodule Exop.ValidationChecks do
   end
 
   defp check_number(number, item_name, {:greater_than_or_equal_to, check_value}) do
-    if number >= check_value,
-      do: true,
-      else: %{item_name => "must be greater than or equal to #{check_value}. got: #{inspect number}"}
+    if number >= check_value do
+      true
+    else
+      %{item_name => "must be greater than or equal to #{check_value}; got: #{inspect(number)}"}
+    end
   end
 
   defp check_number(number, item_name, {:min, check_value}) do
@@ -195,7 +205,11 @@ defmodule Exop.ValidationChecks do
   end
 
   defp check_number(number, item_name, {:less_than, check_value}) do
-    if number < check_value, do: true, else: %{item_name => "must be less than #{check_value}. got: #{inspect number}"}
+    if number < check_value do
+      true
+    else
+      %{item_name => "must be less than #{check_value}; got: #{inspect(number)}"}
+    end
   end
 
   defp check_number(number, item_name, {:lt, check_value}) do
@@ -203,9 +217,11 @@ defmodule Exop.ValidationChecks do
   end
 
   defp check_number(number, item_name, {:less_than_or_equal_to, check_value}) do
-    if number <= check_value,
-      do: true,
-      else: %{item_name => "must be less than or equal to #{check_value}. got: #{inspect number}"}
+    if number <= check_value do
+      true
+    else
+      %{item_name => "must be less than or equal to #{check_value}; got: #{inspect(number)}"}
+    end
   end
 
   defp check_number(number, item_name, {:lte, check_value}) do
@@ -235,7 +251,7 @@ defmodule Exop.ValidationChecks do
     if Enum.member?(check_list, check_item) do
       true
     else
-      %{item_name => "must be one of #{inspect(check_list)}. got: #{inspect check_item}"}
+      %{item_name => "must be one of #{inspect(check_list)}; got: #{inspect(check_item)}"}
     end
   end
 
@@ -254,7 +270,7 @@ defmodule Exop.ValidationChecks do
     check_item = get_check_item(check_items, item_name)
 
     if Enum.member?(check_list, check_item) do
-      %{item_name => "must not be included in #{inspect(check_list)}. got: #{inspect check_item}"}
+      %{item_name => "must not be included in #{inspect(check_list)}; got: #{inspect(check_item)}"}
     else
       true
     end
@@ -278,7 +294,7 @@ defmodule Exop.ValidationChecks do
       if Regex.match?(check, check_item) do
         true
       else
-        %{item_name => "has invalid format. got: #{inspect check_item}"}
+        %{item_name => "has invalid format.; got: #{inspect(check_item)}"}
       end
     else
       true
@@ -344,12 +360,20 @@ defmodule Exop.ValidationChecks do
 
   defp check_length(:gte, item_name, actual_length, check_value) do
     actual_length >= check_value ||
-      %{item_name => "length must be greater than or equal to #{check_value}. got length: #{inspect actual_length}"}
+      %{
+        item_name =>
+          "length must be greater than or equal to #{check_value}; got length: #{
+            inspect(actual_length)
+          }"
+      }
   end
 
   defp check_length(:gt, item_name, actual_length, check_value) do
     actual_length > check_value ||
-      %{item_name => "length must be greater than #{check_value}. got length: #{inspect actual_length}"}
+      %{
+        item_name =>
+          "length must be greater than #{check_value}; got length: #{inspect(actual_length)}"
+      }
   end
 
   defp check_length(:max, item_name, actual_length, check_value) do
@@ -358,21 +382,34 @@ defmodule Exop.ValidationChecks do
 
   defp check_length(:lte, item_name, actual_length, check_value) do
     actual_length <= check_value ||
-      %{item_name => "length must be less than or equal to #{check_value}. got length: #{inspect actual_length}"}
+      %{
+        item_name =>
+          "length must be less than or equal to #{check_value}; got length: #{
+            inspect(actual_length)
+          }"
+      }
   end
 
   defp check_length(:lt, item_name, actual_length, check_value) do
     actual_length < check_value ||
-      %{item_name => "length must be less than #{check_value}. got length: #{inspect actual_length}"}
+      %{
+        item_name =>
+          "length must be less than #{check_value}; got length: #{inspect(actual_length)}"
+      }
   end
 
   defp check_length(:is, item_name, actual_length, check_value) do
-    actual_length == check_value || %{item_name => "length must be equal to #{check_value}. got length: #{inspect actual_length}"}
+    actual_length == check_value ||
+      %{
+        item_name => "length must be equal to #{check_value}; got length: #{inspect(actual_length)}"
+      }
   end
 
   defp check_length(:in, item_name, actual_length, check_value) do
     Enum.member?(check_value, actual_length) ||
-      %{item_name => "length must be in range #{check_value}. got length: #{inspect actual_length}"}
+      %{
+        item_name => "length must be in range #{check_value}; got length: #{inspect(actual_length)}"
+      }
   end
 
   defp check_length(check, item_name, _actual_length, _check_value) do
@@ -457,7 +494,7 @@ defmodule Exop.ValidationChecks do
     if check_item === check_value do
       true
     else
-      %{item_name => "must be equal to #{inspect(check_value)}. got: #{inspect check_item}"}
+      %{item_name => "must be equal to #{inspect(check_value)}; got: #{inspect(check_item)}"}
     end
   end
 
@@ -489,6 +526,28 @@ defmodule Exop.ValidationChecks do
 
   defp validate_struct(%struct{}, struct, _item_name) when is_atom(struct), do: true
 
-  defp validate_struct(item, check, item_name),
-       do: %{item_name => "is not expected struct. expected: #{inspect check}, got: #{inspect item}"}
+  defp validate_struct(%struct{}, check_struct, item_name) when is_atom(check_struct) do
+    %{
+      item_name =>
+        "is not expected struct; expected: #{inspect(check_struct)}; got: #{inspect(struct)}"
+    }
+  end
+
+  defp validate_struct(item, check_struct, item_name) when is_atom(item) do
+    %{
+      item_name =>
+        "is not expected struct; expected: #{inspect(check_struct)}; got: #{inspect(item)}"
+    }
+  end
+
+  defp validate_struct(%struct{} = _item, %check_struct{}, item_name) do
+    %{
+      item_name =>
+        "is not expected struct; expected: #{inspect(check_struct)}; got: #{inspect(struct)}"
+    }
+  end
+
+  defp validate_struct(item, %check_struct{}, item_name) do
+    %{item_name => "is not expected struct; expected: #{inspect(check_struct)}; #{inspect(item)}"}
+  end
 end

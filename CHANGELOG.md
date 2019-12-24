@@ -1,4 +1,4 @@
-## [1.3.5] - yyyy.MM.dd
+## [1.3.5] - 2019.12.24
 
 - basic validation message extension with "got:" (credits to https://github.com/sgilson)
 makes error-tuple messages more descriptive

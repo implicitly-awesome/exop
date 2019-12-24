@@ -42,7 +42,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
     - [func](#func)
     - [allow_nil](#allow_nil)
     - [from](#from)
-    - [any_of](#any_of)
+    - [subset_of](#subset_of)
   - [Defined params](#defined-params)
   - [Interrupt](#interrupt)
   - [Coercion](#coercion)
@@ -429,17 +429,17 @@ _This option doesn't work for `:inner` check's inner parameters currently._
 #### subset_of
 
 Checks whether a parameter's value (list) is a subset of a defined check-list.
-To pass this check, all items within given into an operation parameter list should be included into check-list,
+To pass this check, all items within given into an operation parameter should be included into check-list,
 otherwise check is failed.
 
 ```elixir
 parameter :some_param, subset_of: [1, 2, :a, "b", C]
 
 # {:ok, _} = MyOperation.run(some_param: [1, :a, C])
+# {:ok, _} = MyOperation.run(some_param: [:a])
+# {:error, _} = MyOperation.run(some_param: [])
 # {:error, _} = MyOperation.run(some_param: [3, :a, C])
 ```
-
-_An empty list doesn't pass this check._
 
 ### Interrupt
 

@@ -1,18 +1,24 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/exop.svg)](https://hex.pm/packages/exop) [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/exop/) [![Build Status](https://travis-ci.org/madeinussr/exop.svg?branch=master)](https://travis-ci.org/madeinussr/exop)
 
-#### New versions
-
-_Guys, too much work these days, so new releases will be shipped with some delay. However, I work on them constantly._
-
 # Exop
 
 A library that helps you to organize your Elixir code in more domain-driven way.
 Exop provides macros which helps you to encapsulate business logic and offers you additionally:
 incoming params validation (with predefined contract), params coercion, policy check, fallback behavior and more.
 
+---
+
+## Exop family:
+
 ### ExopData
 
 Interested in property-based testing? Check out new Exop family member - [ExopData](https://github.com/madeinussr/exop_data). If you use Exop to organize your code with ExopData you can get property generators in the most easiest way.
+
+### ExopPlug
+
+The new [ExopPlug](https://github.com/madeinussr/exop_plug) library provides a convenient way to validate incoming parameters of your Phoenix application's controllers by offering you small but useful DSL.
+
+---
 
 ## Table of Contents
 

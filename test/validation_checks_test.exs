@@ -462,4 +462,30 @@ defmodule ValidationChecksTest do
              %{a: "must be less than or equal to 1; got: 3"}
            ]
   end
+
+  test "subset_of/3: success" do
+    assert check_subset_of(%{a: ["b"]}, :a, [1, 2, :a, "b", C]) == true
+    assert check_subset_of(%{a: [2, "b", C]}, :a, [1, 2, :a, "b", C]) == true
+    assert check_subset_of(%{a: [1, 2, :a, "b", C]}, :a, [1, 2, :a, "b", C]) == true
+  end
+
+  test "subset_of/3: fails" do
+    assert check_subset_of(%{a: :b}, :a, [1, 2, :a, "b", C]) == %{a: "must be a list; got: :b"}
+
+    assert check_subset_of(%{a: []}, :a, [1, 2, :a, "b", C]) == %{
+             a: "must be a subset of [1, 2, :a, \"b\", C]; got: []"
+           }
+
+    assert check_subset_of(%{a: [3]}, :a, [1, 2, :a, "b", C]) == %{
+             a: "must be a subset of [1, 2, :a, \"b\", C]; got: [3]"
+           }
+
+    assert check_subset_of(%{a: [1, 2, 3]}, :a, [1, 2, :a, "b", C]) == %{
+             a: "must be a subset of [1, 2, :a, \"b\", C]; got: [1, 2, 3]"
+           }
+
+    assert check_subset_of(%{a: [1, 2, :a, 3, "b", C]}, :a, [1, 2, :a, "b", C]) == %{
+             a: "must be a subset of [1, 2, :a, \"b\", C]; got: [1, 2, :a, 3, \"b\", C]"
+           }
+  end
 end

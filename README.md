@@ -36,6 +36,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
     - [func](#func)
     - [allow_nil](#allow_nil)
     - [from](#from)
+    - [any_of](#any_of)
   - [Defined params](#defined-params)
   - [Interrupt](#interrupt)
   - [Coercion](#coercion)
@@ -49,7 +50,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.3.4"}]
+  [{:exop, "~> 1.3.5"}]
 end
 ```
 
@@ -418,6 +419,21 @@ end
 Why? Simply because sometimes you're not in control of incoming parameters but don't want to map them each time you need to use'em by yourself (good example: params in Phoenix controller's action, which come as a map with string keys).
 
 _This option doesn't work for `:inner` check's inner parameters currently._
+
+#### subset_of
+
+Checks whether a parameter's value (list) is a subset of a defined check-list.
+To pass this check, all items within given into an operation parameter list should be included into check-list,
+otherwise check is failed.
+
+```elixir
+parameter :some_param, subset_of: [1, 2, :a, "b", C]
+
+# {:ok, _} = MyOperation.run(some_param: [1, :a, C])
+# {:error, _} = MyOperation.run(some_param: [3, :a, C])
+```
+
+_An empty list doesn't pass this check._
 
 ### Interrupt
 

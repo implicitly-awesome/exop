@@ -1,3 +1,9 @@
+## [1.3.5] - yyyy.MM.dd
+
+- basic validation message extension with "got:" (credits to https://github.com/sgilson)
+makes error-tuple messages more descriptive
+- new `:subset_of` check allows you to check whether a given list is a subset of defined check-list
+
 ## [1.3.4] - 2019.09.18
 
 - a bug in `coerce_with/2` refactored behavior was fixed

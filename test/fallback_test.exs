@@ -41,23 +41,28 @@ defmodule FallbackTest do
   describe "fallback wasnt defined" do
     test "operation returns its error" do
       result = TestOperation.run(a: "a", b: 2)
-      assert result == {:error, {:validation, %{a: ["has wrong type"]}}}
+
+      assert result ==
+               {:error, {:validation, %{a: ["has wrong type; expected type: integer, got: \"a\""]}}}
     end
   end
 
   describe "fallback was defined" do
     test "operation returns its error if there is no return: true in a fallback opts" do
       result = TestOperation1.run(a: "a", b: 2)
-      assert result == {:error, {:validation, %{a: ["has wrong type"]}}}
+
+      assert result ==
+               {:error, {:validation, %{a: ["has wrong type; expected type: integer, got: \"a\""]}}}
     end
 
     test "operation returns a fallback result if there is return: true in a fallback opts" do
       result = TestOperation2.run(a: "a", b: 2)
+
       assert result == {
-        FallbackTest.TestOperation2,
-        %{a: "a", b: 2},
-        {:error, {:validation, %{a: ["has wrong type"]}}}
-      }
+               FallbackTest.TestOperation2,
+               %{a: "a", b: 2},
+               {:error, {:validation, %{a: ["has wrong type; expected type: integer, got: \"a\""]}}}
+             }
     end
   end
 end

@@ -341,7 +341,9 @@ defmodule OperationTest do
     end
 
     assert Def18Operation.run(a: 2) == {:ok, 4}
-    assert Def18Operation.run(a: 0) == {:error, {:validation, %{a: ["must be greater than 0"]}}}
+
+    assert Def18Operation.run(a: 0) ==
+             {:error, {:validation, %{a: ["must be greater than 0; got: 0"]}}}
 
     assert Def19Operation.run() == {:ok, "str"}
 
@@ -473,7 +475,8 @@ defmodule OperationTest do
 
     assert Def29Operation.run() ==
              {:error,
-              {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
+              {:validation,
+               %{"list_param[1]" => ["length must be greater than or equal to 7; got length: 6"]}}}
   end
 
   test "list_item + coerce_with" do
@@ -491,7 +494,8 @@ defmodule OperationTest do
 
     assert Def30Operation.run() ==
              {:error,
-              {:validation, %{"list_param[1]" => ["length must be greater than or equal to 7"]}}}
+              {:validation,
+               %{"list_param[1]" => ["length must be greater than or equal to 7; got length: 6"]}}}
   end
 
   test "string-named parameters are allowed" do
@@ -508,7 +512,12 @@ defmodule OperationTest do
              {:error, {:validation, %{"a" => ["is required"], "b" => ["is required"]}}}
 
     assert Def31Operation.run(%{"a" => 1, "b" => "2"}) ==
-             {:error, {:validation, %{"a" => ["has wrong type"], "b" => ["has wrong type"]}}}
+             {:error,
+              {:validation,
+               %{
+                 "a" => ["has wrong type; expected type: string, got: 1"],
+                 "b" => ["has wrong type; expected type: integer, got: \"2\""]
+               }}}
 
     assert Def31Operation.run(%{"a" => "1", b: 2}) ==
              {:error, {:validation, %{"b" => ["is required"]}}}
@@ -530,7 +539,12 @@ defmodule OperationTest do
              {:error, {:validation, %{"a" => ["is required"], :b => ["is required"]}}}
 
     assert Def32Operation.run(%{"a" => 1, b: "2"}) ==
-             {:error, {:validation, %{"a" => ["has wrong type"], :b => ["has wrong type"]}}}
+             {:error,
+              {:validation,
+               %{
+                 :b => ["has wrong type; expected type: integer, got: \"2\""],
+                 "a" => ["has wrong type; expected type: string, got: 1"]
+               }}}
 
     assert Def32Operation.run(%{"a" => "1"}) == {:error, {:validation, %{:b => ["is required"]}}}
     assert Def32Operation.run(%{"a" => "1", b: 2}) == {:ok, %{"a" => "1", :b => 2}}
@@ -611,10 +625,19 @@ defmodule OperationTest do
       end
 
       assert Def37Operation.run(a: nil) == {:ok, %{a: nil}}
-      assert Def37Operation.run(a: 1) == {:error, {:validation, %{a: ["must be greater than 2"]}}}
+
+      assert Def37Operation.run(a: 1) ==
+               {:error, {:validation, %{a: ["must be greater than 2; got: 1"]}}}
 
       assert Def37Operation.run(a: "1") ==
-               {:error, {:validation, %{a: ["not a number", "has wrong type"]}}}
+               {:error,
+                {:validation,
+                 %{
+                   a: [
+                     "not a number. got: \"1\"",
+                     "has wrong type; expected type: integer, got: \"1\""
+                   ]
+                 }}}
 
       assert Def37Operation.run(b: nil) == {:ok, %{b: nil}}
 
@@ -795,7 +818,9 @@ defmodule OperationTest do
       end
 
       assert Def47Operation.run(a: :a) == {:ok, %{a: :a}}
-      assert Def47Operation.run(a: "a") == {:error, {:validation, %{a: ["has wrong type"]}}}
+
+      assert Def47Operation.run(a: "a") ==
+               {:error, {:validation, %{a: ["has wrong type; expected type: atom, got: \"a\""]}}}
     end
   end
 
@@ -816,7 +841,7 @@ defmodule OperationTest do
     assert Def48Operation.run(%Def48Struct{a: 1, b: "1"}) == {:ok, %{a: 1, b: "1"}}
 
     assert Def48Operation.run(%Def48Struct{a: "1", b: "1"}) ==
-             {:error, {:validation, %{a: ["has wrong type"]}}}
+             {:error, {:validation, %{a: ["has wrong type; expected type: integer, got: \"1\""]}}}
   end
 
   describe ":from option" do
@@ -845,11 +870,13 @@ defmodule OperationTest do
       assert Def49Operation.run(%{"a" => 1, bB: "1"}) == {:ok, %{a: 1, b: "1"}}
 
       assert Def49Operation.run(%{"a" => 1, bB: 1}) ==
-               {:error, {:validation, %{b: ["has wrong type"]}}}
+               {:error, {:validation, %{b: ["has wrong type; expected type: string, got: 1"]}}}
 
       assert Def50Operation.run(a: 1, b: "1") == {:ok, %{a: 1, b: "1"}}
       assert Def50Operation.run(aA: 1, bB: "1") == {:ok, %{a: 1, b: "1"}}
-      assert Def50Operation.run(aA: 1, bB: 1) == {:error, {:validation, %{b: ["has wrong type"]}}}
+
+      assert Def50Operation.run(aA: 1, bB: 1) ==
+               {:error, {:validation, %{b: ["has wrong type; expected type: string, got: 1"]}}}
     end
   end
 

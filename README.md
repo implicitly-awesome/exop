@@ -1,18 +1,24 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/exop.svg)](https://hex.pm/packages/exop) [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/exop/) [![Build Status](https://travis-ci.org/madeinussr/exop.svg?branch=master)](https://travis-ci.org/madeinussr/exop)
 
-#### New versions
-
-_Guys, too much work these days, so new releases will be shipped with some delay. However, I work on them constantly._
-
 # Exop
 
 A library that helps you to organize your Elixir code in more domain-driven way.
 Exop provides macros which helps you to encapsulate business logic and offers you additionally:
 incoming params validation (with predefined contract), params coercion, policy check, fallback behavior and more.
 
+---
+
+## Exop family:
+
 ### ExopData
 
 Interested in property-based testing? Check out new Exop family member - [ExopData](https://github.com/madeinussr/exop_data). If you use Exop to organize your code with ExopData you can get property generators in the most easiest way.
+
+### ExopPlug
+
+The new [ExopPlug](https://github.com/madeinussr/exop_plug) library provides a convenient way to validate incoming parameters of your Phoenix application's controllers by offering you small but useful DSL.
+
+---
 
 ## Table of Contents
 
@@ -36,6 +42,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
     - [func](#func)
     - [allow_nil](#allow_nil)
     - [from](#from)
+    - [subset_of](#subset_of)
   - [Defined params](#defined-params)
   - [Interrupt](#interrupt)
   - [Coercion](#coercion)
@@ -49,7 +56,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.3.4"}]
+  [{:exop, "~> 1.3.5"}]
 end
 ```
 
@@ -418,6 +425,21 @@ end
 Why? Simply because sometimes you're not in control of incoming parameters but don't want to map them each time you need to use'em by yourself (good example: params in Phoenix controller's action, which come as a map with string keys).
 
 _This option doesn't work for `:inner` check's inner parameters currently._
+
+#### subset_of
+
+Checks whether a parameter's value (list) is a subset of a defined check-list.
+To pass this check, all items within given into an operation parameter should be included into check-list,
+otherwise the check is failed.
+
+```elixir
+parameter :some_param, subset_of: [1, 2, :a, "b", C]
+
+# {:ok, _} = MyOperation.run(some_param: [1, :a, C])
+# {:ok, _} = MyOperation.run(some_param: [:a])
+# {:error, _} = MyOperation.run(some_param: [])
+# {:error, _} = MyOperation.run(some_param: [3, :a, C])
+```
 
 ### Interrupt
 

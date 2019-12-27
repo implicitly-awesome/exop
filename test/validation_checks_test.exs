@@ -53,7 +53,9 @@ defmodule ValidationChecksTest do
   end
 
   test "check_type/3: returns false if item is of unknown type" do
-    assert %{a: "has wrong type"} == check_type(%{a: 1}, :a, :unknown)
+    assert check_type(%{a: 1}, :a, :unknown) == %{
+             a: "has wrong type; expected type: unknown, got: 1"
+           }
   end
 
   test "check_type/3: returns true if item is one of handled type" do
@@ -66,7 +68,9 @@ defmodule ValidationChecksTest do
   end
 
   test "check_type/3: returns false if item is nil but type is not atom" do
-    assert check_type(%{a: nil}, :a, :string) == %{:a => "has wrong type"}
+    assert check_type(%{a: nil}, :a, :string) == %{
+             :a => "has wrong type; expected type: string, got: nil"
+           }
   end
 
   test "check_type/3: checks module" do
@@ -74,26 +78,53 @@ defmodule ValidationChecksTest do
     end
 
     assert check_type(%{a: TestModule}, :a, :module) == true
-    assert check_type(%{a: TestModule_2}, :a, :module) == %{a: "has wrong type"}
-    assert check_type(%{a: :atom}, :a, :module) == %{a: "has wrong type"}
-    assert check_type(%{a: 1}, :a, :module) == %{a: "has wrong type"}
+
+    assert check_type(%{a: TestModule_2}, :a, :module) == %{
+             a: "has wrong type; expected type: module, got: TestModule_2"
+           }
+
+    assert check_type(%{a: :atom}, :a, :module) == %{
+             a: "has wrong type; expected type: module, got: :atom"
+           }
+
+    assert check_type(%{a: 1}, :a, :module) == %{
+             a: "has wrong type; expected type: module, got: 1"
+           }
   end
 
   test "check_type/3: checks keyword" do
     assert check_type(%{a: [b: 1, c: "2"]}, :a, :keyword) == true
     assert check_type(%{a: [{:b, 1}, {:c, "2"}]}, :a, :keyword) == true
     assert check_type(%{a: []}, :a, :keyword) == true
-    assert check_type(%{a: :atom}, :a, :keyword) == %{a: "has wrong type"}
-    assert check_type(%{a: %{b: 1, c: "2"}}, :a, :keyword) == %{a: "has wrong type"}
+
+    assert check_type(%{a: :atom}, :a, :keyword) == %{
+             a: "has wrong type; expected type: keyword, got: :atom"
+           }
+
+    assert check_type(%{a: %{b: 1, c: "2"}}, :a, :keyword) == %{
+             a: "has wrong type; expected type: keyword, got: %{b: 1, c: \"2\"}"
+           }
   end
 
   test "check_type/3: checks structs" do
     assert check_type(%{a: %TestStruct{qwerty: :asdfgh}}, :a, :struct) == true
     assert check_type(%{a: %TestStruct{}}, :a, :struct) == true
-    assert check_type(%{a: %{b: 1, c: "2"}}, :a, :struct) == %{a: "has wrong type"}
-    assert check_type(%{a: %{}}, :a, :struct) == %{a: "has wrong type"}
-    assert check_type(%{a: [{:b, 1}, {:c, "2"}]}, :a, :struct) == %{a: "has wrong type"}
-    assert check_type(%{a: :atom}, :a, :struct) == %{a: "has wrong type"}
+
+    assert check_type(%{a: %{b: 1, c: "2"}}, :a, :struct) == %{
+             a: "has wrong type; expected type: struct, got: %{b: 1, c: \"2\"}"
+           }
+
+    assert check_type(%{a: %{}}, :a, :struct) == %{
+             a: "has wrong type; expected type: struct, got: %{}"
+           }
+
+    assert check_type(%{a: [{:b, 1}, {:c, "2"}]}, :a, :struct) == %{
+             a: "has wrong type; expected type: struct, got: [b: 1, c: \"2\"]"
+           }
+
+    assert check_type(%{a: :atom}, :a, :struct) == %{
+             a: "has wrong type; expected type: struct, got: :atom"
+           }
   end
 
   test "check_type/3: checks uuids" do
@@ -102,11 +133,23 @@ defmodule ValidationChecksTest do
     # uuid 4
     assert check_type(%{a: "7b79b77b-bc4c-4de1-a81f-1a07fc3289c2"}, :a, :uuid) == true
 
-    assert check_type(%{a: ""}, :a, :uuid) == %{a: "has wrong type"}
-    assert check_type(%{a: "qwerty"}, :a, :uuid) == %{a: "has wrong type"}
-    assert check_type(%{a: "qwerty-asdf"}, :a, :uuid) == %{a: "has wrong type"}
-    assert check_type(%{a: :b}, :a, :uuid) == %{a: "has wrong type"}
-    assert check_type(%{a: 1}, :a, :uuid) == %{a: "has wrong type"}
+    assert check_type(%{a: ""}, :a, :uuid) == %{a: "has wrong type; expected type: uuid, got: \"\""}
+
+    assert check_type(%{a: "qwerty"}, :a, :uuid) == %{
+             a: "has wrong type; expected type: uuid, got: \"qwerty\""
+           }
+
+    assert check_type(%{a: "qwerty-asdf"}, :a, :uuid) == %{
+             a: "has wrong type; expected type: uuid, got: \"qwerty-asdf\""
+           }
+
+    assert check_type(%{a: :b}, :a, :uuid) == %{
+             a: "has wrong type; expected type: uuid, got: :b"
+           }
+
+    assert check_type(%{a: 1}, :a, :uuid) == %{
+             a: "has wrong type; expected type: uuid, got: 1"
+           }
   end
 
   test "check_numericality/3: returns %{item_name => error_msg} if item is in params and is not a number" do
@@ -274,24 +317,34 @@ defmodule ValidationChecksTest do
   end
 
   test "check_struct/3: fails" do
-    assert check_struct(%{a: %TestStruct2{}}, :a, %TestStruct{}) == %{a: "is not expected struct"}
+    assert check_struct(%{a: %TestStruct2{}}, :a, %TestStruct{}) == %{
+             a:
+               "is not expected struct; expected: ValidationChecksTest.TestStruct; got: ValidationChecksTest.TestStruct2"
+           }
 
     assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{}) == %{
-             a: "is not expected struct"
+             a:
+               "is not expected struct; expected: ValidationChecksTest.TestStruct; got: ValidationChecksTest.TestStruct2"
            }
 
     assert check_struct(%{a: %TestStruct2{}}, :a, %TestStruct{qwerty: "123"}) == %{
-             a: "is not expected struct"
+             a:
+               "is not expected struct; expected: ValidationChecksTest.TestStruct; got: ValidationChecksTest.TestStruct2"
            }
 
     assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, %TestStruct{qwerty: "123"}) == %{
-             a: "is not expected struct"
+             a:
+               "is not expected struct; expected: ValidationChecksTest.TestStruct; got: ValidationChecksTest.TestStruct2"
            }
 
-    assert check_struct(%{a: %TestStruct2{}}, :a, TestStruct) == %{a: "is not expected struct"}
+    assert check_struct(%{a: %TestStruct2{}}, :a, TestStruct) == %{
+             a:
+               "is not expected struct; expected: ValidationChecksTest.TestStruct; got: ValidationChecksTest.TestStruct2"
+           }
 
     assert check_struct(%{a: %TestStruct2{qwerty: "123"}}, :a, TestStruct) == %{
-             a: "is not expected struct"
+             a:
+               "is not expected struct; expected: ValidationChecksTest.TestStruct; got: ValidationChecksTest.TestStruct2"
            }
   end
 
@@ -304,14 +357,20 @@ defmodule ValidationChecksTest do
   end
 
   test "check_equals/3: fails" do
-    assert check_equals(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1"}
-    assert check_equals(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1"}
-    assert check_equals(%{a: :a}, :a, :b) == %{a: "must be equal to :b"}
-    assert check_equals(%{a: [b: 2, c: 3]}, :a, b: 2, c: 1) == %{a: "must be equal to [b: 2, c: 1]"}
-    assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{a: "must be equal to [b: 2]"}
+    assert check_equals(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1; got: 1.0"}
+    assert check_equals(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1; got: 1.0"}
+    assert check_equals(%{a: :a}, :a, :b) == %{a: "must be equal to :b; got: :a"}
+
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, b: 2, c: 1) == %{
+             a: "must be equal to [b: 2, c: 1]; got: [b: 2, c: 3]"
+           }
+
+    assert check_equals(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{
+             a: "must be equal to [b: 2]; got: [b: 2, c: 3]"
+           }
 
     assert check_equals(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{
-             a: "must be equal to %{b: 2, d: 3}"
+             a: "must be equal to %{b: 2, d: 3}; got: %{b: 2, c: 3}"
            }
   end
 
@@ -324,18 +383,20 @@ defmodule ValidationChecksTest do
   end
 
   test "check_exactly/3: fails" do
-    assert check_exactly(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1"}
-    assert check_exactly(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1"}
-    assert check_exactly(%{a: :a}, :a, :b) == %{a: "must be equal to :b"}
+    assert check_exactly(%{a: 1.0}, :a, 1) == %{a: "must be equal to 1; got: 1.0"}
+    assert check_exactly(%{a: 1.0}, :a, 1.1) == %{a: "must be equal to 1.1; got: 1.0"}
+    assert check_exactly(%{a: :a}, :a, :b) == %{a: "must be equal to :b; got: :a"}
 
     assert check_exactly(%{a: [b: 2, c: 3]}, :a, b: 2, c: 1) == %{
-             a: "must be equal to [b: 2, c: 1]"
+             a: "must be equal to [b: 2, c: 1]; got: [b: 2, c: 3]"
            }
 
-    assert check_exactly(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{a: "must be equal to [b: 2]"}
+    assert check_exactly(%{a: [b: 2, c: 3]}, :a, [{:b, 2}]) == %{
+             a: "must be equal to [b: 2]; got: [b: 2, c: 3]"
+           }
 
     assert check_exactly(%{a: %{b: 2, c: 3}}, :a, %{b: 2, d: 3}) == %{
-             a: "must be equal to %{b: 2, d: 3}"
+             a: "must be equal to %{b: 2, d: 3}; got: %{b: 2, c: 3}"
            }
   end
 
@@ -386,16 +447,45 @@ defmodule ValidationChecksTest do
 
   test "check_numericality/3: aliases" do
     assert check_numericality(%{a: 3}, :a, %{equals: 3}) == true
-    assert check_numericality(%{a: 2}, :a, %{equals: 3}) == [%{a: "must be equal to 3"}]
+    assert check_numericality(%{a: 2}, :a, %{equals: 3}) == [%{a: "must be equal to 3; got: 2"}]
     assert check_numericality(%{a: 3}, :a, %{is: 3}) == true
-    assert check_numericality(%{a: 2}, :a, %{is: 3}) == [%{a: "must be equal to 3"}]
+    assert check_numericality(%{a: 2}, :a, %{is: 3}) == [%{a: "must be equal to 3; got: 2"}]
     assert check_numericality(%{a: 3}, :a, %{min: 1}) == true
 
     assert check_numericality(%{a: 1}, :a, %{min: 3}) == [
-             %{a: "must be greater than or equal to 3"}
+             %{a: "must be greater than or equal to 3; got: 1"}
            ]
 
     assert check_numericality(%{a: 1}, :a, %{max: 3}) == true
-    assert check_numericality(%{a: 3}, :a, %{max: 1}) == [%{a: "must be less than or equal to 1"}]
+
+    assert check_numericality(%{a: 3}, :a, %{max: 1}) == [
+             %{a: "must be less than or equal to 1; got: 3"}
+           ]
+  end
+
+  test "subset_of/3: success" do
+    assert check_subset_of(%{a: ["b"]}, :a, [1, 2, :a, "b", C]) == true
+    assert check_subset_of(%{a: [2, "b", C]}, :a, [1, 2, :a, "b", C]) == true
+    assert check_subset_of(%{a: [1, 2, :a, "b", C]}, :a, [1, 2, :a, "b", C]) == true
+  end
+
+  test "subset_of/3: fails" do
+    assert check_subset_of(%{a: :b}, :a, [1, 2, :a, "b", C]) == %{a: "must be a list; got: :b"}
+
+    assert check_subset_of(%{a: []}, :a, [1, 2, :a, "b", C]) == %{
+             a: "must be a subset of [1, 2, :a, \"b\", C]; got: []"
+           }
+
+    assert check_subset_of(%{a: [3]}, :a, [1, 2, :a, "b", C]) == %{
+             a: "must be a subset of [1, 2, :a, \"b\", C]; got: [3]"
+           }
+
+    assert check_subset_of(%{a: [1, 2, 3]}, :a, [1, 2, :a, "b", C]) == %{
+             a: "must be a subset of [1, 2, :a, \"b\", C]; got: [1, 2, 3]"
+           }
+
+    assert check_subset_of(%{a: [1, 2, :a, 3, "b", C]}, :a, [1, 2, :a, "b", C]) == %{
+             a: "must be a subset of [1, 2, :a, \"b\", C]; got: [1, 2, :a, 3, \"b\", C]"
+           }
   end
 end

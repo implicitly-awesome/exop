@@ -184,7 +184,7 @@ defmodule Exop.Validation do
       []
 
       iex> Exop.Validation.check_list_item(%{a: [1, :atom]}, :a, [type: :integer])
-      [[true, true], [true, %{"a[1]" => "has wrong type; expected type: integer, got: :atom"}]]
+      [[true, true], [true, %{"a[1]" => "has wrong type"}]]
 
       iex> Exop.Validation.check_list_item(%{a: [1, 2]}, :a, [type: :integer])
       [[true, true], [true, true]]

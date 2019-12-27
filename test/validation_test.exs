@@ -41,8 +41,8 @@ defmodule ValidationTest do
                %{param: "is required"},
                true,
                true,
-               %{param2: "has wrong type; expected type: integer, got: \"some_value\""},
-               %{param2: "must be one of [1, 2, 3]; got: \"some_value\""}
+               %{param2: "has wrong type"},
+               %{param2: "must be one of [1, 2, 3]"}
              ]
   end
 
@@ -159,10 +159,10 @@ defmodule ValidationTest do
 
     assert %{
              "list_param[0]" => [
-               "has wrong type; expected type: string, got: 1",
+               "has wrong type",
                "length check supports only lists, binaries, atoms, maps and tuples"
              ],
-             "list_param[1]" => ["length must be greater than or equal to 7; got length: 6"],
+             "list_param[1]" => ["length must be greater than or equal to 7"],
              "list_param[2]" => ["doesn't allow nil"]
            } == reasons
   end
@@ -193,8 +193,8 @@ defmodule ValidationTest do
     {:error, {:validation, reasons}} = valid?(contract, received_params)
 
     assert %{
-             "list_param[0][:b]" => ["length must be greater than or equal to 7; got length: 6"],
-             "list_param[1][:a]" => ["has wrong type; expected type: integer, got: \"3\""]
+             "list_param[0][:b]" => ["length must be greater than or equal to 7"],
+             "list_param[1][:a]" => ["has wrong type"]
            } == reasons
   end
 

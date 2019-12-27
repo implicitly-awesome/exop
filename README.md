@@ -430,7 +430,7 @@ _This option doesn't work for `:inner` check's inner parameters currently._
 
 Checks whether a parameter's value (list) is a subset of a defined check-list.
 To pass this check, all items within given into an operation parameter should be included into check-list,
-otherwise check is failed.
+otherwise the check is failed.
 
 ```elixir
 parameter :some_param, subset_of: [1, 2, :a, "b", C]

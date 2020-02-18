@@ -106,27 +106,6 @@ defmodule ValidationChecksTest do
            }
   end
 
-  test "check_type/3: checks structs" do
-    assert check_type(%{a: %TestStruct{qwerty: :asdfgh}}, :a, :struct) == true
-    assert check_type(%{a: %TestStruct{}}, :a, :struct) == true
-
-    assert check_type(%{a: %{b: 1, c: "2"}}, :a, :struct) == %{
-             a: "has wrong type; expected type: struct, got: %{b: 1, c: \"2\"}"
-           }
-
-    assert check_type(%{a: %{}}, :a, :struct) == %{
-             a: "has wrong type; expected type: struct, got: %{}"
-           }
-
-    assert check_type(%{a: [{:b, 1}, {:c, "2"}]}, :a, :struct) == %{
-             a: "has wrong type; expected type: struct, got: [b: 1, c: \"2\"]"
-           }
-
-    assert check_type(%{a: :atom}, :a, :struct) == %{
-             a: "has wrong type; expected type: struct, got: :atom"
-           }
-  end
-
   test "check_type/3: checks uuids" do
     # uuid 1
     assert check_type(%{a: "9689317e-39ac-11e9-b210-d663bd873d93"}, :a, :uuid) == true
@@ -400,49 +379,27 @@ defmodule ValidationChecksTest do
            }
   end
 
-  def validation(params, :a, param_value), do: validation(params, param_value)
-  def validation(_params, :b, _param_value), do: false
+  def validation({:a, value}, _all_params), do: value > 99
+  def validation({:b, _value}, _all_params), do: false
 
-  def validation(_params, param_value) do
-    param_value > 99
+  def validation_verbose({:a, value}, _all_params) do
+    if value > 99, do: :ok, else: {:error, "My error message"}
   end
 
-  def validation_verbose(params, :a, param_value), do: validation_verbose(params, param_value)
-  def validation_verbose(_params, :b, _param_value), do: false
+  def validation_verbose({:b, _value}, _all_params), do: :error
 
-  def validation_verbose(_params, param_value) do
-    if param_value > 99 do
-      true
-    else
-      {:error, "Custom error message"}
-    end
+  def positive_validation({_name, _value}, _all_params) do
+    [:anything, "what is not", false, :or, "error tuple"]
   end
 
-  test "check_func/3: success" do
+  test "check_func/3" do
     assert check_func(%{a: 100}, :a, &__MODULE__.validation/2) == true
     assert check_func(%{a: 100}, :a, &__MODULE__.validation_verbose/2) == true
-  end
+    assert check_func(%{a: 100}, :a, &__MODULE__.positive_validation/2) == true
+    assert check_func(%{b: "not even a number"}, :b, &__MODULE__.positive_validation/2) == true
 
-  test "check_func/3: fails" do
-    assert check_func(%{a: 98}, :a, &__MODULE__.validation/2) == %{a: "isn't valid"}
-
-    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/2) == %{
-             a: "Custom error message"
-           }
-  end
-
-  test "check_func/3: validation func can expect 3 args: params, param_name and param_value " do
-    assert check_func(%{a: 100}, :a, &__MODULE__.validation/3) == true
-    assert check_func(%{a: 100}, :a, &__MODULE__.validation_verbose/3) == true
-    assert check_func(%{b: 100}, :b, &__MODULE__.validation_verbose/3) == %{b: "isn't valid"}
-
-    assert check_func(%{a: 98}, :a, &__MODULE__.validation/3) == %{a: "isn't valid"}
-
-    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/3) == %{
-             a: "Custom error message"
-           }
-
-    assert check_func(%{b: 98}, :b, &__MODULE__.validation_verbose/3) == %{b: "isn't valid"}
+    assert check_func(%{a: 98}, :a, &__MODULE__.validation/2) == %{a: "not valid"}
+    assert check_func(%{a: 98}, :a, &__MODULE__.validation_verbose/2) == %{a: "My error message"}
   end
 
   test "check_numericality/3: aliases" do

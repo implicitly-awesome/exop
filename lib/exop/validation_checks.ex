@@ -441,40 +441,30 @@ defmodule Exop.ValidationChecks do
 
   ## Examples
 
-      iex> Exop.ValidationChecks.check_func(%{a: 1}, :a, fn(_contract, param)-> param > 0 end)
+      iex> Exop.ValidationChecks.check_func(%{a: 1}, :a, fn({:a, value}, _all_param)-> value > 0 end)
       true
-      iex> Exop.ValidationChecks.check_func(%{a: 1}, :a, fn(_contract, param)-> is_nil(param) end)
-      %{a: "isn't valid"}
-      iex> Exop.ValidationChecks.check_func(%{a: -1}, :a, fn(_contract, _param)-> {:error, :my_error} end)
+      iex> Exop.ValidationChecks.check_func(%{a: 1}, :a, fn({:a, _value}, _all_param)-> :ok end)
+      true
+      iex> Exop.ValidationChecks.check_func(%{a: 1}, :a, fn({:a, value}, _all_param)-> is_nil(value) end)
+      %{a: "not valid"}
+      iex> Exop.ValidationChecks.check_func(%{a: 1}, :a, fn({:a, _value}, _all_param)-> :error end)
+      %{a: "not valid"}
+      iex> Exop.ValidationChecks.check_func(%{a: -1}, :a, fn({:a, _value}, _all_param)-> {:error, :my_error} end)
       %{a: :my_error}
-      iex> Exop.ValidationChecks.check_func(%{a: -1, b: 1}, :a, fn(_contract, param_name, param_value)-> {param_name, param_value} == {:a, -1} end)
-      true
-      iex> Exop.ValidationChecks.check_func(%{a: -1, b: 1}, :b, fn(_contract, param_name, param_value)-> {param_name, param_value} != {:a, -1} end)
-      true
   """
   @spec check_func(
           map(),
           atom() | String.t(),
-          (map(), any -> true | false)
+          ({atom() | String.t(), any()}, map() -> any())
         ) :: true | check_error
   def check_func(check_items, item_name, check) do
     check_item = get_check_item(check_items, item_name)
 
-    check_result =
-      case :erlang.fun_info(check)[:arity] do
-        1 ->
-          check.(check_item)
-
-        2 ->
-          check.(check_items, check_item)
-
-        _ ->
-          check.(check_items, item_name, check_item)
-      end
+    check_result = check.({item_name, check_item}, check_items)
 
     case check_result do
       {:error, msg} -> %{item_name => msg}
-      false -> %{item_name => "isn't valid"}
+      check_result when check_result in [false, :error] -> %{item_name => "not valid"}
       _ -> true
     end
   end

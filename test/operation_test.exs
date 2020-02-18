@@ -327,15 +327,15 @@ defmodule OperationTest do
       use Exop.Operation
 
       parameter :a, func: &__MODULE__.validate/2, coerce_with: &__MODULE__.coerce/2
-      parameter :b, func: &__MODULE__.validate/1
+      parameter :b, func: &__MODULE__.validate/2
 
       def process(params), do: params
 
-      def validate(_params, x), do: validate(x)
+      def validate({_, value}, _received_params), do: validate(value)
 
-      def validate(x), do: x > 0
+      def validate(value), do: value > 0
 
-      def coerce(x), do: x + 1
+      def coerce(value), do: value + 1
 
       def coerce({:a, a_value}, _received_params), do: a_value + 1
     end
@@ -348,9 +348,9 @@ defmodule OperationTest do
     assert Def19Operation.run() == {:ok, "str"}
 
     assert Def20Operation.run(a: -1, b: 0) ==
-             {:error, {:validation, %{a: ["isn't valid"], b: ["isn't valid"]}}}
+             {:error, {:validation, %{a: ["not valid"], b: ["not valid"]}}}
 
-    assert Def20Operation.run(a: 0, b: 0) == {:error, {:validation, %{b: ["isn't valid"]}}}
+    assert Def20Operation.run(a: 0, b: 0) == {:error, {:validation, %{b: ["not valid"]}}}
     assert Def20Operation.run(a: 0, b: 1) == {:ok, %{a: 1, b: 1}}
   end
 
@@ -430,7 +430,7 @@ defmodule OperationTest do
     assert Def26Operation.run!(param: 111) == {:error, :ooops}
   end
 
-  test "custom validation function takes a contract as the first parameter" do
+  test "custom validation function takes a {param_name, param_value} tuple as the first argument" do
     defmodule Def27Operation do
       use Exop.Operation
 
@@ -439,13 +439,13 @@ defmodule OperationTest do
 
       def process(params), do: {params[:a], params[:b]}
 
-      def custom_validation(params, b) do
-        params[:a] > 10 && b < 10
+      def custom_validation({:b, b_value}, all_params) do
+        all_params[:a] > 10 && b_value < 10
       end
     end
 
     assert Def27Operation.run(a: 11, b: 0) == {:ok, {11, 0}}
-    assert Def27Operation.run(a: 0, b: 0) == {:error, {:validation, %{b: ["isn't valid"]}}}
+    assert Def27Operation.run(a: 0, b: 0) == {:error, {:validation, %{b: ["not valid"]}}}
   end
 
   test "run/1: returns unwrapped tuple {:ok, result} if process/1 returns {:ok, result}" do

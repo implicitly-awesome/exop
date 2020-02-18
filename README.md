@@ -56,7 +56,7 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.3.5"}]
+  [{:exop, "~> 1.4"}]
 end
 ```
 
@@ -101,7 +101,7 @@ _for more information see [Operation results](#operation-results) section_
 
 ### Parameter checks
 
-A parameter options could have various checks. Here the list of checks available yet:
+A parameter options could have various checks. Here the list of available checks:
 
 - `type`
 - `required`
@@ -117,6 +117,8 @@ A parameter options could have various checks. Here the list of checks available
 - `list_item`
 - `func`
 - `allow_nil`
+- `from`
+- `subset_of`
 
 #### `type`
 
@@ -315,51 +317,32 @@ Moreover, `coerce_with` and `default` options are available too.
 #### `func`
 
 Checks whether an item is valid over custom validation function.
-If this function returns `false`, validation will fail with default message `"isn't valid"`.
+
+A validation is treated as failed if callback function returns one of results:
+- `{:error, _your_error_message_or_payload}`
+- `:error`
+- `false`
+
+Everything else is treaded as successful validation result.
+
+If the validation function returns either `false` or `:error`, the default message `"not valid"` is used in your operation's validation results.
+
+The validation function receives two arguments:
+- a tuple with a validating parameter's name and value
+- a map of all parameters given to an operation
+
+Those arguments allow you to make a parameter validations which depend on other parameters and their values.
 
 ```elixir
-# arity of 1
-parameter :some_param, func: &is_atom/1
-
-# arity of 2
 parameter :some_param, func: &__MODULE__.your_validation/2
 
-def your_validation(_params, param_value), do: !is_nil(param_value)
-
-# arity of 3
-
-parameter :some_param, func: &__MODULE__.your_validation/3
-
-def your_validation(_params, :some_param = _param_name, param_value), do: !is_nil(param_value)
-```
-
-A custom validation function can also return a user-specified message which will be displayed in map of validation errors.
-
-```elixir
-def your_validation(_params, param) do
-  if param > 99 do
-    true
-  else
-    {:error, "Custom error message"}
-  end
+@spec your_validation({atom() | String.t(), any()}, map()) :: any()
+def your_validation({param_name, param_value}, all_received_params_map) do
+  # your validation logic based on given arguments is here
 end
 ```
 
-Therefore, validation will fail, if the function returns either `false` or `{:error, your_error_msg}` tuple.
-
-`func/1` receives one argument which is the actual parameter value to check.
-
-`func/2` receives two arguments: the first is a contract of an operation (parameters with their values),
-the second - the actual parameter value to check. So, now you can validate a parameter depending on other parameters values.
-
-```elixir
-parameter :a, type: :integer
-parameter :b, func: &__MODULE__.your_validation/2
-
-def your_validation(params, b), do: params[:a] > 0 && !is_nil(b)
-```
-
-_it's possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
+_it is possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
 
 #### allow_nil
 

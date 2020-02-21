@@ -190,4 +190,48 @@ defmodule ChainTest do
 
     assert {:ok, 30.0} = result
   end
+
+  describe "with conditional steps" do
+    defmodule TestChainConditionalSteps do
+      use Exop.Chain
+
+      operation Sum
+      operation MultiplyByHundred, if: &__MODULE__.greater_than_10/1
+      operation DivisionByTen
+
+      def greater_than_10(a: a) when a > 10, do: true
+      def greater_than_10(_x), do: false
+    end
+
+    defmodule TestChainConditionalSteps2 do
+      use Exop.Chain
+
+      step Sum
+      step MultiplyByHundred, if: &__MODULE__.greater_than_10/1
+      step DivisionByTen, if: &__MODULE__.greater_than_10_000/1
+
+      def greater_than_10(a: a) when a > 10, do: true
+      def greater_than_10(_x), do: false
+
+      def greater_than_10_000(a: a) when a > 10_000, do: true
+      def greater_than_10_000(_x), do: false
+    end
+
+    test "invokes a step with a condition" do
+      assert {:ok, [a: 3]} = TestChainConditionalSteps.run(a: 1, b: 2)
+      assert {:ok, 110.0} = TestChainConditionalSteps.run(a: 4, b: 7)
+
+      assert {:ok, [a: 3]} = TestChainConditionalSteps2.run(a: 1, b: 2)
+      assert {:ok, [a: 1100]} = TestChainConditionalSteps2.run(a: 4, b: 7)
+      assert {:ok, 1100.0} = TestChainConditionalSteps2.run(a: 40, b: 70)
+    end
+
+    test "interrupts a chain on error result" do
+      assert {:error, {:validation, %{a: ["has wrong type; expected type: integer, got: \"1\""]}}} =
+               TestChainConditionalSteps.run(a: "1", b: 2)
+
+      assert {:error, {:validation, %{b: ["has wrong type; expected type: integer, got: \"2\""]}}} =
+               TestChainConditionalSteps2.run(a: 1, b: "2")
+    end
+  end
 end

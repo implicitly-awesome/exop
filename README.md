@@ -712,16 +712,43 @@ end
 defmodule YourChain do
   use Exop.Chain, name_in_error: true
 
-  operation Op1
-  operation Op2Fail
-  operation Op3
+  operation Operation1
+  operation Operation2Fail
+  operation Operation3
 end
 
 iex> YourChain.run(a: "1", b: 2)
-{Op2Fail, {:error, {:validation, %{a: ["has wrong type"]}}}}
+{Operation2Fail, {:error, {:validation, %{a: ["has wrong type"]}}}}
 ```
 
 `name_in_error: true` doesn't affect operations with a fallback defined (unmodified fallback result is returned).
+
+### Conditional operations (steps)
+
+It is possible to define an invokation condition for an operation in a chain. Meaning if the condition is truthy - the operation will be invoked.
+
+The condition can be defined with `if: your_func/1` option given to an operation.
+
+```elixir
+defmodule YourChain do
+  use Exop.Chain
+
+  # operation/step - they are synonims in the context of Exop.Chain
+  operation Operation1
+  operation MultiplyByHundred, if: &__MODULE__.is_it_good_to_go?/1
+  operation DivisionByTen
+
+  def is_it_good_to_go?(previous_operation_output) do
+    # here your condition logic which should return a boolean
+  end
+end
+```
+
+A condition function receives a single argument - the previous operation's output (the second element of `{:ok, _}` tuple, not the tuple itself).
+
+An operation is invoked if a condition function returns `true`, otherwise the operation won't be invoked.
+
+And of course a chain invokation interrupts if the previous operation's result wasn't successful (is not `{:ok, _}` tuple).
 
 ## LICENSE
 

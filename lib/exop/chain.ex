@@ -45,19 +45,31 @@ defmodule Exop.Chain do
 
   @doc "Defines one of a chain's operation."
   @spec operation(module(), keyword()) :: any()
-  defmacro operation(operation, additional_params \\ []) do
-    quote bind_quoted: [operation: operation, additional_params: additional_params] do
+  defmacro operation(operation, opts \\ []) do
+    quote bind_quoted: [operation: operation, opts: opts] do
       {:module, operation} = Code.ensure_compiled(operation)
-      @operations %{operation: operation, additional_params: additional_params}
+      additional_params = Keyword.drop(opts, [:if])
+
+      @operations %{
+        operation: operation,
+        additional_params: additional_params,
+        if: Keyword.get(opts, :if)
+      }
     end
   end
 
   @doc "Defines one of a chain's operation."
   @spec step(module(), keyword()) :: any()
-  defmacro step(operation, additional_params \\ []) do
-    quote bind_quoted: [operation: operation, additional_params: additional_params] do
+  defmacro step(operation, opts \\ []) do
+    quote bind_quoted: [operation: operation, opts: opts] do
       {:module, operation} = Code.ensure_compiled(operation)
-      @operations %{operation: operation, additional_params: additional_params}
+      additional_params = Keyword.drop(opts, [:if])
+
+      @operations %{
+        operation: operation,
+        additional_params: additional_params,
+        if: Keyword.get(opts, :if, :no_if_condition)
+      }
     end
   end
 
@@ -104,48 +116,54 @@ defmodule Exop.Chain do
       end
 
       defp invoke_operations(
-             [%{operation: operation, additional_params: additional_params} | []],
-             {:ok, params} = _result
-           ) do
-        params = params |> merge_params(additional_params) |> resolve_params_values()
-
-        case apply(operation, :run, [params]) do
-          result when is_tuple(result) and elem(result, 0) == :error ->
-            throw({@not_ok, result, operation})
-            @not_ok
-
-          {:ok, result} ->
-            result
-
-          result ->
-            throw({@not_ok, result})
-            @not_ok
+             [
+               %{operation: operation, additional_params: additional_params, if: if_condition}
+               | tail
+             ],
+             {:ok, params} = _previous_result
+           )
+           when is_function(if_condition) do
+        if if_condition.(params) == true do
+          params = params |> merge_params(additional_params) |> resolve_params_values()
+          invoke_operation(operation, tail, params)
+        else
+          # if it is the last operation in a chain and it has 'if' condition
+          # and that condition is not applicable
+          if length(tail) == 1 do
+            params
+          else
+            invoke_operations(tail, params)
+          end
         end
       end
 
       defp invoke_operations(
              [%{operation: operation, additional_params: additional_params} | tail],
-             {:ok, params} = _result
+             {:ok, params} = _previous_result
            ) do
         params = params |> merge_params(additional_params) |> resolve_params_values()
+        invoke_operation(operation, tail, params)
+      end
 
+      defp invoke_operations(_operations, not_ok = _result) do
+        throw({@not_ok, not_ok})
+        @not_ok
+      end
+
+      @spec invoke_operation(map(), list(), map() | Keyword.t()) :: any()
+      defp invoke_operation(operation, tail, params) do
         case apply(operation, :run, [params]) do
           result when is_tuple(result) and elem(result, 0) == :error ->
             throw({@not_ok, result, operation})
             @not_ok
 
           {:ok, _} = result ->
-            invoke_operations(tail, result)
+            if length(tail) > 0, do: invoke_operations(tail, result), else: elem(result, 1)
 
           result ->
             throw({@not_ok, result})
             @not_ok
         end
-      end
-
-      defp invoke_operations(_operations, not_ok = _result) do
-        throw({@not_ok, not_ok})
-        @not_ok
       end
 
       @spec merge_params(map() | keyword(), map() | keyword()) :: map()

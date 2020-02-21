@@ -4,6 +4,7 @@
 
 - a validation `type: :struct` that had been deprecated since ver. 1.2.2 was removed
 - the `func` check's callback arguments now aligned with `coerce_with` callback, they are: a parameter's name/value tuple (the first), all parameters map given to an operation (the second), the output of the validation callback fuction has been updated as well (check README for details)
+- `Exop.Chain`'s `operation` (`step`) now can be conditional with `if: _your_condition_func/1` option provided (see README for the details)
 
 ## [1.3.5] - 2019.12.27
 

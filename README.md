@@ -4,7 +4,7 @@
 
 A library that helps you to organize your Elixir code in more domain-driven way.
 Exop provides macros which helps you to encapsulate business logic and offers you additionally:
-incoming params validation (with predefined contract), params coercion, policy check, fallback behavior and more.
+incoming params validation (with predefined contract), params coercion, policy check, fallback behavior, operations chaining and more.
 
 ---
 
@@ -744,11 +744,37 @@ defmodule YourChain do
 end
 ```
 
-A condition function receives a single argument - the previous operation's output (the second element of `{:ok, _}` tuple, not the tuple itself).
+A condition function receives a single argument - the previous operation's output (the second element of `{:ok, _}` tuple, not the tuple itself), turned into map (if the output is Keyword list) so it is easier to pattern-match.
 
 An operation is invoked if a condition function returns `true`, otherwise the operation won't be invoked.
 
-And of course a chain invokation interrupts if the previous operation's result wasn't successful (is not `{:ok, _}` tuple).
+And of course a chain invokation interrupts if the previous operation's result wasn't successful (is not `{:ok, _}` tuple). The previous operation's result is not changed in this case.
+
+### Incoming parameters (previous opeartion result) coercion
+
+If for some reason you need to change incoming parameters (which are the previous operation result) for your operation(-s) in the chain you can do it with `:coerce_with` option. This option is provided for a particular operation (step) and refers to a 1-arity callback function. This single argument is a map of incoming parameters (the previous operation result). It is converted into a map even if the previous operation returns a keyword list.
+
+```elixir
+defmodule YourChain do
+  use Exop.Chain
+
+  operation Sum
+  operation MultiplyByHundred, coerce_with: &__MODULE__.coerce/1
+  operation DivisionByTen
+
+  def coerce(%{a: a} = params), do: %{params | a: a * 10}
+end
+```
+
+The coercion works right before any validation/invokation (how it is with the regular operation). It means that first of all the previous operation's result is coerced and then everything else happens based on those coerced parameters.
+
+Coercion works well with other options like additional parameters and conditional invocation.
+
+Here is the order of an operation handling in a chain:
+
+1. incoming parameters coercion
+2. additional parameters are added
+3. invocation condition is checked
 
 ## LICENSE
 

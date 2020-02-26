@@ -199,7 +199,7 @@ defmodule ChainTest do
       operation MultiplyByHundred, if: &__MODULE__.greater_than_10/1
       operation DivisionByTen
 
-      def greater_than_10(a: a) when a > 10, do: true
+      def greater_than_10(%{a: a}) when a > 10, do: true
       def greater_than_10(_x), do: false
     end
 
@@ -210,10 +210,10 @@ defmodule ChainTest do
       step MultiplyByHundred, if: &__MODULE__.greater_than_10/1
       step DivisionByTen, if: &__MODULE__.greater_than_10_000/1
 
-      def greater_than_10(a: a) when a > 10, do: true
+      def greater_than_10(%{a: a}) when a > 10, do: true
       def greater_than_10(_x), do: false
 
-      def greater_than_10_000(a: a) when a > 10_000, do: true
+      def greater_than_10_000(%{a: a}) when a > 10_000, do: true
       def greater_than_10_000(_x), do: false
     end
 
@@ -232,6 +232,60 @@ defmodule ChainTest do
 
       assert {:error, {:validation, %{b: ["has wrong type; expected type: integer, got: \"2\""]}}} =
                TestChainConditionalSteps2.run(a: 1, b: "2")
+    end
+  end
+
+  describe "with previous operation's output coercion" do
+    defmodule TestChainCoercedSteps do
+      use Exop.Chain
+
+      operation Sum
+      operation MultiplyByHundred, coerce_with: &__MODULE__.coerce/1
+      operation DivisionByTen
+
+      def coerce(%{a: a} = params), do: %{params | a: a * 10}
+    end
+
+    test "changes an incoming params" do
+      assert {:ok, 300.0} = TestChainCoercedSteps.run(a: 1, b: 2)
+      assert {:ok, 3000.0} = TestChainCoercedSteps.run(a: 10, b: 20)
+    end
+
+    defmodule TestChainCoercedSteps2 do
+      use Exop.Chain
+
+      operation Sum
+
+      operation MultiplyByHundred,
+        if: &__MODULE__.greater_than_100/1,
+        coerce_with: &__MODULE__.coerce/1
+
+      operation DivisionByTen
+
+      def coerce(%{a: a} = params), do: %{params | a: a * 2}
+
+      def greater_than_100(%{a: a}) when a > 100, do: true
+      def greater_than_100(_x), do: false
+    end
+
+    test "respects if condition" do
+      assert {:ok, [a: 3]} = TestChainCoercedSteps2.run(a: 1, b: 2)
+      assert {:ok, [a: 30]} = TestChainCoercedSteps2.run(a: 10, b: 20)
+      assert {:ok, 6000.0} = TestChainCoercedSteps2.run(a: 100, b: 200)
+    end
+
+    defmodule TestChainCoercedSteps3 do
+      use Exop.Chain
+
+      operation Sum
+      operation MultiplyByHundred, additional: 5, coerce_with: &__MODULE__.coerce/1
+      operation DivisionByTen
+
+      def coerce(%{a: a} = params), do: %{params | a: a * 2}
+    end
+
+    test "respects additional params" do
+      assert {:ok, 300.0} = TestChainCoercedSteps3.run(a: 1, b: 2)
     end
   end
 end

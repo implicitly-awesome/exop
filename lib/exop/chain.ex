@@ -48,12 +48,15 @@ defmodule Exop.Chain do
   defmacro operation(operation, opts \\ []) do
     quote bind_quoted: [operation: operation, opts: opts] do
       {:module, operation} = Code.ensure_compiled(operation)
-      additional_params = Keyword.drop(opts, [:if])
+      additional_params = Keyword.drop(opts, [:if, :coerce_with])
 
       @operations %{
         operation: operation,
+        params: %{},
         additional_params: additional_params,
-        if: Keyword.get(opts, :if)
+        if: Keyword.get(opts, :if, :no_if_condition),
+        should_be_invoked?: true,
+        coerce_with: Keyword.get(opts, :coerce_with, :no_coercion)
       }
     end
   end
@@ -63,12 +66,15 @@ defmodule Exop.Chain do
   defmacro step(operation, opts \\ []) do
     quote bind_quoted: [operation: operation, opts: opts] do
       {:module, operation} = Code.ensure_compiled(operation)
-      additional_params = Keyword.drop(opts, [:if])
+      additional_params = Keyword.drop(opts, [:if, :coerce_with])
 
       @operations %{
         operation: operation,
+        params: %{},
         additional_params: additional_params,
-        if: Keyword.get(opts, :if, :no_if_condition)
+        if: Keyword.get(opts, :if, :no_if_condition),
+        should_be_invoked?: true,
+        coerce_with: Keyword.get(opts, :coerce_with, :no_coercion)
       }
     end
   end
@@ -87,11 +93,20 @@ defmodule Exop.Chain do
 
       @not_ok :exop_not_ok
 
+      @type operation_definition() :: %{
+              operation: module(),
+              params: map() | keyword(),
+              additional_params: map() | keyword(),
+              if: (map() -> boolean()),
+              should_be_invoked?: boolean(),
+              coerce_with: (map() -> map())
+            }
+
       @doc """
       Invokes all operations defined in a chain. Returns either a result of the last operation
       in the chain or the first result that differs from ok-tuple (validation error, for example).
       """
-      @spec run(Keyword.t() | map() | nil) ::
+      @spec run(keyword() | map() | nil) ::
               {:ok, any} | Validation.validation_error() | interrupt_result | auth_result
       def run(received_params) do
         try do
@@ -109,40 +124,33 @@ defmodule Exop.Chain do
       defp add_operation_name(true, not_ok_result, operation), do: {operation, not_ok_result}
       defp add_operation_name(_, not_ok_result, _), do: not_ok_result
 
-      @spec invoke_operations([%{operation: atom(), additional_params: Keyword.t()}], any()) ::
-              any()
-      defp invoke_operations([], result) do
-        result
-      end
+      @spec invoke_operations([operation_definition()], any()) :: any()
+      defp invoke_operations([], result), do: result
 
       defp invoke_operations(
-             [
-               %{operation: operation, additional_params: additional_params, if: if_condition}
-               | tail
-             ],
+             [%{operation: _, additional_params: _} = operation_definition | tail],
              {:ok, params} = _previous_result
-           )
-           when is_function(if_condition) do
-        if if_condition.(params) == true do
-          params = params |> merge_params(additional_params) |> resolve_params_values()
-          invoke_operation(operation, tail, params)
+           ) do
+        operation_definition =
+          operation_definition
+          |> Map.put(:params, params)
+          |> resolve_coercion()
+          |> merge_params()
+          |> resolve_params_values()
+          |> resolve_if_condition()
+
+        if operation_definition.should_be_invoked? do
+          invoke_operation(operation_definition, tail)
         else
           # if it is the last operation in a chain and it has 'if' condition
           # and that condition is not applicable
           if length(tail) == 1 do
             params
           else
+            # skip the current operation and go with the rest
             invoke_operations(tail, params)
           end
         end
-      end
-
-      defp invoke_operations(
-             [%{operation: operation, additional_params: additional_params} | tail],
-             {:ok, params} = _previous_result
-           ) do
-        params = params |> merge_params(additional_params) |> resolve_params_values()
-        invoke_operation(operation, tail, params)
       end
 
       defp invoke_operations(_operations, not_ok = _result) do
@@ -150,8 +158,9 @@ defmodule Exop.Chain do
         @not_ok
       end
 
-      @spec invoke_operation(map(), list(), map() | Keyword.t()) :: any()
-      defp invoke_operation(operation, tail, params) do
+      @spec invoke_operation(operation_definition(), [operation_definition()]) :: any()
+      defp invoke_operation(%{operation: operation, params: params} = operation_definition, tail)
+           when is_atom(operation) do
         case apply(operation, :run, [params]) do
           result when is_tuple(result) and elem(result, 0) == :error ->
             throw({@not_ok, result, operation})
@@ -166,34 +175,78 @@ defmodule Exop.Chain do
         end
       end
 
-      @spec merge_params(map() | keyword(), map() | keyword()) :: map()
-      defp merge_params(params, additional_params)
+      @spec resolve_coercion(operation_definition()) :: operation_definition()
+      defp resolve_coercion(%{coerce_with: coerce_with, params: params} = operation_definition)
+           when is_function(coerce_with) and is_map(params) do
+        params = coerce_with.(params)
+        Map.put(operation_definition, :params, params)
+      end
+
+      defp resolve_coercion(%{coerce_with: coerce_with, params: params} = operation_definition)
+           when is_function(coerce_with) and is_list(params) do
+        params = params |> Enum.into(%{}) |> coerce_with.()
+        Map.put(operation_definition, :params, params)
+      end
+
+      defp resolve_coercion(%{} = operation_definition), do: operation_definition
+
+      @spec merge_params(operation_definition()) :: operation_definition()
+      defp merge_params(
+             %{additional_params: additional_params, params: params} = operation_definition
+           )
            when is_map(params) and is_map(additional_params) do
-        Map.merge(params, additional_params)
+        params = Map.merge(params, additional_params)
+        Map.put(operation_definition, :params, params)
       end
 
-      defp merge_params(params, additional_params)
-           when is_list(params) and is_map(additional_params) do
-        params |> Enum.into(%{}) |> Map.merge(additional_params)
-      end
-
-      defp merge_params(params, additional_params)
+      defp merge_params(
+             %{additional_params: additional_params, params: params} = operation_definition
+           )
            when is_map(params) and is_list(additional_params) do
-        Map.merge(params, Enum.into(additional_params, %{}))
+        params = Map.merge(params, Enum.into(additional_params, %{}))
+        Map.put(operation_definition, :params, params)
       end
 
-      defp merge_params(params, additional_params)
+      defp merge_params(
+             %{additional_params: additional_params, params: params} = operation_definition
+           )
+           when is_list(params) and is_map(additional_params) do
+        params = Map.merge(Enum.into(params, %{}), additional_params)
+        Map.put(operation_definition, :params, params)
+      end
+
+      defp merge_params(
+             %{additional_params: additional_params, params: params} = operation_definition
+           )
            when is_list(params) and is_list(additional_params) do
-        params |> Enum.into(%{}) |> Map.merge(Enum.into(additional_params, %{}))
+        params = Map.merge(Enum.into(params, %{}), Enum.into(additional_params, %{}))
+        Map.put(operation_definition, :params, params)
       end
 
-      @spec resolve_params_values(map()) :: map()
-      defp resolve_params_values(params) do
-        Enum.reduce(params, %{}, fn {k, v}, acc ->
-          v = if is_function(v), do: v.(), else: v
-          Map.put(acc, k, v)
-        end)
+      defp merge_params(%{} = operation_definition), do: operation_definition
+
+      @spec resolve_params_values(operation_definition()) :: operation_definition()
+      defp resolve_params_values(%{params: params} = operation_definition) do
+        params =
+          Enum.reduce(params, %{}, fn {k, v}, acc ->
+            v = if is_function(v), do: v.(), else: v
+            Map.put(acc, k, v)
+          end)
+
+        Map.put(operation_definition, :params, params)
       end
+
+      @spec resolve_if_condition(operation_definition()) :: operation_definition()
+      defp resolve_if_condition(%{if: if_condition, params: params} = operation_definition)
+           when is_function(if_condition) do
+        if if_condition.(params) == true do
+          operation_definition
+        else
+          Map.put(operation_definition, :should_be_invoked?, false)
+        end
+      end
+
+      defp resolve_if_condition(%{} = operation_definition), do: operation_definition
     end
   end
 end

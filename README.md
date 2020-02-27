@@ -51,6 +51,10 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 - [Operation invocation](#operation-invocation)
 - [Operation results](#operation-results)
 - [Operations chain](#operations-chain)
+  - [Additional parameters](#additional-parameters)
+  - [Descriptive errors](#descriptive-errors)
+  - [Conditional operations](#conditional-operations)
+  - [Incoming parameters coercion](#incoming-parameters-coercion)
 
 ## Installation
 
@@ -688,6 +692,8 @@ operation as its params and so on.
 Once any of operations in the chain returns non-ok-tuple result (error result, interruption, auth error etc.)
 the chain execution interrupts and error result returned (as the chain (`CreateUser`) result).
 
+### Additional parameters
+
 You can pass additional parameters to any operation in a chain (with either an exact value or 0-arity function):
 
 ```elixir
@@ -706,6 +712,8 @@ defmodule CreateUser do
 end
 ```
 
+### Descriptive errors
+
 `use Exop.Chain` can take `:name_in_error` option, when it is set to `true` a failed operation in a chain returns the operation's module name as the first elements of output tuple `{YourOperation, {:error, _}}`
 
 ```elixir
@@ -723,7 +731,7 @@ iex> YourChain.run(a: "1", b: 2)
 
 `name_in_error: true` doesn't affect operations with a fallback defined (unmodified fallback result is returned).
 
-### Conditional operations (steps)
+### Conditional operations
 
 It is possible to define an invokation condition for an operation in a chain. Meaning if the condition is truthy - the operation will be invoked.
 
@@ -750,7 +758,7 @@ An operation is invoked if a condition function returns `true`, otherwise the op
 
 And of course a chain invokation interrupts if the previous operation's result wasn't successful (is not `{:ok, _}` tuple). The previous operation's result is not changed in this case.
 
-### Incoming parameters (previous opeartion result) coercion
+### Incoming parameters coercion
 
 If for some reason you need to change incoming parameters (which are the previous operation result) for your operation(-s) in the chain you can do it with `:coerce_with` option. This option is provided for a particular operation (step) and refers to a 1-arity callback function. This single argument is a map of incoming parameters (the previous operation result). It is converted into a map even if the previous operation returns a keyword list.
 

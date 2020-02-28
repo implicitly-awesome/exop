@@ -4,7 +4,7 @@
 
 A library that helps you to organize your Elixir code in more domain-driven way.
 Exop provides macros which helps you to encapsulate business logic and offers you additionally:
-incoming params validation (with predefined contract), params coercion, policy check, fallback behavior and more.
+incoming params validation (with predefined contract), params coercion, policy check, fallback behavior, operations chaining and more.
 
 ---
 
@@ -51,12 +51,16 @@ Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG
 - [Operation invocation](#operation-invocation)
 - [Operation results](#operation-results)
 - [Operations chain](#operations-chain)
+  - [Additional parameters](#additional-parameters)
+  - [Descriptive errors](#descriptive-errors)
+  - [Conditional operations](#conditional-operations)
+  - [Incoming parameters coercion](#incoming-parameters-coercion)
 
 ## Installation
 
 ```elixir
 def deps do
-  [{:exop, "~> 1.3.5"}]
+  [{:exop, "~> 1.4"}]
 end
 ```
 
@@ -101,7 +105,7 @@ _for more information see [Operation results](#operation-results) section_
 
 ### Parameter checks
 
-A parameter options could have various checks. Here the list of checks available yet:
+A parameter options could have various checks. Here the list of available checks:
 
 - `type`
 - `required`
@@ -117,6 +121,8 @@ A parameter options could have various checks. Here the list of checks available
 - `list_item`
 - `func`
 - `allow_nil`
+- `from`
+- `subset_of`
 
 #### `type`
 
@@ -315,51 +321,32 @@ Moreover, `coerce_with` and `default` options are available too.
 #### `func`
 
 Checks whether an item is valid over custom validation function.
-If this function returns `false`, validation will fail with default message `"isn't valid"`.
+
+A validation is treated as failed if callback function returns one of results:
+- `{:error, _your_error_message_or_payload}`
+- `:error`
+- `false`
+
+Everything else is treaded as successful validation result.
+
+If the validation function returns either `false` or `:error`, the default message `"not valid"` is used in your operation's validation results.
+
+The validation function receives two arguments:
+- a tuple with a validating parameter's name and value
+- a map of all parameters given to an operation
+
+Those arguments allow you to make a parameter validations which depend on other parameters and their values.
 
 ```elixir
-# arity of 1
-parameter :some_param, func: &is_atom/1
-
-# arity of 2
 parameter :some_param, func: &__MODULE__.your_validation/2
 
-def your_validation(_params, param_value), do: !is_nil(param_value)
-
-# arity of 3
-
-parameter :some_param, func: &__MODULE__.your_validation/3
-
-def your_validation(_params, :some_param = _param_name, param_value), do: !is_nil(param_value)
-```
-
-A custom validation function can also return a user-specified message which will be displayed in map of validation errors.
-
-```elixir
-def your_validation(_params, param) do
-  if param > 99 do
-    true
-  else
-    {:error, "Custom error message"}
-  end
+@spec your_validation({atom() | String.t(), any()}, map()) :: any()
+def your_validation({param_name, param_value}, all_received_params_map) do
+  # your validation logic based on given arguments is here
 end
 ```
 
-Therefore, validation will fail, if the function returns either `false` or `{:error, your_error_msg}` tuple.
-
-`func/1` receives one argument which is the actual parameter value to check.
-
-`func/2` receives two arguments: the first is a contract of an operation (parameters with their values),
-the second - the actual parameter value to check. So, now you can validate a parameter depending on other parameters values.
-
-```elixir
-parameter :a, type: :integer
-parameter :b, func: &__MODULE__.your_validation/2
-
-def your_validation(params, b), do: params[:a] > 0 && !is_nil(b)
-```
-
-_it's possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
+_it is possible to combine :func check with others (though not preferable), just make sure this check is the last check in the list_
 
 #### allow_nil
 
@@ -705,6 +692,8 @@ operation as its params and so on.
 Once any of operations in the chain returns non-ok-tuple result (error result, interruption, auth error etc.)
 the chain execution interrupts and error result returned (as the chain (`CreateUser`) result).
 
+### Additional parameters
+
 You can pass additional parameters to any operation in a chain (with either an exact value or 0-arity function):
 
 ```elixir
@@ -723,22 +712,77 @@ defmodule CreateUser do
 end
 ```
 
+### Descriptive errors
+
 `use Exop.Chain` can take `:name_in_error` option, when it is set to `true` a failed operation in a chain returns the operation's module name as the first elements of output tuple `{YourOperation, {:error, _}}`
 
 ```elixir
 defmodule YourChain do
   use Exop.Chain, name_in_error: true
 
-  operation Op1
-  operation Op2Fail
-  operation Op3
+  operation Operation1
+  operation Operation2Fail
+  operation Operation3
 end
 
 iex> YourChain.run(a: "1", b: 2)
-{Op2Fail, {:error, {:validation, %{a: ["has wrong type"]}}}}
+{Operation2Fail, {:error, {:validation, %{a: ["has wrong type"]}}}}
 ```
 
 `name_in_error: true` doesn't affect operations with a fallback defined (unmodified fallback result is returned).
+
+### Conditional operations
+
+It is possible to define an invokation condition for an operation in a chain. Meaning if the condition is truthy - the operation will be invoked.
+
+The condition can be defined with `if: your_func/1` option given to an operation.
+
+```elixir
+defmodule YourChain do
+  use Exop.Chain
+
+  # operation/step - they are synonims in the context of Exop.Chain
+  operation Operation1
+  operation MultiplyByHundred, if: &__MODULE__.is_it_good_to_go?/1
+  operation DivisionByTen
+
+  def is_it_good_to_go?(previous_operation_output) do
+    # here your condition logic which should return a boolean
+  end
+end
+```
+
+A condition function receives a single argument - the previous operation's output (the second element of `{:ok, _}` tuple, not the tuple itself), turned into map (if the output is Keyword list) so it is easier to pattern-match.
+
+An operation is invoked if a condition function returns `true`, otherwise the operation won't be invoked.
+
+And of course a chain invokation interrupts if the previous operation's result wasn't successful (is not `{:ok, _}` tuple). The previous operation's result is not changed in this case.
+
+### Incoming parameters coercion
+
+If for some reason you need to change incoming parameters (which are the previous operation result) for your operation(-s) in the chain you can do it with `:coerce_with` option. This option is provided for a particular operation (step) and refers to a 1-arity callback function. This single argument is a map of incoming parameters (the previous operation result). It is converted into a map even if the previous operation returns a keyword list.
+
+```elixir
+defmodule YourChain do
+  use Exop.Chain
+
+  operation Sum
+  operation MultiplyByHundred, coerce_with: &__MODULE__.coerce/1
+  operation DivisionByTen
+
+  def coerce(%{a: a} = params), do: %{params | a: a * 10}
+end
+```
+
+The coercion works right before any validation/invokation (how it is with the regular operation). It means that first of all the previous operation's result is coerced and then everything else happens based on those coerced parameters.
+
+Coercion works well with other options like additional parameters and conditional invocation.
+
+Here is the order of an operation handling in a chain:
+
+1. incoming parameters coercion
+2. additional parameters are added
+3. invocation condition is checked
 
 ## LICENSE
 

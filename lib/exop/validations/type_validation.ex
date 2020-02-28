@@ -39,16 +39,6 @@ defmodule Exop.TypeValidation do
 
   def check_value(check_item, :tuple) when is_tuple(check_item), do: true
 
-  def check_value(%_{} = _check_item, :struct) do
-    IO.warn("type check with :struct is deprecated, please use :map instead")
-    true
-  end
-
-  def check_value(_check_item, :struct) do
-    IO.warn("type check with :struct is deprecated, please use :map instead")
-    false
-  end
-
   def check_value(check_item, :map) when is_map(check_item), do: true
 
   def check_value(check_item, :list) when is_list(check_item), do: true

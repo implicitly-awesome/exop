@@ -209,8 +209,12 @@ defmodule Exop.Operation do
   Defines a parameter with `name` and `opts` in an operation contract.
   Options could include the parameter value checks and transformations (like coercion).
 
+  A parameter name could be either an atom or a string. You could even mix atom-named and
+  string-named parameters in an operation's contract.
+
   ## Example
       parameter :some_param, type: :map, required: true
+      parameter "my parameter", type: :map, required: true
 
   ## Available checks are:
 
@@ -232,6 +236,10 @@ defmodule Exop.Operation do
                                              greater_than_or_equal_to: 10,
                                              less_than: 20,
                                              less_than_or_equal_to: 10}
+
+  #### equals
+  Checks whether a parameter's value exactly equals given value (with type equality).
+      parameter :some_param, equals: 100.5
 
   #### in
   Checks whether a parameter's value is within a given list.
@@ -268,12 +276,38 @@ defmodule Exop.Operation do
   Checks whether an item is valid over custom validation function.
       parameter :some_param, func: &__MODULE__.your_validation/2
 
-      def your_validation(_params, param), do: !is_nil(param)
+      def your_validation({param_name, param_value}, all_received_params_map) do
+        # your validation logic based on given arguments is here
+      end
 
   #### allow_nil
   It is not a parameter check itself, because it doesn't return any validation errors.
-  It is a parameter attribute which allow you to have other checks for a parameter whilst have a possibility to pass `nil` as the parameter's value.
+  It is a parameter attribute which allow you to have other checks for a parameter whilst have
+  a possibility to pass `nil` as the parameter's value.
   If `nil` is passed all the parameter's checks are ignored during validation.
+
+  #### from
+  This option allows you to pass a parameter to `run/1` and `run!/1` functions with one name and
+  work with this parameter within an operation under another name.
+
+      parameter :a, type: :integer, from: "a"
+
+  #### subset_of
+  Checks whether a parameter's value (list) is a subset of a defined check-list.
+  To pass this check, all items within given into an operation parameter should be included
+  into check-list, otherwise the check is failed.
+
+      parameter :some_param, subset_of: [1, 2, :a, "b", C]
+
+  ## Interrupt
+  In some cases you might want to make an 'early return' from `process/1` function.
+  For this purpose you can call `interrupt/1` function within `process/1` and pass an interruption reason to it.
+  An operation will be interrupted and return `{:interrupt, your_reason}`
+
+      def process(_params) do
+        interrupt(%{fail: "oops"})
+        :ok # will not return it
+      end
 
   ## Coercion
 
@@ -283,9 +317,14 @@ defmodule Exop.Operation do
   default values are resolved (with `:default` option) before the coercion.
   The flow looks like: `Resolve param default value -> Coerce -> Validate coerced`
 
-      parameter :some_param, default: 1, numericality: %{greater_than: 0}, coerce_with: &__MODULE__.coerce/1
+      parameter :a, type: :string, coerce_with: &__MODULE__.to_string/2
 
-      def coerce(x), do: x * 2
+      def to_string({:a, value}, %{} = _received_params) when is_integer(value) do
+        Integer.to_string(value)
+      end
+      def to_string({:a, value}, %{} = _received_params) when is_binary(value) do
+        value
+      end
 
   _For more information and examples check out general Exop docs._
   """

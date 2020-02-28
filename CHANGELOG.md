@@ -1,4 +1,4 @@
-## [1.4.0] - 2020.mm.dd
+## [1.4.0] - 2020.02.28
 
 **breaking changes in this version!**
 

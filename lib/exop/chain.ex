@@ -85,6 +85,7 @@ defmodule Exop.Chain do
 
       @type interrupt_result :: {:interrupt, any}
       @type auth_result :: :ok | no_return
+
       #  throws:
       #  {:error, {:auth, :undefined_policy}} |
       #  {:error, {:auth, :unknown_policy}}   |

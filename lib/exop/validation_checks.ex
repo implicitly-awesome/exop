@@ -565,7 +565,10 @@ defmodule Exop.ValidationChecks do
     }
   end
 
-  defp validate_struct(item, %check_struct{}, item_name) do
-    %{item_name => "is not expected struct; expected: #{inspect(check_struct)}; #{inspect(item)}"}
+  defp validate_struct(item, check_struct, item_name) do
+    %{
+      item_name =>
+        "is not expected struct; expected: #{inspect(check_struct)}; got: #{inspect(item)}"
+    }
   end
 end

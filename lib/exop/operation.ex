@@ -56,6 +56,7 @@ defmodule Exop.Operation do
 
       @type interrupt_result :: {:interrupt, any}
       @type auth_result :: :ok | no_return
+
       #  throws:
       #  {:error, {:auth, :undefined_policy}} |
       #  {:error, {:auth, :unknown_policy}}   |
@@ -441,11 +442,13 @@ defmodule Exop.Operation do
   @spec fallback(module(), any()) :: any()
   defmacro fallback(fallback_module, opts \\ []) do
     quote generated: true, bind_quoted: [fallback_module: fallback_module, opts: opts] do
-      if Code.ensure_compiled?(fallback_module) && function_exported?(fallback_module, :process, 3) do
+      with {:module, _} <- Code.ensure_compiled(fallback_module),
+           true <- function_exported?(fallback_module, :process, 3) do
         @fallback_module %{module: fallback_module, opts: opts}
       else
-        IO.warn("#{@module_name}: #{fallback_module}.run/1 wasn't found")
-        @fallback_module nil
+        _ ->
+          IO.warn("#{@module_name}: #{fallback_module}.run/1 wasn't found")
+          @fallback_module nil
       end
     end
   end

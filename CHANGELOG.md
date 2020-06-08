@@ -1,3 +1,7 @@
+## [1.4.1] - 2020.06.08
+
+- `Code.ensure_compiled/1` instead of deprecated `Code.ensure_compiled?/1`
+
 ## [1.4.0] - 2020.02.28
 
 **breaking changes in this version!**

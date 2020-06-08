@@ -976,4 +976,24 @@ defmodule OperationTest do
     assert {:ok, params} = Def55Operation.run(b: 1)
     assert %{a: 2, b: 1} = params
   end
+
+  defmodule Def56Operation do
+    use Exop.Operation
+
+    parameter :a,
+      type: :string,
+      coerce_with: &__MODULE__.coerce/2,
+      required: false,
+      allow_nil: true
+
+    def coerce({_, value}, _) when is_binary(value), do: value
+    def coerce({_, value}, _), do: to_string(value)
+
+    def process(params), do: params
+  end
+
+  test "there is no coercion if a param is not required and it is absent" do
+    assert {:ok, %{a: "1"}} = Def56Operation.run(a: 1)
+    assert {:ok, %{}} = Def56Operation.run()
+  end
 end

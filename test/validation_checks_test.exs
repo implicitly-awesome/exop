@@ -325,6 +325,11 @@ defmodule ValidationChecksTest do
              a:
                "is not expected struct; expected: ValidationChecksTest.TestStruct; got: ValidationChecksTest.TestStruct2"
            }
+
+    assert check_struct(%{a: "not a struct"}, :a, TestStruct) == %{
+             a:
+               "is not expected struct; expected: ValidationChecksTest.TestStruct; got: \"not a struct\""
+           }
   end
 
   test "check_equals/3: success" do

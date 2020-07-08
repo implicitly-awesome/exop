@@ -1,3 +1,7 @@
+## [1.4.2] - yyyy.mm.dd
+
+- a bug in `coerce_with/2` was fixed: a parameter got coerced (as `nil`) even if it is not required
+
 ## [1.4.1] - 2020.06.08
 
 - `Code.ensure_compiled/1` instead of deprecated `Code.ensure_compiled?/1`

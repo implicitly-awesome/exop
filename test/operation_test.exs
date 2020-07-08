@@ -316,7 +316,7 @@ defmodule OperationTest do
     defmodule Def19Operation do
       use Exop.Operation
 
-      parameter :a, required: true, coerce_with: &__MODULE__.coerce/2
+      parameter :a, coerce_with: &__MODULE__.coerce/2, required: false
 
       def process(params), do: params[:a]
 
@@ -345,7 +345,7 @@ defmodule OperationTest do
     assert Def18Operation.run(a: 0) ==
              {:error, {:validation, %{a: ["must be greater than 0; got: 0"]}}}
 
-    assert Def19Operation.run() == {:ok, "str"}
+    assert Def19Operation.run() == {:ok, nil}
 
     assert Def20Operation.run(a: -1, b: 0) ==
              {:error, {:validation, %{a: ["not valid"], b: ["not valid"]}}}
@@ -487,15 +487,21 @@ defmodule OperationTest do
         list_item: [type: :string, length: %{min: 7}],
         coerce_with: &__MODULE__.make_list/2
 
-      def process(params), do: {:ok, params[:list_param]}
+      def process(params), do: params[:list_param]
 
-      def make_list(_, _), do: ["1234567", "7chars"]
+      def make_list({_, value}, _) when is_list(value), do: value
+      def make_list({_, _}, _), do: ["1234567", "7charss"]
     end
 
     assert Def30Operation.run() ==
+             {:error, {:validation, %{list_param: ["is not a list", "is required"]}}}
+
+    assert Def30Operation.run(list_param: [""]) ==
              {:error,
               {:validation,
-               %{"list_param[1]" => ["length must be greater than or equal to 7; got length: 6"]}}}
+               %{"list_param[0]" => ["length must be greater than or equal to 7; got length: 0"]}}}
+
+    assert Def30Operation.run(list_param: "not a list") == {:ok, ["1234567", "7charss"]}
   end
 
   test "string-named parameters are allowed" do
@@ -993,7 +999,9 @@ defmodule OperationTest do
   end
 
   test "there is no coercion if a param is not required and it is absent" do
-    assert {:ok, %{a: "1"}} = Def56Operation.run(a: 1)
-    assert {:ok, %{}} = Def56Operation.run()
+    assert Def56Operation.run(a: "1") == {:ok, %{a: "1"}}
+    assert Def56Operation.run(a: 1) == {:ok, %{a: "1"}}
+    assert Def56Operation.run(a: nil) == {:ok, %{a: ""}}
+    assert Def56Operation.run() == {:ok, %{}}
   end
 end

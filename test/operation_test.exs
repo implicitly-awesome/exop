@@ -418,17 +418,17 @@ defmodule OperationTest do
     assert Def25Operation.run(param: 111) == {:error, :ooops}
   end
 
-  test "run!/1: returns unwrapped error tuple if process/1 returns it" do
-    defmodule Def26Operation do
-      use Exop.Operation
+  # test "run!/1: returns unwrapped error tuple if process/1 returns it" do
+  #   defmodule Def26Operation do
+  #     use Exop.Operation
 
-      parameter :param
+  #     parameter :param
 
-      def process(_params), do: {:error, :ooops}
-    end
+  #     def process(_params), do: {:error, :ooops}
+  #   end
 
-    assert Def26Operation.run!(param: 111) == {:error, :ooops}
-  end
+  #   assert Def26Operation.run!(param: 111) == {:error, :ooops}
+  # end
 
   test "custom validation function takes a {param_name, param_value} tuple as the first argument" do
     defmodule Def27Operation do
@@ -1003,5 +1003,19 @@ defmodule OperationTest do
     assert Def56Operation.run(a: 1) == {:ok, %{a: "1"}}
     assert Def56Operation.run(a: nil) == {:ok, %{a: ""}}
     assert Def56Operation.run() == {:ok, %{}}
+  end
+
+  test "run!/1: returns Exop.Operation.ErrorResult error if error tuple has been returned" do
+    defmodule Def57Operation do
+      use Exop.Operation
+
+      parameter :param, required: true
+
+      def process(_params), do: {:error, :some_error_message}
+    end
+
+    assert_raise Exop.Operation.ErrorResult,
+                 "Elixir.OperationTest.Def57Operation returned: \n{:error, :some_error_message}",
+                 fn -> Def57Operation.run!(param: "hi!") end
   end
 end

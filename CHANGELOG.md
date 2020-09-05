@@ -1,6 +1,7 @@
 ## [1.4.2] - yyyy.mm.dd
 
 - a bug in `coerce_with/2` was fixed: a parameter got coerced (as `nil`) even if it is not required
+- `run!` raises an `Exop.Operation.ErrorResult` error when an operation returns an error tuple
 
 ## [1.4.1] - 2020.06.08
 

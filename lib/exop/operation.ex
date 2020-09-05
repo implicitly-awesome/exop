@@ -18,6 +18,10 @@ defmodule Exop.Operation do
 
   alias Exop.{Validation, TypeValidation}
 
+  defmodule ErrorResult do
+    defexception message: "Operation execution error"
+  end
+
   @doc """
   Operation's entry point. Takes defined contract as the single parameter.
   Contract itself is a list of maps: `[%{name: atom(), opts: keyword()}]`
@@ -130,7 +134,10 @@ defmodule Exop.Operation do
             result
 
           {:error, {:validation, reasons}} ->
-            raise(Validation.ValidationError, mod_err_msg(reasons))
+            raise(Validation.ValidationError, validation_error_message(reasons))
+
+          {:error, _} = error ->
+            raise(ErrorResult, error_result_message(error))
 
           result ->
             result
@@ -168,11 +175,15 @@ defmodule Exop.Operation do
 
       defp output(_params, {:error, {:validation, errors}} = validation_result)
            when is_map(errors) do
-        errors |> mod_err_msg() |> Logger.warn()
+        errors |> validation_error_message() |> Logger.warn()
         validation_result
       end
 
-      defp mod_err_msg(errors), do: "#{@module_name} errors: \n#{Validation.errors_message(errors)}"
+      defp validation_error_message(errors) do
+        "#{@module_name} errors: \n#{Validation.errors_message(errors)}"
+      end
+
+      defp error_result_message(error), do: "#{@module_name} returned: \n#{inspect(error)}"
 
       @spec interrupt(any) :: no_return()
       def interrupt(reason \\ nil) do

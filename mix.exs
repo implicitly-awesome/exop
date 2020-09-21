@@ -40,7 +40,7 @@ defmodule Exop.Mixfile do
   defp package do
     [
       files: ["lib", "mix.exs", "README.md", "LICENSE"],
-      maintainers: ["Andrey Chernykh", "Aleksandr Fomin"],
+      maintainers: ["Andrey Chernykh"],
       licenses: ["MIT"],
       links: %{"Github" => "https://github.com/madeinussr/exop"}
     ]

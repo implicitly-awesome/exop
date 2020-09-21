@@ -619,7 +619,8 @@ There is "bang" version of `run/1` exists. Function `run!/1` does the same thing
 the only difference is a result of invocation, it might be:
 
 - if a contract validation passed - the actual result of an operation (result of a code, described in `process/1`)
-- if a contract validation failed - an error `Exop.Validation.ValidationError` raising
+- if a contract validation failed - an error `Exop.Validation.ValidationError` is raised
+- if an operation returns an error tuple - an error `Exop.Operation.ErrorResult` is raised
 - in case of manual interruption - `{:interrupt, _reason}`
 
 _You always can bypass the validation simply by calling `process/1` function itself, if needed._

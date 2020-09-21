@@ -94,50 +94,54 @@ defmodule Exop.Utils do
         [%{name: contract_item_name, opts: contract_item_opts} | contract_tail],
         coerced_params
       ) do
-    inner = fetch_inner_checks(contract_item_opts)
+    if ValidationChecks.check_item_present?(received_params, contract_item_name) do
+      inner = fetch_inner_checks(contract_item_opts)
 
-    coerced_params =
-      if is_map(inner) do
-        inner_params = Map.get(received_params, contract_item_name)
+      coerced_params =
+        if is_map(inner) do
+          inner_params = Map.get(received_params, contract_item_name)
 
-        coerced_inners =
-          Enum.reduce(inner, %{}, fn {contract_item_name, contract_item_opts}, acc ->
-            coerced_value =
-              resolve_coercions(
-                inner_params,
-                [%{name: contract_item_name, opts: contract_item_opts}],
-                inner_params
-              )
+          coerced_inners =
+            Enum.reduce(inner, %{}, fn {contract_item_name, contract_item_opts}, acc ->
+              coerced_value =
+                resolve_coercions(
+                  inner_params,
+                  [%{name: contract_item_name, opts: contract_item_opts}],
+                  inner_params
+                )
 
-            if is_map(coerced_value) do
-              to_put = Map.get(coerced_value, contract_item_name, @no_value)
+              if is_map(coerced_value) do
+                to_put = Map.get(coerced_value, contract_item_name, @no_value)
 
-              if to_put == @no_value, do: acc, else: Map.put_new(acc, contract_item_name, to_put)
-            else
-              coerced_value
-            end
-          end)
+                if to_put == @no_value, do: acc, else: Map.put_new(acc, contract_item_name, to_put)
+              else
+                coerced_value
+              end
+            end)
 
-        if is_map(coerced_inners) do
-          received_params[contract_item_name]
-          |> Map.merge(coerced_inners)
-          |> put_param_value(received_params, contract_item_name)
+          if is_map(coerced_inners) do
+            received_params[contract_item_name]
+            |> Map.merge(coerced_inners)
+            |> put_param_value(received_params, contract_item_name)
+          else
+            put_param_value(coerced_inners, received_params, contract_item_name)
+          end
         else
-          put_param_value(coerced_inners, received_params, contract_item_name)
-        end
-      else
-        if Keyword.has_key?(contract_item_opts, :coerce_with) do
-          coerce_func = Keyword.get(contract_item_opts, :coerce_with)
-          check_item = ValidationChecks.get_check_item(coerced_params, contract_item_name)
-          coerced_value = coerce_func.({contract_item_name, check_item}, received_params)
+          if Keyword.has_key?(contract_item_opts, :coerce_with) do
+            coerce_func = Keyword.get(contract_item_opts, :coerce_with)
+            check_item = ValidationChecks.get_check_item(coerced_params, contract_item_name)
+            coerced_value = coerce_func.({contract_item_name, check_item}, received_params)
 
-          put_param_value(coerced_value, coerced_params, contract_item_name)
-        else
-          coerced_params
+            put_param_value(coerced_value, coerced_params, contract_item_name)
+          else
+            coerced_params
+          end
         end
-      end
 
-    resolve_coercions(coerced_params, contract_tail, coerced_params)
+      resolve_coercions(coerced_params, contract_tail, coerced_params)
+    else
+      resolve_coercions(coerced_params, contract_tail, coerced_params)
+    end
   end
 
   @spec fetch_inner_checks(list()) :: map() | nil

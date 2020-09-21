@@ -10,7 +10,7 @@ defmodule Exop.Mixfile do
   def project do
     [
       app: :exop,
-      version: "1.4.1",
+      version: "1.4.2",
       elixir: ">= 1.6.0",
       name: "Exop",
       description: @description,
@@ -40,7 +40,7 @@ defmodule Exop.Mixfile do
   defp package do
     [
       files: ["lib", "mix.exs", "README.md", "LICENSE"],
-      maintainers: ["Andrey Chernykh", "Aleksandr Fomin"],
+      maintainers: ["Andrey Chernykh"],
       licenses: ["MIT"],
       links: %{"Github" => "https://github.com/madeinussr/exop"}
     ]

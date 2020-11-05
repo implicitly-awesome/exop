@@ -1,4 +1,4 @@
-## [1.4.2] - 2019.09.21
+## [1.4.2] - 2020.09.21
 
 - a bug in `coerce_with/2` was fixed: a parameter got coerced (as `nil`) even if it is not required
 - `run!` raises an `Exop.Operation.ErrorResult` error when an operation returns an error tuple

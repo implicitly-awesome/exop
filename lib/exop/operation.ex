@@ -358,12 +358,6 @@ defmodule Exop.Operation do
                     __MODULE__ |> Module.split() |> Enum.join(".")
                   }`, " <>
                     "supported type checks are `:#{Enum.join(TypeValidation.known_types(), "`, `:")}`."
-
-          {:error, {:unknown_struct, unknown_struct}} ->
-            raise ArgumentError,
-                  "Unknown struct `#{inspect(unknown_struct)}` is beeing used for for parameter `#{
-                    inspect(name)
-                  }` in module `#{__MODULE__ |> Module.split() |> Enum.join(".")}`."
         end
       end
     end
@@ -377,7 +371,7 @@ defmodule Exop.Operation do
 
         policy MonthlyReportPolicy, :can_read?
 
-        parameter :user, required: true, struct: %User{}
+        parameter :user, required: true, struct: User
 
         def process(params) do
           authorize(params.user)

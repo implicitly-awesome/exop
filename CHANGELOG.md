@@ -1,4 +1,4 @@
-## [1.4.3] - yyyy.MM.dd
+## [1.4.3] - 2021.02.07
 
 - not properly functioning check (since elixir 1.11.0) for struct parameters has been removed
 

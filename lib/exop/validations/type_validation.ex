@@ -11,9 +11,7 @@ defmodule Exop.TypeValidation do
 
   def type_supported?(nil, opts) when is_list(opts) do
     if Keyword.has_key?(opts, :struct) do
-      opts
-      |> Keyword.get(:struct)
-      |> check_struct_exists()
+      opts |> Keyword.get(:struct) |> check_struct_exists()
     else
       :ok
     end
@@ -26,6 +24,9 @@ defmodule Exop.TypeValidation do
   def type_supported?(unknown_type, _opts) do
     {:error, {:unknown_type, unknown_type}}
   end
+
+  defp check_struct_exists(struct_name) when is_atom(struct_name), do: :ok
+  defp check_struct_exists(%_{}), do: :ok
 
   def known_types, do: @known_types
 
@@ -98,16 +99,4 @@ defmodule Exop.TypeValidation do
   defp c(?e), do: ?e
   defp c(?f), do: ?f
   defp c(_), do: throw(:error)
-
-  defp check_struct_exists(struct_name) when is_atom(struct_name) do
-    with {:module, _} <- Code.ensure_compiled(struct_name),
-         true <- function_exported?(struct_name, :__struct__, 0) do
-      :ok
-    else
-      _ -> {:error, {:unknown_struct, struct_name}}
-    end
-  end
-
-  defp check_struct_exists(%_{}), do: :ok
-  defp check_struct_exists(unknown_struct), do: {:error, {:unknown_struct, unknown_struct}}
 end

@@ -1,3 +1,7 @@
+## [1.4.3] - 2021.02.07
+
+- not properly functioning check (since elixir 1.11.0) for struct parameters has been removed
+
 ## [1.4.2] - 2020.09.21
 
 - a bug in `coerce_with/2` was fixed: a parameter got coerced (as `nil`) even if it is not required

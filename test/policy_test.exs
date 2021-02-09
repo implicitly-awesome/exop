@@ -17,7 +17,7 @@ defmodule PolicyTest do
   defmodule ReadOperation do
     use Exop.Operation
     policy TestPolicy, :can_read?
-    parameter :user, required: true, struct: %User{}
+    parameter :user, required: true, struct: User
 
     def process(params) do
       authorize(params[:user])
@@ -28,7 +28,7 @@ defmodule PolicyTest do
   defmodule WriteOperation do
     use Exop.Operation
     policy TestPolicy, :can_write?
-    parameter :user, required: true, struct: %User{}
+    parameter :user, required: true, struct: User
 
     def process(params) do
       authorize(params[:user])
@@ -39,7 +39,7 @@ defmodule PolicyTest do
   defmodule ErrorOperation do
     use Exop.Operation
     policy TestPolicy, :can_error?
-    parameter :user, required: true, struct: %User{}
+    parameter :user, required: true, struct: User
 
     def process(params) do
       authorize(params[:user])
@@ -50,7 +50,7 @@ defmodule PolicyTest do
   defmodule CustomErrorOperation do
     use Exop.Operation
     policy TestPolicy, :can_custom_error?
-    parameter :user, required: true, struct: %User{}
+    parameter :user, required: true, struct: User
 
     def process(params) do
       authorize(params[:user])

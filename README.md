@@ -510,7 +510,7 @@ Every action expects an argument for a check. It's up to you how to handle this 
 
     policy MonthlyReportPolicy, :can_read?
 
-    parameter :user, struct: %User{}
+    parameter :user, struct: User
 
     def process(%{user: %User{} = user}) do
       # make some reading...
@@ -526,7 +526,7 @@ Every action expects an argument for a check. It's up to you how to handle this 
 
     policy MonthlyReportPolicy, :can_read?
 
-    parameter :user, struct: %User{}
+    parameter :user, struct: User
 
     def process(params) do
       authorize(params.user)

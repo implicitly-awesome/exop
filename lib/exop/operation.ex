@@ -190,7 +190,7 @@ defmodule Exop.Operation do
         throw({@exop_interruption, reason})
       end
 
-      @spec do_authorize(module(), atom(), any()) :: no_return()
+      @spec do_authorize(module(), atom(), any()) :: :ok | no_return()
       defp do_authorize(nil, _action, _opts) do
         throw({@exop_auth_error, :undefined_policy})
       end

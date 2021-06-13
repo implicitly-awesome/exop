@@ -1,3 +1,8 @@
+## [1.4.4] - 2021.06.13
+
+- `do_authorize`'s typespec was fixed
+- `ex_doc` version was bumped
+
 ## [1.4.3] - 2021.02.07
 
 - not properly functioning check (since elixir 1.11.0) for struct parameters has been removed

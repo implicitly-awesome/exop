@@ -175,7 +175,7 @@ defmodule Exop.Operation do
 
       defp output(_params, {:error, {:validation, errors}} = validation_result)
            when is_map(errors) do
-        errors |> validation_error_message() |> Logger.warn()
+        errors |> validation_error_message() |> Logger.warning()
         validation_result
       end
 

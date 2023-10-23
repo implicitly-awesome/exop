@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # do not write into log within tests
 config :logger, backends: []

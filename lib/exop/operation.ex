@@ -46,6 +46,7 @@ defmodule Exop.Operation do
       @policy_module nil
       @policy_action_name nil
       @fallback_module nil
+      @callback_module nil
       @module_name __MODULE__
 
       @before_compile unquote(__MODULE__)
@@ -112,11 +113,19 @@ defmodule Exop.Operation do
         result = params |> Utils.resolve_coercions(@contract, params) |> output()
 
         with {:ok, _} = result <- result do
-          result
+          invoke_callback(@callback_module, params, result)
         else
           error -> invoke_fallback(@fallback_module, params, error)
         end
       end
+
+      @spec invoke_callback(map() | nil, map(), any()) :: any()
+      defp invoke_callback(%{module: callback_module, opts: opts}, received_params, result) do
+        apply(callback_module, :process, [@module_name, received_params, result, opts])
+        result
+      end
+
+      defp invoke_callback(_fallback_module, _received_params, result), do: result
 
       @spec invoke_fallback(map() | nil, map(), any()) :: any()
       defp invoke_fallback(%{module: fallback_module, opts: opts}, received_params, error) do
@@ -354,9 +363,7 @@ defmodule Exop.Operation do
 
           {:error, {:unknown_type, unknown_type}} ->
             raise ArgumentError,
-                  "Unknown type check `#{inspect(unknown_type)}` for parameter `#{inspect(name)}` in module `#{
-                    __MODULE__ |> Module.split() |> Enum.join(".")
-                  }`, " <>
+                  "Unknown type check `#{inspect(unknown_type)}` for parameter `#{inspect(name)}` in module `#{__MODULE__ |> Module.split() |> Enum.join(".")}`, " <>
                     "supported type checks are `:#{Enum.join(TypeValidation.known_types(), "`, `:")}`."
         end
       end
@@ -454,6 +461,43 @@ defmodule Exop.Operation do
         _ ->
           IO.warn("#{@module_name}: #{fallback_module}.run/1 wasn't found")
           @fallback_module nil
+      end
+    end
+  end
+
+  @doc """
+  Defines a callback module that will be used for a successful operation as side effect.
+      defmodule MultiplyByTenOperation do
+        use Exop.Operation
+
+        callback LiveProdcast, topic: "math", type: "mutliplication"
+
+        parameter :a, type: :integer, required: true
+
+        def process(%{a: a}), do: a * 10
+      end
+
+  A callback module itself might be:
+      defmodule LiveProdcast do
+        use Exop.Callback
+
+        def process(operation_module, params_passed_to_the_operation, successful_result, opts) do
+          Phoenix.PubSub.broadcast(MyApp.PubSub, opts[:topic], %{type: opts[:type], payload: successful_result})
+        end
+      end
+
+  `opts` is an open keyword list to pass needed options and metadata to the successful call.
+  """
+  @spec callback(module(), any()) :: any()
+  defmacro callback(callback_module, opts \\ []) do
+    quote generated: true, bind_quoted: [callback_module: callback_module, opts: opts] do
+      with {:module, _} <- Code.ensure_compiled(callback_module),
+           true <- function_exported?(callback_module, :process, 4) do
+        @callback_module %{module: callback_module, opts: opts}
+      else
+        _ ->
+          IO.warn("#{@module_name}: #{callback_module}.run/1 wasn't found")
+          @callback_module nil
       end
     end
   end

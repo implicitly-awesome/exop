@@ -24,37 +24,38 @@ The new [ExopPlug](https://github.com/madeinussr/exop_plug) library provides a c
 
 Here is the [CHANGELOG](https://github.com/madeinussr/exop/blob/master/CHANGELOG.md) that was started from ver. 0.4.1 ¯\\\_(ツ)\_/¯
 
-- [Installation](#installation)
-- [Operation definition](#operation-definition)
-  - [Parameter checks](#parameter-checks)
-    - [type](#type)
-    - [required](#required)
-    - [default](#default)
-    - [numericality](#numericality)
-    - [equals](#equals)
-    - [in](#in)
-    - [not_in](#not_in)
-    - [format](#format)
-    - [length](#length)
-    - [inner](#inner)
-    - [struct](#struct)
-    - [list_item](#list_item)
-    - [func](#func)
-    - [allow_nil](#allow_nil)
-    - [from](#from)
-    - [subset_of](#subset_of)
-  - [Defined params](#defined-params)
-  - [Interrupt](#interrupt)
-  - [Coercion](#coercion)
-  - [Policy check](#policy-check)
-  - [Fallback module](#fallback-module)
-- [Operation invocation](#operation-invocation)
-- [Operation results](#operation-results)
-- [Operations chain](#operations-chain)
-  - [Additional parameters](#additional-parameters)
-  - [Descriptive errors](#descriptive-errors)
-  - [Conditional operations](#conditional-operations)
-  - [Incoming parameters coercion](#incoming-parameters-coercion)
+-   [Installation](#installation)
+-   [Operation definition](#operation-definition)
+    -   [Parameter checks](#parameter-checks)
+        -   [type](#type)
+        -   [required](#required)
+        -   [default](#default)
+        -   [numericality](#numericality)
+        -   [equals](#equals)
+        -   [in](#in)
+        -   [not_in](#not_in)
+        -   [format](#format)
+        -   [length](#length)
+        -   [inner](#inner)
+        -   [struct](#struct)
+        -   [list_item](#list_item)
+        -   [func](#func)
+        -   [allow_nil](#allow_nil)
+        -   [from](#from)
+        -   [subset_of](#subset_of)
+    -   [Defined params](#defined-params)
+    -   [Interrupt](#interrupt)
+    -   [Coercion](#coercion)
+    -   [Policy check](#policy-check)
+    -   [Fallback module](#fallback-module)
+    -   [Callback module](#callback-module)
+-   [Operation invocation](#operation-invocation)
+-   [Operation results](#operation-results)
+-   [Operations chain](#operations-chain)
+    -   [Additional parameters](#additional-parameters)
+    -   [Descriptive errors](#descriptive-errors)
+    -   [Conditional operations](#conditional-operations)
+    -   [Incoming parameters coercion](#incoming-parameters-coercion)
 
 ## Installation
 
@@ -107,22 +108,22 @@ _for more information see [Operation results](#operation-results) section_
 
 A parameter options could have various checks. Here the list of available checks:
 
-- `type`
-- `required`
-- `default`
-- `numericality`
-- `equals` (`exactly`)
-- `in`
-- `not_in`
-- `format` (`regex`)
-- `length`
-- `inner`
-- `struct`
-- `list_item`
-- `func`
-- `allow_nil`
-- `from`
-- `subset_of`
+-   `type`
+-   `required`
+-   `default`
+-   `numericality`
+-   `equals` (`exactly`)
+-   `in`
+-   `not_in`
+-   `format` (`regex`)
+-   `length`
+-   `inner`
+-   `struct`
+-   `list_item`
+-   `func`
+-   `allow_nil`
+-   `from`
+-   `subset_of`
 
 #### `type`
 
@@ -134,18 +135,18 @@ parameter :some_param, type: :map
 
 Exop handle almost all Elixir types and some additional:
 
-- :boolean
-- :integer
-- :float
-- :string
-- :tuple
-- :map
-- :keyword
-- :list
-- :atom
-- :module
-- :function
-- :uuid
+-   :boolean
+-   :integer
+-   :float
+-   :string
+-   :tuple
+-   :map
+-   :keyword
+-   :list
+-   :atom
+-   :module
+-   :function
+-   :uuid
 
 _Unknown type always generates ArgumentError exception on compile time._
 
@@ -244,11 +245,11 @@ parameter :some_param, regex: ~r/foo/
 
 Checks the length of a parameter's value. The value should be one of handled types:
 
-- list (items count)
-- string (chars count)
-- atom (treated as string)
-- map (key-value pairs count)
-- tuple (items count)
+-   list (items count)
+-   string (chars count)
+-   atom (treated as string)
+-   map (key-value pairs count)
+-   tuple (items count)
 
 `length` check is complex as `numericality` (should define map of inner checks).
 All possible checks are listed in the example below.
@@ -323,17 +324,19 @@ Moreover, `coerce_with` and `default` options are available too.
 Checks whether an item is valid over custom validation function.
 
 A validation is treated as failed if callback function returns one of results:
-- `{:error, _your_error_message_or_payload}`
-- `:error`
-- `false`
+
+-   `{:error, _your_error_message_or_payload}`
+-   `:error`
+-   `false`
 
 Everything else is treaded as successful validation result.
 
 If the validation function returns either `false` or `:error`, the default message `"not valid"` is used in your operation's validation results.
 
 The validation function receives two arguments:
-- a tuple with a validating parameter's name and value
-- a map of all parameters given to an operation
+
+-   a tuple with a validating parameter's name and value
+-   a map of all parameters given to an operation
 
 Those arguments allow you to make a parameter validations which depend on other parameters and their values.
 
@@ -502,7 +505,7 @@ Just define a module with a bunch of functions, each takes a single argument (an
 In this policy two actions (checks) defined (`can_read?/1` & `can_write?/1`).
 Every action expects an argument for a check. It's up to you how to handle this argument and turn it into the actual check.
 
-- next step - link an operation and a policy
+-   next step - link an operation and a policy
 
 ```elixir
   defmodule ReadOperation do
@@ -518,7 +521,7 @@ Every action expects an argument for a check. It's up to you how to handle this 
   end
 ```
 
-- finally - call `authorize/1` within `process/1`
+-   finally - call `authorize/1` within `process/1`
 
 ```elixir
   defmodule ReadOperation do
@@ -559,9 +562,9 @@ Define a fallback module:
 
 here you need to define and implement `process/3` function which takes following params:
 
-- failed operation module
-- params that were passed into the operation
-- an error result which was returned by the operation
+-   failed operation module
+-   params that were passed into the operation
+-   an error result which was returned by the operation
 
 Use your fallback in operations like this:
 
@@ -596,6 +599,72 @@ function's result - `:some_fallback_result`).
 If you want `SomeOperation.run/1` to return original result (`{:error, {:validation, %{a: ["has wrong type"]}}}`)
 specify `return: false` option or just omit it in a fallback definition.
 
+### Callback module
+
+If you'd like to handle a side effect successful operation (for example brodcast results to Phoenix.PubSub)
+you can use `Exop.Callback`.
+
+Define a callback module:
+
+```elixir
+  defmodule CallbackModule do
+    use Exop.Callback
+
+    def process(operation, params, result, opts) do
+      Phoenix.PubSub.broadcast(MyApp.PubSub, :topic, result)
+    end
+  end
+```
+
+here you need to define and implement `process/4` function which takes following params:
+
+-   operation module
+-   params that were passed into the operation
+-   an successful result which was returned by the operation
+-   opts keyword list for additional metadata
+
+Use your callback in operations like this:
+
+```elixir
+defmodule SomeOperation do
+  use Exop.Operation
+
+  callback CallbackModule
+
+  parameter :a, type: :integer
+  parameter :b, type: :integer
+
+  def process(%{a: a, b: b}), do: a + b
+end
+```
+
+You can use `opts` keyword list to add needed metadata to your call like this:
+
+```elixir
+  defmodule CallbackModule do
+    use Exop.Callback
+
+    def process(operation, params, result, opts) do
+      Phoenix.PubSub.broadcast(MyApp.PubSub, opts[:topic], result)
+    end
+  end
+```
+
+and then use the callback like this
+
+```elixir
+defmodule SomeOperation do
+  use Exop.Operation
+
+  callback CallbackModule, topic: :some_topic
+
+  parameter :a, type: :integer
+  parameter :b, type: :integer
+
+  def process(%{a: a, b: b}), do: a + b
+end
+```
+
 ## Operation invocation
 
 As said earlier, operations in most cases called by `run/1` function. This function
@@ -618,10 +687,10 @@ will not be invoked and corresponding warning in the application's log will appe
 There is "bang" version of `run/1` exists. Function `run!/1` does the same things that its sibling does,
 the only difference is a result of invocation, it might be:
 
-- if a contract validation passed - the actual result of an operation (result of a code, described in `process/1`)
-- if a contract validation failed - an error `Exop.Validation.ValidationError` is raised
-- if an operation returns an error tuple - an error `Exop.Operation.ErrorResult` is raised
-- in case of manual interruption - `{:interrupt, _reason}`
+-   if a contract validation passed - the actual result of an operation (result of a code, described in `process/1`)
+-   if a contract validation failed - an error `Exop.Validation.ValidationError` is raised
+-   if an operation returns an error tuple - an error `Exop.Operation.ErrorResult` is raised
+-   in case of manual interruption - `{:interrupt, _reason}`
 
 _You always can bypass the validation simply by calling `process/1` function itself, if needed._
 
@@ -637,15 +706,15 @@ Or you will receive `@type validation_error :: {:error, :validation_failed, map(
 
 An operation can return one of results listed below (depends on passed in params and operation definition):
 
-- an operation was completed successfully:
-  - `{:error, _your_error_reason_}` (if an :error-tuple (any length, but `:error` atom should be the first element) was returned by `process/1` function)
-  - `{:ok, any()}` (otherwise, even if `{:ok, _your_result_}` tuple was returned by `process/1` function)
-- a contract validation failed: `{:error, {:validation, map()}}`
-- if `interrupt/1` was invoked: `{:interrupt, any()}`
-- policy check failed:
-  - `{:error, {:auth, :undefined_policy}}`
-  - `{:error, {:auth, :undefined_action}}`
-  - `{:error, {:auth, atom()}}`
+-   an operation was completed successfully:
+    -   `{:error, _your_error_reason_}` (if an :error-tuple (any length, but `:error` atom should be the first element) was returned by `process/1` function)
+    -   `{:ok, any()}` (otherwise, even if `{:ok, _your_result_}` tuple was returned by `process/1` function)
+-   a contract validation failed: `{:error, {:validation, map()}}`
+-   if `interrupt/1` was invoked: `{:interrupt, any()}`
+-   policy check failed:
+    -   `{:error, {:auth, :undefined_policy}}`
+    -   `{:error, {:auth, :undefined_action}}`
+    -   `{:error, {:auth, atom()}}`
 
 _For the "bang" version of `run/1` see results description above._
 

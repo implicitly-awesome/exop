@@ -10,8 +10,8 @@ defmodule Exop.Mixfile do
   def project do
     [
       app: :exop,
-      version: "1.4.4",
-      elixir: ">= 1.6.0",
+      version: "1.5.0",
+      elixir: ">= 1.11.0",
       name: "Exop",
       description: @description,
       package: package(),
@@ -31,8 +31,8 @@ defmodule Exop.Mixfile do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.23", only: [:dev, :test, :docs]},
-      {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false}
+      {:ex_doc, "~> 0.27", only: [:dev, :test, :docs]},
+      {:dialyxir, "~> 1.4", only: [:dev], runtime: false}
     ]
   end
 

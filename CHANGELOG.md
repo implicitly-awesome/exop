@@ -1,3 +1,8 @@
+## [1.4.5] - 2023.10.26
+
+- Elixir is bumped to 1.15
+- OTP is bumped to 26.0
+
 ## [1.4.4] - 2021.06.13
 
 - `do_authorize`'s typespec was fixed
